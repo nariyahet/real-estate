@@ -1,0 +1,258 @@
+import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import "../App.css";
+
+const API_URL = "http://localhost:5000/api";
+
+function Dashboard() {
+  const navigate = useNavigate();
+
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalAgents: 0,
+    totalProperties: 0,
+    availableProperties: 0,
+    soldProperties: 0,
+    rentedProperties: 0,
+    inactiveProperties: 0,
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const getHeaders = useCallback(() => {
+    const token = localStorage.getItem("token");
+
+    return {
+      Authorization: `Bearer ${token}`,
+    };
+  }, []);
+
+  const fetchDashboardStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await axios.get(`${API_URL}/admin/dashboard-stats`, {
+        headers: getHeaders(),
+      });
+
+      if (response.data.success) {
+        setStats({
+          totalUsers: response.data.stats.totalUsers || 0,
+          totalAgents: response.data.stats.totalAgents || 0,
+          totalProperties: response.data.stats.totalProperties || 0,
+          availableProperties: response.data.stats.availableProperties || 0,
+          soldProperties: response.data.stats.soldProperties || 0,
+          rentedProperties: response.data.stats.rentedProperties || 0,
+          inactiveProperties: response.data.stats.inactiveProperties || 0,
+        });
+      }
+    } catch (err) {
+      console.error("Dashboard Stats Error:", err);
+
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/", { replace: true });
+        return;
+      }
+
+      setError(
+        err.response?.data?.message || "Unable to load dashboard statistics.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [getHeaders, navigate]);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, [fetchDashboardStats]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("adminToken");
+
+    navigate("/", { replace: true });
+  };
+
+  const renderDashboard = () => (
+    <div className="dashboard-content">
+      <div className="welcome-card">
+        <div>
+          <span>ADMIN PANEL</span>
+          <h2>Welcome back, Admin 👋</h2>
+          <p>Manage your real estate platform from one place.</p>
+        </div>
+
+        <div className="welcome-icon">🏢</div>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-card-top">
+            <div className="stat-icon">👥</div>
+          </div>
+
+          <div className="stat-value">{stats.totalUsers}</div>
+
+          <div className="stat-title">Total Users</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-top">
+            <div className="stat-icon">🤝</div>
+          </div>
+
+          <div className="stat-value">{stats.totalAgents}</div>
+
+          <div className="stat-title">Total Agents</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-top">
+            <div className="stat-icon">🏠</div>
+          </div>
+
+          <div className="stat-value">{stats.totalProperties}</div>
+
+          <div className="stat-title">Total Properties</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-top">
+            <div className="stat-icon">✅</div>
+          </div>
+
+          <div className="stat-value">{stats.availableProperties}</div>
+
+          <div className="stat-title">Available Properties</div>
+        </div>
+      </div>
+
+      <div className="overview-section">
+        <div className="section-header">
+          <div>
+            <span>PROPERTY OVERVIEW</span>
+            <h2>Property Status</h2>
+          </div>
+
+          <button
+            className="refresh-btn"
+            onClick={fetchDashboardStats}
+            disabled={loading}
+          >
+            {loading ? "Refreshing..." : "↻ Refresh"}
+          </button>
+        </div>
+
+        <div className="property-status-grid">
+          <div className="status-card available">
+            <span>Available</span>
+            <strong>{stats.availableProperties}</strong>
+          </div>
+
+          <div className="status-card sold">
+            <span>Sold</span>
+            <strong>{stats.soldProperties}</strong>
+          </div>
+
+          <div className="status-card rented">
+            <span>Rented</span>
+            <strong>{stats.rentedProperties}</strong>
+          </div>
+
+          <div className="status-card inactive">
+            <span>Inactive</span>
+            <strong>{stats.inactiveProperties}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="admin-layout">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="brand-icon">🏠</div>
+
+          <div>
+            <h2>RealEstate</h2>
+            <span>Admin Panel</span>
+          </div>
+        </div>
+
+        <nav className="sidebar-nav">
+          <button
+            className="nav-item active"
+            onClick={() => navigate("/dashboard")}
+          >
+            <span>📊</span>
+            Dashboard
+          </button>
+
+          <button className="nav-item" onClick={() => navigate("/users")}>
+            <span>👥</span>
+            Users
+          </button>
+
+          <button className="nav-item" onClick={() => navigate("/agents")}>
+            <span>🤝</span>
+            Agents
+          </button>
+
+          <button className="nav-item" onClick={() => navigate("/properties")}>
+            <span>🏠</span>
+            Properties
+          </button>
+        </nav>
+
+        <div className="sidebar-bottom">
+          <button className="nav-item logout-btn" onClick={handleLogout}>
+            <span>🚪</span>
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="main-content">
+        <header className="topbar">
+          <div>
+            <p className="page-label">REAL ESTATE ADMIN</p>
+
+            <h1>Dashboard</h1>
+          </div>
+
+          <div className="admin-profile">
+            <div className="profile-avatar">A</div>
+
+            <div>
+              <strong>Admin User</strong>
+              <span>Administrator</span>
+            </div>
+          </div>
+        </header>
+
+        {error && (
+          <div className="error-box">
+            <span>{error}</span>
+
+            <button type="button" onClick={() => setError("")}>
+              ×
+            </button>
+          </div>
+        )}
+
+        {renderDashboard()}
+      </main>
+    </div>
+  );
+}
+
+export default Dashboard;

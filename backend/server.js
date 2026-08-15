@@ -1,0 +1,91 @@
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+
+dotenv.config();
+
+const app = express();
+
+const PORT = process.env.PORT || 5000;
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  "http://localhost:5177",
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+);
+
+app.use(express.json());
+
+const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Real Estate API is running",
+  });
+});
+
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Backend server is healthy",
+    port: PORT,
+  });
+});
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found.",
+  });
+});
+
+app.use((err, req, res, next) => {
+  console.error("Server Error:", err);
+
+  res.status(500).json({
+    success: false,
+    message: "Internal server error.",
+  });
+});
+
+const server = app.listen(PORT, () => {
+  console.log("");
+  console.log("");
+  console.log("   REAL ESTATE BACKEND SERVER");
+  console.log("");
+  console.log(`Server running on port ${PORT}`);
+  console.log(`API: http://localhost:${PORT}`);
+  console.log(`Health: http://localhost:${PORT}/api/health`);
+  console.log("");
+  console.log("");
+});
+
+server.on("error", (error) => {
+  console.error("SERVER START ERROR:", error);
+
+  if (error.code === "EADDRINUSE") {
+    console.error(`Port ${PORT} is already in use.`);
+  }
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("UNCAUGHT EXCEPTION:", error);
+});
+
+process.on("unhandledRejection", (error) => {
+  console.error("UNHANDLED REJECTION:", error);
+});

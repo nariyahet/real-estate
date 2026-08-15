@@ -1,0 +1,128 @@
+import { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import "./Login.css";
+
+const API_URL = "http://localhost:5000/api";
+
+function Login() {
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    setError("");
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail || !password) {
+      setError("Email and password are required.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await axios.post(
+        `${API_URL}/auth/login`,
+        {
+          email: cleanEmail,
+          password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (response.data?.success && response.data?.token) {
+        const user = response.data.user;
+
+        // Only admin can access admin dashboard
+        if (user?.role !== "admin") {
+          setError("Access denied. Admin account required.");
+          return;
+        }
+
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        navigate("/dashboard", { replace: true });
+      } else {
+        setError(
+          response.data?.message ||
+            "Login failed. Please check your email and password.",
+        );
+      }
+    } catch (err) {
+      console.error("Login Error:", err);
+
+      if (err.response) {
+        setError(
+          err.response.data?.message ||
+            "Login failed. Please check your email and password.",
+        );
+      } else if (err.request) {
+        setError("Backend server સાથે connection થઈ શક્યું નથી.");
+      } else {
+        setError("Login failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="login-page">
+      <div className="login-card">
+        <h1>RealEstate</h1>
+
+        <p>Login to your account</p>
+
+        {error && <div className="error-box">{error}</div>}
+
+        <form onSubmit={handleLogin}>
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+
+            <input
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+
+            <input
+              id="password"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </div>
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default Login;

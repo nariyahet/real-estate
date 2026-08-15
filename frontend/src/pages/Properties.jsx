@@ -1,0 +1,315 @@
+import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
+import "./Properties.css";
+
+const API_URL = "http://localhost:5000/api";
+
+function Properties() {
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [updatingId, setUpdatingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const getHeaders = useCallback(() => {
+    const token =
+      localStorage.getItem("adminToken") || localStorage.getItem("token");
+
+    return {
+      Authorization: `Bearer ${token}`,
+    };
+  }, []);
+
+  const fetchProperties = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await axios.get(`${API_URL}/admin/properties`, {
+        headers: getHeaders(),
+      });
+
+      if (response.data.success) {
+        setProperties(response.data.properties || []);
+      } else {
+        setProperties([]);
+        setError(response.data.message || "Failed to load properties.");
+      }
+    } catch (err) {
+      console.error("Properties Error:", err);
+
+      setError(err.response?.data?.message || "Failed to load properties.");
+    } finally {
+      setLoading(false);
+    }
+  }, [getHeaders]);
+
+  useEffect(() => {
+    const loadProperties = async () => {
+      await fetchProperties();
+    };
+
+    loadProperties();
+  }, [fetchProperties]);
+
+  const updatePropertyStatus = async (propertyId, status) => {
+    try {
+      setUpdatingId(propertyId);
+      setError("");
+
+      const response = await axios.put(
+        `${API_URL}/admin/properties/${propertyId}/status`,
+        { status },
+        {
+          headers: getHeaders(),
+        },
+      );
+
+      if (response.data.success) {
+        setProperties((currentProperties) =>
+          currentProperties.map((property) =>
+            property.id === propertyId ? { ...property, status } : property,
+          ),
+        );
+      } else {
+        setError(response.data.message || "Failed to update property status.");
+      }
+    } catch (err) {
+      console.error("Update Property Status Error:", err);
+
+      setError(
+        err.response?.data?.message || "Failed to update property status.",
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const deleteProperty = async (propertyId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this property?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingId(propertyId);
+      setError("");
+
+      const response = await axios.delete(
+        `${API_URL}/admin/properties/${propertyId}`,
+        {
+          headers: getHeaders(),
+        },
+      );
+
+      if (response.data.success) {
+        setProperties((currentProperties) =>
+          currentProperties.filter((property) => property.id !== propertyId),
+        );
+      } else {
+        setError(response.data.message || "Failed to delete property.");
+      }
+    } catch (err) {
+      console.error("Delete Property Error:", err);
+
+      setError(err.response?.data?.message || "Failed to delete property.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const formatPrice = (price, listingType) => {
+    const value = Number(price || 0);
+
+    const formatted = value.toLocaleString("en-IN", {
+      maximumFractionDigits: 2,
+    });
+
+    if (listingType === "Rent") {
+      return `₹${formatted}/month`;
+    }
+
+    return `₹${formatted}`;
+  };
+
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "Available":
+        return "available";
+
+      case "Sold":
+        return "sold";
+
+      case "Rented":
+        return "rented";
+
+      case "Inactive":
+        return "inactive";
+
+      default:
+        return "";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="page-header">
+          <div>
+            <h1>Properties</h1>
+            <p>Manage all real estate properties</p>
+          </div>
+        </div>
+
+        <div className="loading-state">
+          <div className="loader"></div>
+          <p>Loading properties...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-container">
+      <div className="page-header">
+        <div>
+          <span className="page-label">PROPERTY MANAGEMENT</span>
+          <h1>Properties</h1>
+          <p>Manage all listed properties from one place.</p>
+        </div>
+
+        <button type="button" onClick={fetchProperties} disabled={loading}>
+          ↻ Refresh
+        </button>
+      </div>
+
+      {error && (
+        <div className="error-box">
+          <span>{error}</span>
+
+          <button
+            type="button"
+            onClick={() => setError("")}
+            className="error-close"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {!error && properties.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-icon">🏠</div>
+          <h3>No Properties Found</h3>
+          <p>Currently there are no properties available.</p>
+        </div>
+      )}
+
+      {properties.length > 0 && (
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Property</th>
+                <th>Type</th>
+                <th>Listing</th>
+                <th>Price</th>
+                <th>Agent</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {properties.map((property) => (
+                <tr key={property.id}>
+                  <td>
+                    <span className="property-id">#{property.id}</span>
+                  </td>
+
+                  <td>
+                    <div className="property-info">
+                      <strong className="property-title">
+                        {property.title || "Untitled Property"}
+                      </strong>
+
+                      {property.city && (
+                        <span className="property-location">
+                          {property.city}
+                          {property.state ? `, ${property.state}` : ""}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+
+                  <td>
+                    <span className="property-type">
+                      {property.property_type || "-"}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span
+                      className={`listing-badge ${
+                        property.listing_type === "Sale" ? "sale" : "rent"
+                      }`}
+                    >
+                      {property.listing_type || "-"}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span className="property-price">
+                      {formatPrice(property.price, property.listing_type)}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span className="agent-name">
+                      {property.agent_name || "Not Assigned"}
+                    </span>
+                  </td>
+
+                  <td>
+                    <select
+                      className={`status-select ${getStatusClass(
+                        property.status,
+                      )}`}
+                      value={property.status || "Available"}
+                      disabled={updatingId === property.id}
+                      onChange={(e) =>
+                        updatePropertyStatus(property.id, e.target.value)
+                      }
+                    >
+                      <option value="Available">Available</option>
+                      <option value="Sold">Sold</option>
+                      <option value="Rented">Rented</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </td>
+
+                  <td>
+                    <button
+                      type="button"
+                      className="delete-btn"
+                      disabled={deletingId === property.id}
+                      onClick={() => deleteProperty(property.id)}
+                    >
+                      {deletingId === property.id ? "Deleting..." : "Delete"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Properties;
