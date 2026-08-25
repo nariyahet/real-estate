@@ -78,6 +78,8 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log("LOGIN REQUEST RECEIVED");
+
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -87,7 +89,11 @@ const login = async (req, res) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
+    console.log("LOGIN EMAIL:", normalizedEmail);
+
     const user = await findUserByEmail(normalizedEmail);
+
+    console.log("USER FOUND:", !!user);
 
     if (!user) {
       return res.status(401).json({
@@ -96,7 +102,11 @@ const login = async (req, res) => {
       });
     }
 
+    console.log("PASSWORD HASH LENGTH:", user.password?.length);
+
     const passwordMatch = await bcrypt.compare(password, user.password);
+
+    console.log("PASSWORD MATCH:", passwordMatch);
 
     if (!passwordMatch) {
       return res.status(401).json({
@@ -105,7 +115,11 @@ const login = async (req, res) => {
       });
     }
 
+    console.log("PASSWORD VERIFIED");
+
     const token = generateToken(user);
+
+    console.log("TOKEN GENERATED");
 
     return res.status(200).json({
       success: true,
@@ -121,12 +135,17 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login Error:", error);
+    console.error("");
+    console.error(error);
+    console.error("MESSAGE:", error.message);
+    console.error("CODE:", error.code);
+    console.error("STACK:", error.stack);
+    console.error("");
 
     return res.status(500).json({
       success: false,
       message: "Login failed.",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      error: error.message,
     });
   }
 };

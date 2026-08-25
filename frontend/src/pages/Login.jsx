@@ -31,23 +31,28 @@ function Login() {
         password,
       });
 
-      if (response.data?.success && response.data?.token) {
-        const user = response.data.user;
-
-        if (user?.role !== "admin") {
-          setError("Access denied. Admin account required.");
-          return;
-        }
-
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(user));
-
-        navigate("/dashboard", { replace: true });
-      } else {
+      if (!response.data?.success || !response.data?.token) {
         setError(
           response.data?.message ||
             "Login failed. Please check your email and password.",
         );
+        return;
+      }
+
+      const { token, user } = response.data;
+
+      if (!user) {
+        setError("User information was not returned by the server.");
+        return;
+      }
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      if (user.role === "admin") {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/properties", { replace: true });
       }
     } catch (err) {
       console.error("Login Error:", err);
@@ -71,7 +76,6 @@ function Login() {
     <div className="login-page">
       <div className="login-card">
         <h1>RealEstate</h1>
-
         <p>Login to your account</p>
 
         {error && <div className="error-box">{error}</div>}

@@ -18,7 +18,7 @@ function Dashboard() {
     inactiveProperties: 0,
   });
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const getHeaders = useCallback(() => {
@@ -30,6 +30,13 @@ function Dashboard() {
   }, []);
 
   const fetchDashboardStats = useCallback(async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/", { replace: true });
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
@@ -38,23 +45,32 @@ function Dashboard() {
         headers: getHeaders(),
       });
 
-      if (response.data.success) {
-        setStats({
-          totalUsers: response.data.stats.totalUsers || 0,
-          totalAgents: response.data.stats.totalAgents || 0,
-          totalProperties: response.data.stats.totalProperties || 0,
-          availableProperties: response.data.stats.availableProperties || 0,
-          soldProperties: response.data.stats.soldProperties || 0,
-          rentedProperties: response.data.stats.rentedProperties || 0,
-          inactiveProperties: response.data.stats.inactiveProperties || 0,
-        });
+      if (!response.data?.success) {
+        setError(
+          response.data?.message || "Unable to load dashboard statistics.",
+        );
+        return;
       }
+
+      const dashboardStats = response.data.stats || {};
+
+      setStats({
+        totalUsers: Number(dashboardStats.totalUsers || 0),
+        totalAgents: Number(dashboardStats.totalAgents || 0),
+        totalProperties: Number(dashboardStats.totalProperties || 0),
+        availableProperties: Number(dashboardStats.availableProperties || 0),
+        soldProperties: Number(dashboardStats.soldProperties || 0),
+        rentedProperties: Number(dashboardStats.rentedProperties || 0),
+        inactiveProperties: Number(dashboardStats.inactiveProperties || 0),
+      });
     } catch (err) {
       console.error("Dashboard Stats Error:", err);
 
-      if (err.response?.status === 401) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("adminToken");
+
         navigate("/", { replace: true });
         return;
       }
@@ -79,104 +95,8 @@ function Dashboard() {
     navigate("/", { replace: true });
   };
 
-  const renderDashboard = () => (
-    <div className="dashboard-content">
-      <div className="welcome-card">
-        <div>
-          <span>ADMIN PANEL</span>
-          <h2>Welcome back, Admin 👋</h2>
-          <p>Manage your real estate platform from one place.</p>
-        </div>
-
-        <div className="welcome-icon">🏢</div>
-      </div>
-
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-card-top">
-            <div className="stat-icon">👥</div>
-          </div>
-
-          <div className="stat-value">{stats.totalUsers}</div>
-
-          <div className="stat-title">Total Users</div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-card-top">
-            <div className="stat-icon">🤝</div>
-          </div>
-
-          <div className="stat-value">{stats.totalAgents}</div>
-
-          <div className="stat-title">Total Agents</div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-card-top">
-            <div className="stat-icon">🏠</div>
-          </div>
-
-          <div className="stat-value">{stats.totalProperties}</div>
-
-          <div className="stat-title">Total Properties</div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-card-top">
-            <div className="stat-icon">✅</div>
-          </div>
-
-          <div className="stat-value">{stats.availableProperties}</div>
-
-          <div className="stat-title">Available Properties</div>
-        </div>
-      </div>
-
-      <div className="overview-section">
-        <div className="section-header">
-          <div>
-            <span>PROPERTY OVERVIEW</span>
-            <h2>Property Status</h2>
-          </div>
-
-          <button
-            className="refresh-btn"
-            onClick={fetchDashboardStats}
-            disabled={loading}
-          >
-            {loading ? "Refreshing..." : "↻ Refresh"}
-          </button>
-        </div>
-
-        <div className="property-status-grid">
-          <div className="status-card available">
-            <span>Available</span>
-            <strong>{stats.availableProperties}</strong>
-          </div>
-
-          <div className="status-card sold">
-            <span>Sold</span>
-            <strong>{stats.soldProperties}</strong>
-          </div>
-
-          <div className="status-card rented">
-            <span>Rented</span>
-            <strong>{stats.rentedProperties}</strong>
-          </div>
-
-          <div className="status-card inactive">
-            <span>Inactive</span>
-            <strong>{stats.inactiveProperties}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="admin-layout">
-      {/* Sidebar */}
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-icon">🏠</div>
@@ -189,6 +109,7 @@ function Dashboard() {
 
         <nav className="sidebar-nav">
           <button
+            type="button"
             className="nav-item active"
             onClick={() => navigate("/dashboard")}
           >
@@ -196,36 +117,50 @@ function Dashboard() {
             Dashboard
           </button>
 
-          <button className="nav-item" onClick={() => navigate("/users")}>
+          <button
+            type="button"
+            className="nav-item"
+            onClick={() => navigate("/users")}
+          >
             <span>👥</span>
             Users
           </button>
 
-          <button className="nav-item" onClick={() => navigate("/agents")}>
+          <button
+            type="button"
+            className="nav-item"
+            onClick={() => navigate("/agents")}
+          >
             <span>🤝</span>
             Agents
           </button>
 
-          <button className="nav-item" onClick={() => navigate("/properties")}>
+          <button
+            type="button"
+            className="nav-item"
+            onClick={() => navigate("/properties")}
+          >
             <span>🏠</span>
             Properties
           </button>
         </nav>
 
         <div className="sidebar-bottom">
-          <button className="nav-item logout-btn" onClick={handleLogout}>
+          <button
+            type="button"
+            className="nav-item logout-btn"
+            onClick={handleLogout}
+          >
             <span>🚪</span>
             Logout
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">
         <header className="topbar">
           <div>
             <p className="page-label">REAL ESTATE ADMIN</p>
-
             <h1>Dashboard</h1>
           </div>
 
@@ -249,7 +184,115 @@ function Dashboard() {
           </div>
         )}
 
-        {renderDashboard()}
+        <div className="dashboard-content">
+          <div className="welcome-card">
+            <div>
+              <span>ADMIN PANEL</span>
+              <h2>Welcome back, Admin 👋</h2>
+              <p>Manage your real estate platform from one place.</p>
+            </div>
+
+            <div className="welcome-icon">🏢</div>
+          </div>
+
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-card-top">
+                <div className="stat-icon">👥</div>
+              </div>
+
+              <div>
+                <div className="stat-value">
+                  {loading ? "..." : stats.totalUsers}
+                </div>
+
+                <div className="stat-title">Total Users</div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-card-top">
+                <div className="stat-icon">🤝</div>
+              </div>
+
+              <div>
+                <div className="stat-value">
+                  {loading ? "..." : stats.totalAgents}
+                </div>
+
+                <div className="stat-title">Total Agents</div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-card-top">
+                <div className="stat-icon">🏠</div>
+              </div>
+
+              <div>
+                <div className="stat-value">
+                  {loading ? "..." : stats.totalProperties}
+                </div>
+
+                <div className="stat-title">Total Properties</div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-card-top">
+                <div className="stat-icon">✅</div>
+              </div>
+
+              <div>
+                <div className="stat-value">
+                  {loading ? "..." : stats.availableProperties}
+                </div>
+
+                <div className="stat-title">Available Properties</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="overview-section">
+            <div className="section-header">
+              <div>
+                <span>PROPERTY OVERVIEW</span>
+                <h2>Property Status</h2>
+              </div>
+
+              <button
+                type="button"
+                className="refresh-btn"
+                onClick={fetchDashboardStats}
+                disabled={loading}
+              >
+                {loading ? "Refreshing..." : "↻ Refresh"}
+              </button>
+            </div>
+
+            <div className="property-status-grid">
+              <div className="status-card available">
+                <span>Available</span>
+                <strong>{loading ? "..." : stats.availableProperties}</strong>
+              </div>
+
+              <div className="status-card sold">
+                <span>Sold</span>
+                <strong>{loading ? "..." : stats.soldProperties}</strong>
+              </div>
+
+              <div className="status-card rented">
+                <span>Rented</span>
+                <strong>{loading ? "..." : stats.rentedProperties}</strong>
+              </div>
+
+              <div className="status-card inactive">
+                <span>Inactive</span>
+                <strong>{loading ? "..." : stats.inactiveProperties}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );

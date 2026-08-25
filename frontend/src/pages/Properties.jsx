@@ -11,6 +11,14 @@ function Properties() {
   const [updatingId, setUpdatingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
+  const getUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  };
+
   const getHeaders = useCallback(() => {
     const token =
       localStorage.getItem("adminToken") || localStorage.getItem("token");
@@ -25,7 +33,14 @@ function Properties() {
       setLoading(true);
       setError("");
 
-      const response = await axios.get(`${API_URL}/admin/properties`, {
+      const user = getUser();
+
+      const endpoint =
+        user?.role === "admin"
+          ? `${API_URL}/admin/properties`
+          : `${API_URL}/properties`;
+
+      const response = await axios.get(endpoint, {
         headers: getHeaders(),
       });
 
@@ -38,6 +53,7 @@ function Properties() {
     } catch (err) {
       console.error("Properties Error:", err);
 
+      setProperties([]);
       setError(err.response?.data?.message || "Failed to load properties.");
     } finally {
       setLoading(false);
@@ -45,11 +61,7 @@ function Properties() {
   }, [getHeaders]);
 
   useEffect(() => {
-    const loadProperties = async () => {
-      await fetchProperties();
-    };
-
-    loadProperties();
+    fetchProperties();
   }, [fetchProperties]);
 
   const updatePropertyStatus = async (propertyId, status) => {
@@ -139,16 +151,12 @@ function Properties() {
     switch (status) {
       case "Available":
         return "available";
-
       case "Sold":
         return "sold";
-
       case "Rented":
         return "rented";
-
       case "Inactive":
         return "inactive";
-
       default:
         return "";
     }
@@ -172,13 +180,20 @@ function Properties() {
     );
   }
 
+  const user = getUser();
+  const isAdmin = user?.role === "admin";
+
   return (
     <div className="page-container">
       <div className="page-header">
         <div>
           <span className="page-label">PROPERTY MANAGEMENT</span>
           <h1>Properties</h1>
-          <p>Manage all listed properties from one place.</p>
+          <p>
+            {isAdmin
+              ? "Manage all listed properties from one place."
+              : "Browse available real estate properties."}
+          </p>
         </div>
 
         <button type="button" onClick={fetchProperties} disabled={loading}>
@@ -219,8 +234,9 @@ function Properties() {
                 <th>Listing</th>
                 <th>Price</th>
                 <th>Agent</th>
-                <th>Status</th>
-                <th>Actions</th>
+
+                {isAdmin && <th>Status</th>}
+                {isAdmin && <th>Actions</th>}
               </tr>
             </thead>
 
@@ -274,34 +290,38 @@ function Properties() {
                     </span>
                   </td>
 
-                  <td>
-                    <select
-                      className={`status-select ${getStatusClass(
-                        property.status,
-                      )}`}
-                      value={property.status || "Available"}
-                      disabled={updatingId === property.id}
-                      onChange={(e) =>
-                        updatePropertyStatus(property.id, e.target.value)
-                      }
-                    >
-                      <option value="Available">Available</option>
-                      <option value="Sold">Sold</option>
-                      <option value="Rented">Rented</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                  </td>
+                  {isAdmin && (
+                    <td>
+                      <select
+                        className={`status-select ${getStatusClass(
+                          property.status,
+                        )}`}
+                        value={property.status || "Available"}
+                        disabled={updatingId === property.id}
+                        onChange={(e) =>
+                          updatePropertyStatus(property.id, e.target.value)
+                        }
+                      >
+                        <option value="Available">Available</option>
+                        <option value="Sold">Sold</option>
+                        <option value="Rented">Rented</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
+                    </td>
+                  )}
 
-                  <td>
-                    <button
-                      type="button"
-                      className="delete-btn"
-                      disabled={deletingId === property.id}
-                      onClick={() => deleteProperty(property.id)}
-                    >
-                      {deletingId === property.id ? "Deleting..." : "Delete"}
-                    </button>
-                  </td>
+                  {isAdmin && (
+                    <td>
+                      <button
+                        type="button"
+                        className="delete-btn"
+                        disabled={deletingId === property.id}
+                        onClick={() => deleteProperty(property.id)}
+                      >
+                        {deletingId === property.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
