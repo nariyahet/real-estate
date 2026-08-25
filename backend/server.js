@@ -22,7 +22,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests without an Origin header
       if (!origin) {
         return callback(null, true);
       }
@@ -39,8 +38,6 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
-
-app.options("*", cors());
 
 app.use(express.json());
 
