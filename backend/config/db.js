@@ -22,6 +22,7 @@ const testDatabaseConnection = async () => {
     const connection = await pool.getConnection();
 
     console.log("MySQL Database Connected");
+    console.log("Database:", process.env.DB_NAME);
 
     connection.release();
   } catch (error) {

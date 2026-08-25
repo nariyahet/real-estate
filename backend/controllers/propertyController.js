@@ -10,6 +10,10 @@ const {
 const { pool } = require("../config/db");
 
 const getProperties = async (req, res) => {
+
+   console.log("🔥 GET PROPERTIES CONTROLLER RUNNING");
+  console.log("QUERY:", req.query);
+  
   try {
     const {
       search,
@@ -57,7 +61,7 @@ const getProperty = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!Number.isInteger(Number(id))) {
+    if (!Number.isInteger(Number(id)) || Number(id) <= 0) {
       return res.status(400).json({
         success: false,
         message: "Invalid property ID.",
@@ -113,6 +117,7 @@ const addProperty = async (req, res) => {
       longitude,
       status,
       featured,
+      agent_id,
     } = req.body;
 
     if (
@@ -192,13 +197,35 @@ const addProperty = async (req, res) => {
       agentId = agentRows[0].id;
     }
 
-    if (req.user.role === "admin" && req.body.agent_id) {
-      agentId = Number(req.body.agent_id);
+    if (
+      req.user.role === "admin" &&
+      agent_id !== undefined &&
+      agent_id !== null &&
+      agent_id !== ""
+    ) {
+      agentId = Number(agent_id);
 
       if (!Number.isInteger(agentId) || agentId <= 0) {
         return res.status(400).json({
           success: false,
           message: "Invalid agent ID.",
+        });
+      }
+
+      const [agentRows] = await pool.execute(
+        `
+        SELECT id
+        FROM agents
+        WHERE id = ?
+        LIMIT 1
+        `,
+        [agentId],
+      );
+
+      if (!agentRows[0]) {
+        return res.status(400).json({
+          success: false,
+          message: "Agent not found.",
         });
       }
     }
@@ -516,6 +543,14 @@ const removeProperty = async (req, res) => {
         });
       }
     }
+
+    await pool.execute(
+      `
+      DELETE FROM property_images
+      WHERE property_id = ?
+      `,
+      [propertyId],
+    );
 
     const deleted = await deletePropertyModel(propertyId);
 

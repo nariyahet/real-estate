@@ -8,66 +8,98 @@ const getAllProperties = async ({
   minPrice = "",
   maxPrice = "",
   bedrooms = "",
-  status = "Available",
+  status = "",
   featured = "",
   page = 1,
   limit = 10,
 } = {}) => {
+  console.log("🔥 GET ALL PROPERTIES CALLED");
+
+  const [[dbInfo]] = await pool.execute(`
+    SELECT
+      DATABASE() AS database_name,
+      COUNT(*) AS total_properties
+    FROM properties
+  `);
+
+  console.log("🔥 API DATABASE:", dbInfo);
+
+  const [allProperties] = await pool.execute(`
+    SELECT id, title, status
+    FROM properties
+    ORDER BY id
+  `);
+
+  console.log("🔥 API PROPERTIES:", allProperties);
+
   const conditions = [];
   const values = [];
 
-  if (status) {
+  if (status && status !== "all") {
     conditions.push("p.status = ?");
     values.push(status);
   }
 
   if (search) {
     conditions.push(`
-            (
-                p.title LIKE ?
-                OR p.description LIKE ?
-                OR p.address LIKE ?
-                OR p.city LIKE ?
-            )
-        `);
+      (
+        p.title LIKE ?
+        OR p.description LIKE ?
+        OR p.address LIKE ?
+        OR p.city LIKE ?
+      )
+    `);
 
     const searchValue = `%${search}%`;
 
     values.push(searchValue, searchValue, searchValue, searchValue);
   }
 
-  if (city) {
+  if (city && city !== "all") {
     conditions.push("p.city = ?");
     values.push(city);
   }
 
-  if (propertyType) {
+  if (propertyType && propertyType !== "all") {
     conditions.push("p.property_type = ?");
     values.push(propertyType);
   }
 
-  if (listingType) {
+  if (listingType && listingType !== "all") {
     conditions.push("p.listing_type = ?");
     values.push(listingType);
   }
 
   if (minPrice !== "" && minPrice !== undefined) {
-    conditions.push("p.price >= ?");
-    values.push(Number(minPrice));
+    const min = Number(minPrice);
+
+    if (!Number.isNaN(min)) {
+      conditions.push("p.price >= ?");
+      values.push(min);
+    }
   }
 
   if (maxPrice !== "" && maxPrice !== undefined) {
-    conditions.push("p.price <= ?");
-    values.push(Number(maxPrice));
+    const max = Number(maxPrice);
+
+    if (!Number.isNaN(max)) {
+      conditions.push("p.price <= ?");
+      values.push(max);
+    }
   }
 
   if (bedrooms !== "" && bedrooms !== undefined) {
-    conditions.push("p.bedrooms >= ?");
-    values.push(Number(bedrooms));
+    const bedroomCount = Number(bedrooms);
+
+    if (!Number.isNaN(bedroomCount)) {
+      conditions.push("p.bedrooms >= ?");
+      values.push(bedroomCount);
+    }
   }
 
-  if (featured !== "" && featured !== undefined) {
+  if (featured !== "" && featured !== undefined && featured !== "all") {
     conditions.push("p.featured = ?");
+
     values.push(
       featured === true ||
         featured === "true" ||
@@ -91,10 +123,10 @@ const getAllProperties = async ({
 
   const [countRows] = await pool.execute(
     `
-        SELECT COUNT(*) AS total
-        FROM properties p
-        ${whereClause}
-        `,
+      SELECT COUNT(*) AS total
+      FROM properties p
+      ${whereClause}
+    `,
     countValues,
   );
 
@@ -102,7 +134,7 @@ const getAllProperties = async ({
 
   const [properties] = await pool.execute(
     `
-    SELECT
+      SELECT
         p.id,
         p.agent_id,
         p.title,
@@ -129,19 +161,20 @@ const getAllProperties = async ({
         u.email AS agent_email,
         u.phone AS agent_phone
 
-    FROM properties p
+      FROM properties p
 
-    LEFT JOIN agents a
+      LEFT JOIN agents a
         ON p.agent_id = a.id
 
-    LEFT JOIN users u
+      LEFT JOIN users u
         ON a.user_id = u.id
 
-    ${whereClause}
+      ${whereClause}
 
-    ORDER BY p.created_at DESC
+      ORDER BY p.created_at DESC
 
-    LIMIT ${pageLimit} OFFSET ${offset}
+      LIMIT ${pageLimit}
+      OFFSET ${offset}
     `,
     values,
   );
@@ -160,51 +193,44 @@ const getAllProperties = async ({
 const getPropertyById = async (id) => {
   const [rows] = await pool.execute(
     `
-        SELECT
-            p.id,
-            p.agent_id,
-            p.title,
-            p.description,
-            p.property_type,
-            p.listing_type,
-            p.price,
-            p.bedrooms,
-            p.bathrooms,
-            p.area,
-            p.address,
-            p.city,
-            p.state,
-            p.country,
-            p.latitude,
-            p.longitude,
-            p.status,
-            p.featured,
-            p.created_at,
-            p.updated_at,
-
-            a.agency_name,
-            a.bio AS agent_bio,
-            a.experience AS agent_experience,
-            a.location AS agent_location,
-
-            u.id AS agent_user_id,
-            u.name AS agent_name,
-            u.email AS agent_email,
-            u.phone AS agent_phone,
-            u.profile_image AS agent_profile_image
-
-        FROM properties p
-
-        LEFT JOIN agents a
-            ON p.agent_id = a.id
-
-        LEFT JOIN users u
-            ON a.user_id = u.id
-
-        WHERE p.id = ?
-
-        LIMIT 1
-        `,
+      SELECT
+        p.id,
+        p.agent_id,
+        p.title,
+        p.description,
+        p.property_type,
+        p.listing_type,
+        p.price,
+        p.bedrooms,
+        p.bathrooms,
+        p.area,
+        p.address,
+        p.city,
+        p.state,
+        p.country,
+        p.latitude,
+        p.longitude,
+        p.status,
+        p.featured,
+        p.created_at,
+        p.updated_at,
+        a.agency_name,
+        a.bio AS agent_bio,
+        a.experience AS agent_experience,
+        a.location AS agent_location,
+        u.id AS agent_user_id,
+        u.name AS agent_name,
+        u.email AS agent_email,
+        u.phone AS agent_phone,
+        u.profile_image AS agent_profile_image
+      FROM properties p
+      LEFT JOIN agents a
+        ON p.agent_id = a.id
+      LEFT JOIN users u
+        ON a.user_id = u.id
+      WHERE p.id = ?
+      LIMIT 1
+      `,
     [id],
   );
 
@@ -214,15 +240,15 @@ const getPropertyById = async (id) => {
 
   const [images] = await pool.execute(
     `
-        SELECT
-            id,
-            image_url,
-            is_primary,
-            created_at
-        FROM property_images
-        WHERE property_id = ?
-        ORDER BY is_primary DESC, id ASC
-        `,
+      SELECT
+        id,
+        image_url,
+        is_primary,
+        created_at
+      FROM property_images
+      WHERE property_id = ?
+      ORDER BY is_primary DESC, id ASC
+      `,
     [id],
   );
 
@@ -253,28 +279,28 @@ const createProperty = async ({
 }) => {
   const [result] = await pool.execute(
     `
-        INSERT INTO properties
-        (
-            agent_id,
-            title,
-            description,
-            property_type,
-            listing_type,
-            price,
-            bedrooms,
-            bathrooms,
-            area,
-            address,
-            city,
-            state,
-            country,
-            latitude,
-            longitude,
-            status,
-            featured
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
+      INSERT INTO properties
+      (
+        agent_id,
+        title,
+        description,
+        property_type,
+        listing_type,
+        price,
+        bedrooms,
+        bathrooms,
+        area,
+        address,
+        city,
+        state,
+        country,
+        latitude,
+        longitude,
+        status,
+        featured
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
     [
       agent_id || null,
       title,
@@ -342,11 +368,10 @@ const updateProperty = async (id, data) => {
 
   const [result] = await pool.execute(
     `
-        UPDATE properties
-        SET
-            ${updates.join(", ")}
-        WHERE id = ?
-        `,
+      UPDATE properties
+      SET ${updates.join(", ")}
+      WHERE id = ?
+      `,
     values,
   );
 
@@ -360,9 +385,9 @@ const updateProperty = async (id, data) => {
 const deleteProperty = async (id) => {
   const [result] = await pool.execute(
     `
-        DELETE FROM properties
-        WHERE id = ?
-        `,
+      DELETE FROM properties
+      WHERE id = ?
+      `,
     [id],
   );
 
@@ -373,18 +398,18 @@ const getPropertiesByAgent = async (agentId) => {
   const [rows] = await pool.execute(
     `
         SELECT
-            p.id,
-            p.title,
-            p.property_type,
-            p.listing_type,
-            p.price,
-            p.bedrooms,
-            p.bathrooms,
-            p.area,
-            p.city,
-            p.status,
-            p.featured,
-            p.created_at
+          p.id,
+          p.title,
+          p.property_type,
+          p.listing_type,
+          p.price,
+          p.bedrooms,
+          p.bathrooms,
+          p.area,
+          p.city,
+          p.status,
+          p.featured,
+          p.created_at
         FROM properties p
         WHERE p.agent_id = ?
         ORDER BY p.created_at DESC

@@ -1,3 +1,4 @@
+
 INSERT INTO users
 (name, email, password, phone, role)
 VALUES
@@ -23,6 +24,7 @@ VALUES
     'user'
 );
 
+
 INSERT INTO agents
 (user_id, agency_name, bio, experience, location)
 VALUES
@@ -33,6 +35,7 @@ VALUES
     5,
     'Surat'
 );
+
 
 INSERT INTO properties
 (
@@ -120,28 +123,134 @@ VALUES
     'India',
     'Available',
     FALSE
+),
+(
+    1,
+    'Premium 3 BHK Flat',
+    'Spacious premium apartment with modern kitchen, balcony and covered parking.',
+    'Apartment',
+    'Sale',
+    6800000,
+    3,
+    2,
+    1550,
+    'Piplod',
+    'Surat',
+    'Gujarat',
+    'India',
+    'Available',
+    TRUE
+),
+(
+    1,
+    'Elegant 5 BHK Villa',
+    'Large luxury villa with landscaped garden, spacious bedrooms and private parking.',
+    'Villa',
+    'Sale',
+    18500000,
+    5,
+    4,
+    3600,
+    'City Light',
+    'Surat',
+    'Gujarat',
+    'India',
+    'Available',
+    TRUE
+),
+(
+    1,
+    'Affordable 1 BHK Apartment',
+    'Affordable and well-connected apartment ideal for individuals and small families.',
+    'Apartment',
+    'Sale',
+    3200000,
+    1,
+    1,
+    750,
+    'Katargam',
+    'Surat',
+    'Gujarat',
+    'India',
+    'Available',
+    FALSE
+),
+(
+    1,
+    'Retail Shop Space',
+    'Prime commercial shop located in a busy market area with excellent customer visibility.',
+    'Shop',
+    'Rent',
+    35000,
+    0,
+    1,
+    650,
+    'Varachha Road',
+    'Surat',
+    'Gujarat',
+    'India',
+    'Available',
+    FALSE
+),
+(
+    1,
+    'Spacious 4 BHK Residence',
+    'Well-designed family residence with large living spaces and modern amenities.',
+    'Apartment',
+    'Sale',
+    9800000,
+    4,
+    3,
+    2200,
+    'Athwa',
+    'Surat',
+    'Gujarat',
+    'India',
+    'Sold',
+    TRUE
+),
+(
+    1,
+    'Corporate Office Building',
+    'Modern commercial office building suitable for corporate companies and businesses.',
+    'Office',
+    'Sale',
+    22000000,
+    0,
+    4,
+    4200,
+    'Dumas Road',
+    'Surat',
+    'Gujarat',
+    'India',
+    'Available',
+    TRUE
 );
+
 
 INSERT INTO property_images
 (property_id, image_url, is_primary)
 VALUES
-(
-    1,
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c',
-    TRUE
-),
-(
-    2,
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-    TRUE
-),
-(
-    3,
-    'https://images.unsplash.com/photo-1497366754035-f200968a6e72',
-    TRUE
-),
-(
-    4,
-    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3',
-    TRUE
-);
+(1, 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c', TRUE),
+(2, 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c', TRUE),
+(3, 'https://images.unsplash.com/photo-1497366754035-f200968a6e72', TRUE),
+(4, 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3', TRUE),
+(5, 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d', TRUE),
+(6, 'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde', TRUE),
+(7, 'https://images.unsplash.com/photo-1600585154526-990dced4db0d', TRUE),
+(8, 'https://images.unsplash.com/photo-1497366811353-6870744d04b2', TRUE),
+(9, 'https://images.unsplash.com/photo-1600607688969-a5bfcd646154', TRUE),
+(10, 'https://images.unsplash.com/photo-1497366216548-37526070297c', TRUE);
+
+
+SELECT id, name, email, role
+FROM users;
+
+SELECT id, user_id, agency_name
+FROM agents;
+
+SELECT id, title, city, status, price
+FROM properties;
+
+SELECT id, property_id, image_url
+FROM property_images;

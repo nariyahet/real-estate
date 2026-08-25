@@ -9,13 +9,19 @@ const {
   getMyProperties,
 } = require("../controllers/propertyController");
 
-const { protect } = require("../middleware/authMiddleware");
+const {
+  protect,
+} = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
 router.get("/", getProperties);
 
-router.get("/agent/my-properties", protect, getMyProperties);
+router.get(
+  "/agent/my-properties",
+  protect,
+  getMyProperties
+);
 
 router.get("/:id", getProperty);
 

@@ -49,11 +49,7 @@ function Login() {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      if (user.role === "admin") {
-        navigate("/dashboard", { replace: true });
-      } else {
-        navigate("/properties", { replace: true });
-      }
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error("Login Error:", err);
 

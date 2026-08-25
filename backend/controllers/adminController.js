@@ -195,7 +195,8 @@ const updateUserRole = async (req, res) => {
       if (!agentRows[0]) {
         await connection.execute(
           `
-          INSERT INTO agents (
+          INSERT INTO agents
+          (
             user_id,
             agency_name,
             bio,
@@ -247,7 +248,8 @@ const getAllAdminProperties = async (req, res) => {
       SELECT
         p.*,
         u.name AS agent_name,
-        u.email AS agent_email
+        u.email AS agent_email,
+        u.phone AS agent_phone
       FROM properties p
       LEFT JOIN agents a ON p.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
@@ -332,12 +334,33 @@ const deleteAdminProperty = async (req, res) => {
       });
     }
 
+    const propertyId = Number(id);
+
+    const [imageRows] = await pool.execute(
+      `
+      SELECT id
+      FROM property_images
+      WHERE property_id = ?
+      `,
+      [propertyId],
+    );
+
+    if (imageRows.length > 0) {
+      await pool.execute(
+        `
+        DELETE FROM property_images
+        WHERE property_id = ?
+        `,
+        [propertyId],
+      );
+    }
+
     const [result] = await pool.execute(
       `
       DELETE FROM properties
       WHERE id = ?
       `,
-      [Number(id)],
+      [propertyId],
     );
 
     if (result.affectedRows === 0) {
