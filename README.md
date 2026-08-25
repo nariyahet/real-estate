@@ -1,65 +1,51 @@
 # 🏠 Real Estate Management System
 
-A full-stack **Real Estate Management System** built to manage users, agents, properties, authentication, and administrative operations through a modern web application.
+A full-stack **Real Estate Management System** built with React.js, Node.js, Express.js, and MySQL.
 
-The project uses **React.js** for the frontend, **Node.js + Express.js** for the backend, and **MySQL** for database management.
-
----
+The application provides a structured platform for managing properties, users, agents, authentication, and property-related data through a modern web interface and RESTful APIs.
 
 ## 🚀 Features
 
-### 🔐 Authentication & Security
+### 👤 Authentication
 
-* User login and registration
+* User registration and login
+* Secure password hashing with bcrypt
 * JWT-based authentication
-* Password hashing with bcrypt
-* Protected routes
-* Role-based authorization
-* Admin-only access control
-* Automatic token expiration
-* Secure environment variable configuration
+* Protected API routes
+* User authentication middleware
 
-### 📊 Admin Dashboard
+### 🏘️ Property Management
 
-* Dashboard statistics
-* Total users overview
-* Total agents overview
-* Property statistics
-* Administrative management interface
-
-### 👥 User Management
-
-* View registered users
-* View user information
-* Manage user roles
-* Role-based access control
-
-### 🧑‍💼 Agent Management
-
-* View all agents
-* Agent information management
-* Agent-specific property management
-
-### 🏡 Property Management
-
-* View properties
-* Property status management
-* Property approval/rejection
+* View available properties
+* View property details
+* Add new properties
+* Update properties
 * Delete properties
-* Property information management
+* Agent-specific property management
+* Property search/filter support
 
-### 🎨 Frontend
+### 👨‍💼 Agent Management
 
-* Responsive React interface
-* React Router navigation
-* Protected pages
-* Login interface
-* Dashboard interface
-* Users management page
-* Agents management page
-* Properties management page
+* Agent information
+* Agent property management
+* Protected agent operations
+* Permission-based property operations
 
----
+### 👨‍💻 Admin Management
+
+* Admin authentication
+* User management APIs
+* Property management capabilities
+* Protected administrative routes
+
+### 🗄️ Database
+
+* MySQL relational database
+* User management
+* Property management
+* Database schema
+* Seed/demo data
+* Connection pooling with `mysql2`
 
 ## 🛠️ Tech Stack
 
@@ -70,179 +56,85 @@ The project uses **React.js** for the frontend, **Node.js + Express.js** for the
 * JavaScript
 * HTML5
 * CSS3
-* React Router
 * Axios
+* React Router
 
 ### Backend
 
 * Node.js
 * Express.js
+* REST API
 * JWT
 * bcryptjs
 * CORS
 * dotenv
+* MySQL2
 
 ### Database
 
 * MySQL
-* mysql2
 
 ### Development Tools
 
-* VS Code
 * Git
 * GitHub
-* ESLint
+* VS Code
 * npm
-
----
 
 ## 📁 Project Structure
 
 ```text
 REAL-ESTATE/
 │
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── pages/
+│   │   ├── assets/
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   ├── index.css
+│   │   └── main.jsx
+│   │
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.js
+│
 ├── backend/
 │   ├── config/
-│   │   └── db.js
-│   │
 │   ├── controllers/
-│   │   ├── adminController.js
-│   │   ├── authController.js
-│   │   └── propertyController.js
-│   │
 │   ├── middleware/
-│   │   └── authMiddleware.js
-│   │
 │   ├── models/
-│   │   ├── propertyModel.js
-│   │   └── userModel.js
-│   │
 │   ├── routes/
-│   │   ├── adminRoutes.js
-│   │   ├── authRoutes.js
-│   │   └── propertyRoutes.js
-│   │
-│   ├── utils/
-│   │   └── generateToken.js
-│   │
-│   ├── .env.example
-│   ├── .gitignore
-│   ├── package.json
-│   └── server.js
+│   ├── server.js
+│   ├── addProperties.js
+│   └── addPropertyImages.js
 │
 ├── database/
 │   ├── schema.sql
 │   └── seed.sql
 │
-└── frontend/
-    ├── public/
-    ├── src/
-    │   ├── pages/
-    │   │   ├── Agents.jsx
-    │   │   ├── Dashboard.jsx
-    │   │   ├── Login.jsx
-    │   │   ├── Properties.jsx
-    │   │   └── Users.jsx
-    │   │
-    │   ├── App.jsx
-    │   ├── App.css
-    │   ├── index.css
-    │   └── main.jsx
-    │
-    ├── package.json
-    └── vite.config.js
+├── .gitignore
+└── README.md
 ```
-
----
 
 ## ⚙️ Installation
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/nariyahet/real-estate-management-system.git
+git clone https://github.com/nariyahet/real-estate.git
 ```
 
-### 2. Navigate to the project
+### 2. Open the project
 
 ```bash
-cd real-estate-management-system
+cd real-estate
 ```
 
----
+## 🎨 Frontend Setup
 
-## 🔧 Backend Setup
-
-Navigate to the backend:
-
-```bash
-cd backend
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Create a `.env` file:
-
-```env
-PORT=5000
-
-DB_HOST=localhost
-DB_USER=your_database_user
-DB_PASSWORD=your_database_password
-DB_NAME=real_estate
-DB_PORT=3306
-
-JWT_SECRET=your_jwt_secret
-```
-
-> Never commit your real `.env` file to GitHub.
-
-Start the backend:
-
-```bash
-node server.js
-```
-
-Backend will run on:
-
-```text
-http://localhost:5000
-```
-
-Health check:
-
-```text
-http://localhost:5000/api/health
-```
-
----
-
-## 🗄️ Database Setup
-
-Create the MySQL database using:
-
-```text
-database/schema.sql
-```
-
-Then insert demo/initial data using:
-
-```text
-database/seed.sql
-```
-
-Make sure your MySQL credentials match the `.env` configuration.
-
----
-
-## 💻 Frontend Setup
-
-Open another terminal and navigate to:
+Go to the frontend directory:
 
 ```bash
 cd frontend
@@ -260,165 +152,143 @@ Start the development server:
 npm run dev
 ```
 
-The frontend will normally be available at:
+The Vite development server will provide a local URL in the terminal.
 
-```text
-http://localhost:5174
-```
+## ⚙️ Backend Setup
 
----
-
-## 🔑 Demo Accounts
-
-For local development, demo accounts can be created through the provided database seed file.
-
-Example roles:
-
-| Role  | Access                      |
-| ----- | --------------------------- |
-| Admin | Full administrative access  |
-| Agent | Agent-related functionality |
-| User  | Standard user access        |
-
-> Use your local database credentials and seeded accounts when testing the application.
-
----
-
-## 🔒 Security
-
-This project implements several security practices:
-
-* JWT authentication
-* bcrypt password hashing
-* Role-based authorization
-* Protected API routes
-* Environment variables for secrets
-* `.env` excluded from Git
-* Generic authentication error messages
-* Production-safe API error responses
-* CORS configuration
-* Dependency vulnerability auditing
-
-The backend currently passes:
-
-```text
-npm audit
-found 0 vulnerabilities
-```
-
----
-
-## 🧪 Development Checks
-
-Frontend lint:
+Open another terminal and go to the backend directory:
 
 ```bash
-npm run lint
+cd backend
 ```
 
-Production build:
+Install dependencies:
 
 ```bash
-npm run build
+npm install
 ```
 
-Backend dependency security check:
+Create a `.env` file inside the `backend` directory.
+
+Example:
+
+```env
+PORT=5000
+
+DB_HOST=your_database_host
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+DB_NAME=real_estate_db
+DB_PORT=3306
+
+JWT_SECRET=your_jwt_secret
+```
+
+Then start the backend:
 
 ```bash
-npm audit
+npm start
 ```
 
----
+For development with nodemon:
 
-## 📡 API Structure
+```bash
+npm run dev
+```
 
-### Authentication
+## 🗄️ Database Setup
+
+Create a MySQL database:
+
+```sql
+CREATE DATABASE real_estate_db;
+```
+
+Then execute:
 
 ```text
-POST /api/auth/login
-POST /api/auth/register
+database/schema.sql
 ```
 
-### Admin
+After creating the tables, you can use:
 
 ```text
-GET    /api/admin/dashboard-stats
-GET    /api/admin/users
-GET    /api/admin/agents
-PUT    /api/admin/users/:id/role
-GET    /api/admin/properties
-PUT    /api/admin/properties/:id/status
-DELETE /api/admin/properties/:id
+database/seed.sql
 ```
 
-### Health
+to insert demo/initial data.
+
+## 🔐 Environment Variables
+
+For security, environment variables are **not included in the GitHub repository**.
+
+Create your own:
 
 ```text
-GET /api/health
+backend/.env
 ```
 
----
+and configure your database credentials and JWT secret.
 
-## 🌐 Current Development URLs
+Never commit your real `.env` file to GitHub.
 
-Frontend:
+## 🔌 API
 
-```text
-http://localhost:5174
-```
+The backend exposes RESTful API endpoints for:
 
-Backend:
+* Authentication
+* User management
+* Property management
+* Agent property operations
+* Administrative operations
+
+The backend runs locally on:
 
 ```text
 http://localhost:5000
 ```
 
-API:
+API routes use the `/api` prefix.
 
-```text
-http://localhost:5000/api
-```
+## 🔒 Security
 
-> These are local development URLs. Production URLs will be added after deployment.
+The project includes:
 
----
+* Password hashing using bcrypt
+* JWT authentication
+* Protected routes
+* Role/permission checks
+* Environment variables for sensitive configuration
+* CORS configuration
 
-## 📈 Future Improvements
+## 📱 Responsive Design
 
-Planned improvements may include:
+The frontend is designed to provide a responsive experience across desktop and smaller screen sizes.
 
-* Property image uploads
-* Advanced property search and filtering
-* Property details page
-* Agent dashboard
-* User profile management
-* Favorites/wishlist
-* Property inquiry system
-* Email notifications
-* Cloud image storage
-* Production deployment
-* Custom domain
-* Analytics
-* Advanced admin reports
+## 🎯 Project Purpose
 
----
+This project was developed as a **full-stack web development portfolio project** to demonstrate practical experience with:
 
-## 👨‍💻 Author
+* React.js
+* Node.js
+* Express.js
+* MySQL
+* REST APIs
+* Authentication
+* CRUD operations
+* Database integration
+* Git/GitHub
+
+## 👨‍💻 Developer
 
 **Het Nariya**
 
-Software Developer | Full Stack Developer
+Full Stack Web Developer
 
-### Technologies
+### Skills Demonstrated
 
-React.js • Node.js • Express.js • MySQL • JavaScript • HTML5 • CSS3 • Git • GitHub
-
----
+`React.js` · `Node.js` · `Express.js` · `JavaScript` · `MySQL` · `REST API` · `JWT` · `Git` · `GitHub`
 
 ## 📄 License
 
-This project is created for learning, portfolio, and development purposes.
-
----
-
-⭐ If you find this project useful, consider giving it a star on GitHub.
+This project is created for educational, portfolio, and demonstration purposes.
