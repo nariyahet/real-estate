@@ -3,20 +3,20 @@ const { pool } = require("../config/db");
 const findUserByEmail = async (email) => {
   const [rows] = await pool.execute(
     `
-        SELECT
-            id,
-            name,
-            email,
-            password,
-            phone,
-            role,
-            profile_image,
-            created_at,
-            updated_at
-        FROM users
-        WHERE email = ?
-        LIMIT 1
-        `,
+      SELECT
+        id,
+        name,
+        email,
+        password,
+        phone,
+        role,
+        profile_image,
+        created_at,
+        updated_at
+      FROM users
+      WHERE email = ?
+      LIMIT 1
+    `,
     [email],
   );
 
@@ -26,19 +26,19 @@ const findUserByEmail = async (email) => {
 const findUserById = async (id) => {
   const [rows] = await pool.execute(
     `
-        SELECT
-            id,
-            name,
-            email,
-            phone,
-            role,
-            profile_image,
-            created_at,
-            updated_at
-        FROM users
-        WHERE id = ?
-        LIMIT 1
-        `,
+      SELECT
+        id,
+        name,
+        email,
+        phone,
+        role,
+        profile_image,
+        created_at,
+        updated_at
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+    `,
     [id],
   );
 
@@ -48,16 +48,16 @@ const findUserById = async (id) => {
 const createUser = async ({ name, email, password, phone, role = "user" }) => {
   const [result] = await pool.execute(
     `
-        INSERT INTO users
-        (
-            name,
-            email,
-            password,
-            phone,
-            role
-        )
-        VALUES (?, ?, ?, ?, ?)
-        `,
+      INSERT INTO users
+      (
+        name,
+        email,
+        password,
+        phone,
+        role
+      )
+      VALUES (?, ?, ?, ?, ?)
+    `,
     [name, email, password, phone || null, role],
   );
 
@@ -67,13 +67,13 @@ const createUser = async ({ name, email, password, phone, role = "user" }) => {
 const updateUser = async (id, { name, phone, profile_image }) => {
   const [result] = await pool.execute(
     `
-        UPDATE users
-        SET
-            name = ?,
-            phone = ?,
-            profile_image = ?
-        WHERE id = ?
-        `,
+      UPDATE users
+      SET
+        name = ?,
+        phone = ?,
+        profile_image = ?
+      WHERE id = ?
+    `,
     [name, phone || null, profile_image || null, id],
   );
 
