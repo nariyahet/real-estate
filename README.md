@@ -1,10 +1,33 @@
 # 🏠 Real Estate Management System
 
-A full-stack **Real Estate Management System** built with React.js, Node.js, Express.js, and MySQL.
+A modern full-stack **Real Estate Management System** built with **React.js, Node.js, Express.js, and MySQL**.
 
-The application provides a structured platform for managing properties, users, agents, authentication, and property-related data through a modern web interface and RESTful APIs.
+The application provides a structured platform for managing properties, users, agents, authentication, and property-related data through a modern responsive interface and RESTful APIs.
 
-## 🚀 Features
+---
+
+## 🚀 Live Demo
+
+🌐 **Live Website:**
+https://real-estate-eight-ochre.vercel.app
+
+🔗 **GitHub Repository:**
+https://github.com/nariyahet/real-estate
+
+### 🔐 Demo Login
+
+Use the demo account below to explore the application:
+
+```text
+Email: demo@realestate.com
+Password: Demo@123
+```
+
+> **Note:** Demo credentials are provided for portfolio and client demonstration purposes.
+
+---
+
+## ✨ Features
 
 ### 👤 Authentication
 
@@ -12,31 +35,38 @@ The application provides a structured platform for managing properties, users, a
 * Secure password hashing with bcrypt
 * JWT-based authentication
 * Protected API routes
-* User authentication middleware
+* Authentication middleware
+* Persistent login session
+* User profile management
 
 ### 🏘️ Property Management
 
 * View available properties
-* View property details
+* View detailed property information
 * Add new properties
 * Update properties
 * Delete properties
 * Agent-specific property management
-* Property search/filter support
+* Property search and filtering
+* Property image support
+* Property CRUD operations
 
 ### 👨‍💼 Agent Management
 
 * Agent information
-* Agent property management
+* Agent-specific property management
 * Protected agent operations
 * Permission-based property operations
+* Agent property ownership validation
 
 ### 👨‍💻 Admin Management
 
 * Admin authentication
+* Protected administrative routes
 * User management APIs
 * Property management capabilities
-* Protected administrative routes
+* Role-based authorization
+* Administrative property operations
 
 ### 🗄️ Database
 
@@ -45,7 +75,17 @@ The application provides a structured platform for managing properties, users, a
 * Property management
 * Database schema
 * Seed/demo data
-* Connection pooling with `mysql2`
+* Connection pooling using `mysql2`
+
+### 📱 Responsive Design
+
+* Responsive layout
+* Desktop support
+* Tablet support
+* Mobile-friendly interface
+* Modern user interface
+
+---
 
 ## 🛠️ Tech Stack
 
@@ -69,10 +109,17 @@ The application provides a structured platform for managing properties, users, a
 * CORS
 * dotenv
 * MySQL2
+* Multer
 
 ### Database
 
 * MySQL
+
+### Deployment
+
+* Vercel — Frontend
+* Render — Backend
+* Aiven — MySQL Database
 
 ### Development Tools
 
@@ -80,6 +127,9 @@ The application provides a structured platform for managing properties, users, a
 * GitHub
 * VS Code
 * npm
+* Postman
+
+---
 
 ## 📁 Project Structure
 
@@ -106,6 +156,7 @@ REAL-ESTATE/
 │   ├── middleware/
 │   ├── models/
 │   ├── routes/
+│   ├── utils/
 │   ├── server.js
 │   ├── addProperties.js
 │   └── addPropertyImages.js
@@ -118,23 +169,27 @@ REAL-ESTATE/
 └── README.md
 ```
 
+---
+
 ## ⚙️ Installation
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/nariyahet/real-estate.git
 ```
 
-### 2. Open the project
+### 2. Open the Project
 
 ```bash
 cd real-estate
 ```
 
+---
+
 ## 🎨 Frontend Setup
 
-Go to the frontend directory:
+Navigate to the frontend directory:
 
 ```bash
 cd frontend
@@ -152,11 +207,13 @@ Start the development server:
 npm run dev
 ```
 
-The Vite development server will provide a local URL in the terminal.
+Vite will provide a local development URL in the terminal.
+
+---
 
 ## ⚙️ Backend Setup
 
-Open another terminal and go to the backend directory:
+Open another terminal and navigate to the backend directory:
 
 ```bash
 cd backend
@@ -170,7 +227,7 @@ npm install
 
 Create a `.env` file inside the `backend` directory.
 
-Example:
+### Environment Configuration
 
 ```env
 PORT=5000
@@ -184,7 +241,7 @@ DB_PORT=3306
 JWT_SECRET=your_jwt_secret
 ```
 
-Then start the backend:
+Start the backend:
 
 ```bash
 npm start
@@ -196,6 +253,8 @@ For development with nodemon:
 npm run dev
 ```
 
+---
+
 ## 🗄️ Database Setup
 
 Create a MySQL database:
@@ -204,37 +263,25 @@ Create a MySQL database:
 CREATE DATABASE real_estate_db;
 ```
 
-Then execute:
+Execute the database schema:
 
 ```text
 database/schema.sql
 ```
 
-After creating the tables, you can use:
+Then insert demo/initial data:
 
 ```text
 database/seed.sql
 ```
 
-to insert demo/initial data.
+The application uses MySQL connection pooling through `mysql2`.
 
-## 🔐 Environment Variables
-
-For security, environment variables are **not included in the GitHub repository**.
-
-Create your own:
-
-```text
-backend/.env
-```
-
-and configure your database credentials and JWT secret.
-
-Never commit your real `.env` file to GitHub.
+---
 
 ## 🔌 API
 
-The backend exposes RESTful API endpoints for:
+The backend provides RESTful API endpoints for:
 
 * Authentication
 * User management
@@ -242,53 +289,162 @@ The backend exposes RESTful API endpoints for:
 * Agent property operations
 * Administrative operations
 
-The backend runs locally on:
+### Local Backend
 
 ```text
 http://localhost:5000
 ```
 
-API routes use the `/api` prefix.
+### Health Check
+
+```text
+http://localhost:5000/api/health
+```
+
+### Production Backend
+
+```text
+https://real-estate-backend-kved.onrender.com
+```
+
+### Production Health Check
+
+```text
+https://real-estate-backend-kved.onrender.com/api/health
+```
+
+All API routes use the `/api` prefix.
+
+---
+
+## 🔐 Environment Variables & Security
+
+Sensitive environment variables are **not included in this repository**.
+
+Create:
+
+```text
+backend/.env
+```
+
+and configure:
+
+```env
+DB_HOST=your_database_host
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+DB_NAME=real_estate_db
+DB_PORT=3306
+JWT_SECRET=your_jwt_secret
+```
+
+### Security Practices
+
+* Never commit `.env` files
+* Never expose database credentials
+* Never expose JWT secrets
+* Use environment variables for sensitive configuration
+* Use bcrypt for password hashing
+* Use JWT for authentication
+* Protect private API routes
+
+---
+
+## 🌐 Deployment
+
+The project is deployed using a separated frontend/backend architecture.
+
+### Frontend
+
+**Vercel**
+
+```text
+https://real-estate-eight-ochre.vercel.app
+```
+
+### Backend
+
+**Render**
+
+```text
+https://real-estate-backend-kved.onrender.com
+```
+
+### Database
+
+**Aiven MySQL**
+
+The production backend connects to the hosted MySQL database through secure environment variables.
+
+---
 
 ## 🔒 Security
 
-The project includes:
+The application implements several security practices:
 
-* Password hashing using bcrypt
-* JWT authentication
-* Protected routes
-* Role/permission checks
-* Environment variables for sensitive configuration
+* Password hashing with bcrypt
+* JWT-based authentication
+* Protected API routes
+* Role-based authorization
+* User ownership validation
+* Environment variables for secrets
 * CORS configuration
+* Server-side validation
+* Database parameterized queries
+
+---
 
 ## 📱 Responsive Design
 
-The frontend is designed to provide a responsive experience across desktop and smaller screen sizes.
+The frontend is designed to provide a responsive experience across:
+
+* Desktop
+* Laptop
+* Tablet
+* Mobile devices
+
+---
 
 ## 🎯 Project Purpose
 
-This project was developed as a **full-stack web development portfolio project** to demonstrate practical experience with:
+This project was developed as a **full-stack web development portfolio project** to demonstrate practical experience in building and deploying a complete web application.
+
+### Skills Demonstrated
 
 * React.js
 * Node.js
 * Express.js
+* JavaScript
 * MySQL
 * REST APIs
-* Authentication
-* CRUD operations
-* Database integration
-* Git/GitHub
+* JWT Authentication
+* bcrypt
+* CRUD Operations
+* Database Integration
+* Role-Based Authorization
+* Responsive Web Design
+* Git
+* GitHub
+* Vercel
+* Render
+* API Integration
+
+---
 
 ## 👨‍💻 Developer
 
-**Het Nariya**
+### Het Nariya
 
-Full Stack Web Developer
+**Full Stack Web Developer**
 
-### Skills Demonstrated
+Building modern, responsive, and scalable web applications using JavaScript technologies.
 
-`React.js` · `Node.js` · `Express.js` · `JavaScript` · `MySQL` · `REST API` · `JWT` · `Git` · `GitHub`
+### Technical Skills
+
+`React.js` · `Node.js` · `Express.js` · `JavaScript` · `MySQL` · `REST API` · `JWT` · `HTML5` · `CSS3` · `Git` · `GitHub`
+
+---
 
 ## 📄 License
 
-This project is created for educational, portfolio, and demonstration purposes.
+This project was created for **educational, portfolio, and demonstration purposes**.
