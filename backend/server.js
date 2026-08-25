@@ -4,6 +4,8 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+const { testDatabaseConnection } = require("./config/db");
+
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -27,9 +29,11 @@ app.use(express.json());
 
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const propertyRoutes = require("./routes/propertyRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/properties", propertyRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -62,16 +66,16 @@ app.use((err, req, res, next) => {
   });
 });
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   console.log("");
-  console.log("");
-  console.log("   REAL ESTATE BACKEND SERVER");
+  console.log("REAL ESTATE BACKEND SERVER");
   console.log("");
   console.log(`Server running on port ${PORT}`);
   console.log(`API: http://localhost:${PORT}`);
   console.log(`Health: http://localhost:${PORT}/api/health`);
   console.log("");
-  console.log("");
+
+  await testDatabaseConnection();
 });
 
 server.on("error", (error) => {

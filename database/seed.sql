@@ -1,26 +1,24 @@
-USE real_estate_db;
-
 INSERT INTO users
 (name, email, password, phone, role)
 VALUES
 (
     'Admin User',
     'admin@realestate.com',
-    '$2b$10$exampleAdminHashedPassword',
+    '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     '+91 9000000001',
     'admin'
 ),
 (
     'John Agent',
     'john@realestate.com',
-    '$2b$10$exampleAgentHashedPassword',
+    '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     '+91 9000000002',
     'agent'
 ),
 (
     'Demo User',
     'user@realestate.com',
-    '$2b$10$exampleUserHashedPassword',
+    '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     '+91 9000000003',
     'user'
 );

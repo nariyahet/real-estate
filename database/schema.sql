@@ -1,8 +1,4 @@
-CREATE DATABASE real_estate_db;
-
-USE real_estate_db;
-
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
@@ -15,12 +11,7 @@ CREATE TABLE users (
         ON UPDATE CURRENT_TIMESTAMP
 );
 
-UPDATE users
-SET password = '$2b$10$zaJX5O08K4xgGdeEvHB4M.RVLqq0H0.CA2ju0q68NYCiE0UvpGrfm'
-WHERE id = 2
-  AND email = 'john@realestate.com';
-
-CREATE TABLE agents (
+CREATE TABLE IF NOT EXISTS agents (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     agency_name VARCHAR(150),
@@ -33,67 +24,12 @@ CREATE TABLE agents (
     CONSTRAINT fk_agents_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    UNIQUE KEY unique_agent_user (user_id)
 );
 
-INSERT INTO agents
-(
-    user_id,
-    agency_name,
-    bio,
-    experience,
-    location,
-    profile_image
-)
-VALUES
-(
-    2,
-    'Surat Prime Realty',
-    'Professional real estate agent helping clients find residential and commercial properties in Surat.',
-    5,
-    'Surat, Gujarat',
-    NULL
-);
-
-SELECT
-    id,
-    agent_id,
-    title,
-    property_type,
-    listing_type,
-    price,
-    city,
-    status
-FROM properties
-ORDER BY id DESC
-LIMIT 5;
-
-SELECT id, name, email, role
-FROM users
-WHERE email = 'john@realestate.com';
-
-SELECT *
-FROM agents
-WHERE user_id = 2;
-
-SELECT id, name, email, role
-FROM users
-WHERE id = 2;
-
-DELETE FROM agents
-WHERE id = 1
-AND user_id = 2;
-
-SELECT *
-FROM agents
-WHERE user_id = 2;
-
-ALTER TABLE agents
-ADD UNIQUE (user_id);
-
-SHOW COLUMNS FROM agents;
-
-CREATE TABLE properties (
+CREATE TABLE IF NOT EXISTS properties (
     id INT AUTO_INCREMENT PRIMARY KEY,
     agent_id INT NULL,
     title VARCHAR(200) NOT NULL,
@@ -105,12 +41,14 @@ CREATE TABLE properties (
         'Office',
         'Shop',
         'Land',
-        'Warehouse') NOT NULL,
+        'Warehouse'
+    ) NOT NULL,
     listing_type ENUM(
         'Sale',
-        'Rent') NOT NULL,		
-	price DECIMAL(15,2) NOT NULL,
-	bedrooms INT DEFAULT 0,
+        'Rent'
+    ) NOT NULL,
+    price DECIMAL(15,2) NOT NULL,
+    bedrooms INT DEFAULT 0,
     bathrooms INT DEFAULT 0,
     area DECIMAL(10,2),
     address VARCHAR(255),
@@ -119,14 +57,13 @@ CREATE TABLE properties (
     country VARCHAR(100) DEFAULT 'India',
     latitude DECIMAL(10,8),
     longitude DECIMAL(11,8),
-
     status ENUM(
         'Available',
         'Sold',
         'Rented',
         'Inactive'
     ) DEFAULT 'Available',
-	featured BOOLEAN DEFAULT FALSE,
+    featured BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -137,7 +74,7 @@ CREATE TABLE properties (
         ON DELETE SET NULL
 );
 
-CREATE TABLE property_images (
+CREATE TABLE IF NOT EXISTS property_images (
     id INT AUTO_INCREMENT PRIMARY KEY,
     property_id INT NOT NULL,
     image_url VARCHAR(500) NOT NULL,
@@ -150,26 +87,28 @@ CREATE TABLE property_images (
         ON DELETE CASCADE
 );
 
-
-CREATE TABLE favorites (
+CREATE TABLE IF NOT EXISTS favorites (
     id INT AUTO_INCREMENT PRIMARY KEY,
-	user_id INT NOT NULL,
+    user_id INT NOT NULL,
     property_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
     UNIQUE KEY unique_favorite (user_id, property_id),
+
     CONSTRAINT fk_favorites_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
         ON DELETE CASCADE,
+
     CONSTRAINT fk_favorites_property
         FOREIGN KEY (property_id)
         REFERENCES properties(id)
         ON DELETE CASCADE
 );
 
-CREATE TABLE inquiries (
+CREATE TABLE IF NOT EXISTS inquiries (
     id INT AUTO_INCREMENT PRIMARY KEY,
-	user_id INT NULL,
+    user_id INT NULL,
     property_id INT NOT NULL,
     agent_id INT NULL,
     name VARCHAR(100) NOT NULL,
@@ -191,14 +130,14 @@ CREATE TABLE inquiries (
         FOREIGN KEY (user_id)
         REFERENCES users(id)
         ON DELETE SET NULL,
+
     CONSTRAINT fk_inquiries_property
         FOREIGN KEY (property_id)
         REFERENCES properties(id)
         ON DELETE CASCADE,
+
     CONSTRAINT fk_inquiries_agent
         FOREIGN KEY (agent_id)
         REFERENCES agents(id)
         ON DELETE SET NULL
 );
-
-DESCRIBE properties;

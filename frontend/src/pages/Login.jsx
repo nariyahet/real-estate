@@ -1,9 +1,7 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 import "./Login.css";
-
-const API_URL = "http://localhost:5000/api";
 
 function Login() {
   const navigate = useNavigate();
@@ -28,23 +26,14 @@ function Login() {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        `${API_URL}/auth/login`,
-        {
-          email: cleanEmail,
-          password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const response = await api.post("/auth/login", {
+        email: cleanEmail,
+        password,
+      });
 
       if (response.data?.success && response.data?.token) {
         const user = response.data.user;
 
-        // Only admin can access admin dashboard
         if (user?.role !== "admin") {
           setError("Access denied. Admin account required.");
           return;
