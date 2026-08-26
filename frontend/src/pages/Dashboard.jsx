@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://real-estate-backend-kved.onrender.com/api";
 
 function Dashboard() {
   const navigate = useNavigate();
