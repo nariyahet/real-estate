@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import "./Agents.css";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://real-estate-backend-kved.onrender.com/api";
 
 function Agents() {
   const [agents, setAgents] = useState([]);
@@ -30,22 +30,23 @@ function Agents() {
         setAgents(response.data.agents || []);
       } else {
         setAgents([]);
+        setError(
+          response.data?.message || "Failed to load agents.",
+        );
       }
     } catch (err) {
       console.error("Agents Error:", err);
 
-      setError(err.response?.data?.message || "Failed to load agents.");
+      setError(
+        err.response?.data?.message || "Failed to load agents.",
+      );
     } finally {
       setLoading(false);
     }
   }, [getHeaders]);
 
   useEffect(() => {
-    const loadAgents = async () => {
-      await fetchAgents();
-    };
-
-    loadAgents();
+    fetchAgents();
   }, [fetchAgents]);
 
   if (loading) {
@@ -97,22 +98,19 @@ function Agents() {
               {agents.map((agent) => (
                 <tr key={agent.agent_id}>
                   <td>{agent.agent_id}</td>
-
                   <td>{agent.name || "-"}</td>
-
                   <td>{agent.email || "-"}</td>
-
                   <td>{agent.phone || "-"}</td>
-
                   <td>
                     <span className="role-badge agent">
                       {agent.role || "agent"}
                     </span>
                   </td>
-
                   <td>
                     {agent.created_at
-                      ? new Date(agent.created_at).toLocaleDateString()
+                      ? new Date(
+                          agent.created_at,
+                        ).toLocaleDateString()
                       : "-"}
                   </td>
                 </tr>
