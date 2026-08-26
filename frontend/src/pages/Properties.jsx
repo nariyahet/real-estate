@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import "./Properties.css";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://real-estate-backend-kved.onrender.com/api";
 
 function Properties() {
   const [properties, setProperties] = useState([]);
@@ -48,13 +48,17 @@ function Properties() {
         setProperties(response.data.properties || []);
       } else {
         setProperties([]);
-        setError(response.data.message || "Failed to load properties.");
+        setError(
+          response.data.message || "Failed to load properties.",
+        );
       }
     } catch (err) {
       console.error("Properties Error:", err);
 
       setProperties([]);
-      setError(err.response?.data?.message || "Failed to load properties.");
+      setError(
+        err.response?.data?.message || "Failed to load properties.",
+      );
     } finally {
       setLoading(false);
     }
@@ -80,17 +84,23 @@ function Properties() {
       if (response.data.success) {
         setProperties((currentProperties) =>
           currentProperties.map((property) =>
-            property.id === propertyId ? { ...property, status } : property,
+            property.id === propertyId
+              ? { ...property, status }
+              : property,
           ),
         );
       } else {
-        setError(response.data.message || "Failed to update property status.");
+        setError(
+          response.data.message ||
+            "Failed to update property status.",
+        );
       }
     } catch (err) {
       console.error("Update Property Status Error:", err);
 
       setError(
-        err.response?.data?.message || "Failed to update property status.",
+        err.response?.data?.message ||
+          "Failed to update property status.",
       );
     } finally {
       setUpdatingId(null);
@@ -119,15 +129,23 @@ function Properties() {
 
       if (response.data.success) {
         setProperties((currentProperties) =>
-          currentProperties.filter((property) => property.id !== propertyId),
+          currentProperties.filter(
+            (property) => property.id !== propertyId,
+          ),
         );
       } else {
-        setError(response.data.message || "Failed to delete property.");
+        setError(
+          response.data.message ||
+            "Failed to delete property.",
+        );
       }
     } catch (err) {
       console.error("Delete Property Error:", err);
 
-      setError(err.response?.data?.message || "Failed to delete property.");
+      setError(
+        err.response?.data?.message ||
+          "Failed to delete property.",
+      );
     } finally {
       setDeletingId(null);
     }
@@ -196,7 +214,11 @@ function Properties() {
           </p>
         </div>
 
-        <button type="button" onClick={fetchProperties} disabled={loading}>
+        <button
+          type="button"
+          onClick={fetchProperties}
+          disabled={loading}
+        >
           ↻ Refresh
         </button>
       </div>
@@ -244,7 +266,9 @@ function Properties() {
               {properties.map((property) => (
                 <tr key={property.id}>
                   <td>
-                    <span className="property-id">#{property.id}</span>
+                    <span className="property-id">
+                      #{property.id}
+                    </span>
                   </td>
 
                   <td>
@@ -256,7 +280,9 @@ function Properties() {
                       {property.city && (
                         <span className="property-location">
                           {property.city}
-                          {property.state ? `, ${property.state}` : ""}
+                          {property.state
+                            ? `, ${property.state}`
+                            : ""}
                         </span>
                       )}
                     </div>
@@ -271,7 +297,9 @@ function Properties() {
                   <td>
                     <span
                       className={`listing-badge ${
-                        property.listing_type === "Sale" ? "sale" : "rent"
+                        property.listing_type === "Sale"
+                          ? "sale"
+                          : "rent"
                       }`}
                     >
                       {property.listing_type || "-"}
@@ -280,7 +308,10 @@ function Properties() {
 
                   <td>
                     <span className="property-price">
-                      {formatPrice(property.price, property.listing_type)}
+                      {formatPrice(
+                        property.price,
+                        property.listing_type,
+                      )}
                     </span>
                   </td>
 
@@ -296,16 +327,27 @@ function Properties() {
                         className={`status-select ${getStatusClass(
                           property.status,
                         )}`}
-                        value={property.status || "Available"}
-                        disabled={updatingId === property.id}
+                        value={
+                          property.status || "Available"
+                        }
+                        disabled={
+                          updatingId === property.id
+                        }
                         onChange={(e) =>
-                          updatePropertyStatus(property.id, e.target.value)
+                          updatePropertyStatus(
+                            property.id,
+                            e.target.value,
+                          )
                         }
                       >
-                        <option value="Available">Available</option>
+                        <option value="Available">
+                          Available
+                        </option>
                         <option value="Sold">Sold</option>
                         <option value="Rented">Rented</option>
-                        <option value="Inactive">Inactive</option>
+                        <option value="Inactive">
+                          Inactive
+                        </option>
                       </select>
                     </td>
                   )}
@@ -315,10 +357,16 @@ function Properties() {
                       <button
                         type="button"
                         className="delete-btn"
-                        disabled={deletingId === property.id}
-                        onClick={() => deleteProperty(property.id)}
+                        disabled={
+                          deletingId === property.id
+                        }
+                        onClick={() =>
+                          deleteProperty(property.id)
+                        }
                       >
-                        {deletingId === property.id ? "Deleting..." : "Delete"}
+                        {deletingId === property.id
+                          ? "Deleting..."
+                          : "Delete"}
                       </button>
                     </td>
                   )}
