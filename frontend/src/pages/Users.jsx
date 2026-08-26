@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import "./Users.css";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://real-estate-backend-kved.onrender.com/api";
 
 function Users() {
   const [users, setUsers] = useState([]);
@@ -32,23 +32,23 @@ function Users() {
         setUsers(response.data.users || []);
       } else {
         setUsers([]);
-        setError(response.data.message || "Failed to load users.");
+        setError(
+          response.data.message || "Failed to load users.",
+        );
       }
     } catch (err) {
       console.error("Users Error:", err);
 
-      setError(err.response?.data?.message || "Failed to load users.");
+      setError(
+        err.response?.data?.message || "Failed to load users.",
+      );
     } finally {
       setLoading(false);
     }
   }, [getHeaders]);
 
   useEffect(() => {
-    const loadUsers = async () => {
-      await fetchUsers();
-    };
-
-    loadUsers();
+    fetchUsers();
   }, [fetchUsers]);
 
   const updateUserRole = async (userId, role) => {
@@ -71,12 +71,18 @@ function Users() {
           ),
         );
       } else {
-        setError(response.data.message || "Failed to update user role.");
+        setError(
+          response.data.message ||
+            "Failed to update user role.",
+        );
       }
     } catch (err) {
       console.error("Update User Role Error:", err);
 
-      setError(err.response?.data?.message || "Failed to update user role.");
+      setError(
+        err.response?.data?.message ||
+          "Failed to update user role.",
+      );
     } finally {
       setUpdatingId(null);
     }
@@ -86,13 +92,10 @@ function Users() {
     switch (role) {
       case "admin":
         return "admin";
-
       case "agent":
         return "agent";
-
       case "user":
         return "user";
-
       default:
         return "user";
     }
@@ -180,28 +183,40 @@ function Users() {
                     <td>
                       <div className="user-info">
                         <div className="user-avatar">
-                          {(user.name || "U").charAt(0).toUpperCase()}
+                          {(user.name || "U")
+                            .charAt(0)
+                            .toUpperCase()}
                         </div>
 
-                        <strong>{user.name || "Unknown User"}</strong>
+                        <strong>
+                          {user.name || "Unknown User"}
+                        </strong>
                       </div>
                     </td>
 
                     <td>
-                      <span className="user-email">{user.email || "-"}</span>
+                      <span className="user-email">
+                        {user.email || "-"}
+                      </span>
                     </td>
 
                     <td>{user.phone || "-"}</td>
 
                     <td>
-                      <span className={`role-badge ${getRoleClass(user.role)}`}>
+                      <span
+                        className={`role-badge ${getRoleClass(
+                          user.role,
+                        )}`}
+                      >
                         {user.role || "user"}
                       </span>
                     </td>
 
                     <td>
                       {user.created_at
-                        ? new Date(user.created_at).toLocaleDateString("en-IN")
+                        ? new Date(
+                            user.created_at,
+                          ).toLocaleDateString("en-IN")
                         : "-"}
                     </td>
 
@@ -209,15 +224,18 @@ function Users() {
                       <select
                         className="role-select"
                         value={user.role || "user"}
-                        disabled={updatingId === user.id}
+                        disabled={
+                          updatingId === user.id
+                        }
                         onChange={(e) =>
-                          updateUserRole(user.id, e.target.value)
+                          updateUserRole(
+                            user.id,
+                            e.target.value,
+                          )
                         }
                       >
                         <option value="user">User</option>
-
                         <option value="agent">Agent</option>
-
                         <option value="admin">Admin</option>
                       </select>
                     </td>
