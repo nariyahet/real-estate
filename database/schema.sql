@@ -13,7 +13,8 @@ CREATE TABLE users (
     phone VARCHAR(30),
     role ENUM('admin', 'agent', 'user') NOT NULL DEFAULT 'user',
     profile_image TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 
@@ -48,10 +49,13 @@ CREATE TABLE properties (
     city VARCHAR(100),
     state VARCHAR(100),
     country VARCHAR(100) DEFAULT 'India',
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
     status ENUM('Available', 'Sold', 'Rented', 'Inactive')
         DEFAULT 'Available',
     featured BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_properties_agent
         FOREIGN KEY (agent_id)

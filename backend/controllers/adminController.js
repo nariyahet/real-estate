@@ -98,7 +98,7 @@ const getAllAgents = async (req, res) => {
         a.bio,
         a.experience,
         a.location,
-        a.profile_image,
+        u.profile_image,
         a.created_at
       FROM agents a
       INNER JOIN users u ON a.user_id = u.id
@@ -201,10 +201,9 @@ const updateUserRole = async (req, res) => {
             agency_name,
             bio,
             experience,
-            location,
-            profile_image
+            location
           )
-          VALUES (?, NULL, NULL, 0, NULL, NULL)
+          VALUES (?, NULL, NULL, 0, NULL)
           `,
           [userId],
         );
