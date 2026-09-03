@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
+import api from "../api/axios";
 import "./Properties.css";
 
 const API_URL = "https://real-estate-backend-kved.onrender.com/api";
 
 function Properties() {
   const [properties, setProperties] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [togglingFavId, setTogglingFavId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
@@ -64,9 +68,55 @@ function Properties() {
     }
   }, [getHeaders]);
 
+  const fetchFavoriteIds = useCallback(async () => {
+    try {
+      const response = await api.get("/favorites/ids");
+      if (response.data?.success && Array.isArray(response.data?.favoriteIds)) {
+        setFavoriteIds(new Set(response.data.favoriteIds));
+      }
+    } catch (err) {
+      console.warn("Favorites fetch info:", err.message);
+    }
+  }, []);
+
   useEffect(() => {
     fetchProperties();
-  }, [fetchProperties]);
+    fetchFavoriteIds();
+  }, [fetchProperties, fetchFavoriteIds]);
+
+  const handleToggleFavorite = async (e, propertyId) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      setTogglingFavId(propertyId);
+      const isFav = favoriteIds.has(propertyId);
+
+      if (isFav) {
+        const response = await api.delete(`/favorites/${propertyId}`);
+        if (response.data?.success) {
+          setFavoriteIds((prev) => {
+            const next = new Set(prev);
+            next.delete(propertyId);
+            return next;
+          });
+        }
+      } else {
+        const response = await api.post(`/favorites/${propertyId}`);
+        if (response.data?.success) {
+          setFavoriteIds((prev) => {
+            const next = new Set(prev);
+            next.add(propertyId);
+            return next;
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Toggle Favorite Error:", err);
+    } finally {
+      setTogglingFavId(null);
+    }
+  };
 
   const updatePropertyStatus = async (propertyId, status) => {
     try {
@@ -214,13 +264,19 @@ function Properties() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={fetchProperties}
-          disabled={loading}
-        >
-          ↻ Refresh
-        </button>
+        <div className="properties-header-actions">
+          <Link to="/favorites" className="favorites-nav-btn">
+            ♥ Favorites ({favoriteIds.size})
+          </Link>
+
+          <button
+            type="button"
+            onClick={fetchProperties}
+            disabled={loading}
+          >
+            ↻ Refresh
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -273,9 +329,27 @@ function Properties() {
 
                   <td>
                     <div className="property-info">
-                      <strong className="property-title">
-                        {property.title || "Untitled Property"}
-                      </strong>
+                      <div className="property-title-with-heart">
+                        <button
+                          type="button"
+                          className={`heart-toggle-btn ${
+                            favoriteIds.has(property.id) ? "favorited" : ""
+                          }`}
+                          title={
+                            favoriteIds.has(property.id)
+                              ? "Remove from favorites"
+                              : "Save to favorites"
+                          }
+                          onClick={(e) => handleToggleFavorite(e, property.id)}
+                          disabled={togglingFavId === property.id}
+                        >
+                          {favoriteIds.has(property.id) ? "♥" : "♡"}
+                        </button>
+
+                        <strong className="property-title">
+                          {property.title || "Untitled Property"}
+                        </strong>
+                      </div>
 
                       {property.city && (
                         <span className="property-location">

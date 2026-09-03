@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 import "../App.css";
 
 const API_URL = "https://real-estate-backend-kved.onrender.com/api";
@@ -19,6 +20,7 @@ function Dashboard() {
   });
 
   const [agentProperties, setAgentProperties] = useState(0);
+  const [favoriteCount, setFavoriteCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -89,6 +91,15 @@ function Dashboard() {
         const properties = response.data.properties || [];
 
         setAgentProperties(properties.length);
+
+        try {
+          const favRes = await api.get("/favorites");
+          if (favRes.data?.success) {
+            setFavoriteCount(favRes.data.favorites?.length || 0);
+          }
+        } catch (favErr) {
+          console.warn("Favorites fetch info:", favErr.message);
+        }
       }
     } catch (err) {
       console.error("Dashboard Error:", err);
@@ -171,6 +182,15 @@ function Dashboard() {
           >
             <span>🏠</span>
             Properties
+          </button>
+
+          <button
+            type="button"
+            className="nav-item"
+            onClick={() => navigate("/favorites")}
+          >
+            <span>♥</span>
+            My Favorites
           </button>
         </nav>
 
@@ -372,6 +392,16 @@ function Dashboard() {
                   <span>View Properties</span>
 
                   <strong>🏠</strong>
+                </div>
+
+                <div
+                  className="status-card"
+                  onClick={() => navigate("/favorites")}
+                  style={{ cursor: "pointer" }}
+                >
+                  <span>My Favorites</span>
+
+                  <strong>{loading ? "..." : favoriteCount}</strong>
                 </div>
               </div>
             </div>

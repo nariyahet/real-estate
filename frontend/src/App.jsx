@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Agents from "./pages/Agents";
 import Properties from "./pages/Properties";
+import Favorites from "./pages/Favorites";
 import Users from "./pages/Users";
 
 function ProtectedRoute({ children }) {
@@ -52,6 +53,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Properties />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/favorites"
+        element={
+          <ProtectedRoute>
+            <Favorites />
           </ProtectedRoute>
         }
       />
