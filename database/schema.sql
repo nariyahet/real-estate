@@ -96,3 +96,35 @@ CREATE TABLE favorites (
         REFERENCES properties(id)
         ON DELETE CASCADE
 );
+
+
+CREATE TABLE inquiries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    property_id INT NOT NULL,
+    agent_id INT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    phone VARCHAR(30),
+    message TEXT NOT NULL,
+    agent_notes TEXT,
+    status ENUM('Pending', 'Contacted', 'Closed', 'Resolved', 'Cancelled') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_inquiries_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE SET NULL,
+
+    CONSTRAINT fk_inquiries_property
+        FOREIGN KEY (property_id)
+        REFERENCES properties(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_inquiries_agent
+        FOREIGN KEY (agent_id)
+        REFERENCES agents(id)
+        ON DELETE SET NULL
+);
+

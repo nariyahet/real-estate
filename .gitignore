@@ -7,3 +7,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .DS_Store
+
+# Temporary backup files
+favorites-staged-backup.patch
+feature-changes-backup.patch
+ersLenovoDesktopREAL-ESTATE*

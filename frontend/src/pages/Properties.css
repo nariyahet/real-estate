@@ -70,7 +70,7 @@
 
 .table-container table {
   width: 100%;
-  min-width: 1100px;
+  min-width: 960px;
   border-collapse: collapse;
 }
 
@@ -361,6 +361,99 @@
   gap: 12px;
 }
 
+.inquiries-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 18px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.inquiries-nav-btn:hover {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.property-title-link {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  display: inline-block;
+  transition: color 0.2s ease;
+}
+
+.property-title-link:hover {
+  color: #2563eb;
+}
+
+.inline-inquire-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 5px 12px;
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  width: fit-content;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.inline-inquire-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.view-inquire-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: #2563eb;
+  color: #ffffff;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s ease;
+}
+
+.view-inquire-btn:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.row-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .favorites-nav-btn {
   display: inline-flex;
   align-items: center;
@@ -413,7 +506,4 @@
   transform: scale(1.1);
 }
 
-.heart-toggle-btn:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
+

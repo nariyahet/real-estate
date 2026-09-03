@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import api from "../api/axios";
 import "./Properties.css";
@@ -7,6 +7,7 @@ import "./Properties.css";
 const API_URL = "https://real-estate-backend-kved.onrender.com/api";
 
 function Properties() {
+  const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [togglingFavId, setTogglingFavId] = useState(null);
@@ -269,6 +270,10 @@ function Properties() {
             ♥ Favorites ({favoriteIds.size})
           </Link>
 
+          <Link to="/inquiries" className="inquiries-nav-btn">
+            ✉ Inquiries
+          </Link>
+
           <button
             type="button"
             onClick={fetchProperties}
@@ -312,9 +317,8 @@ function Properties() {
                 <th>Listing</th>
                 <th>Price</th>
                 <th>Agent</th>
-
                 {isAdmin && <th>Status</th>}
-                {isAdmin && <th>Actions</th>}
+                <th>Action</th>
               </tr>
             </thead>
 
@@ -346,19 +350,37 @@ function Properties() {
                           {favoriteIds.has(property.id) ? "♥" : "♡"}
                         </button>
 
-                        <strong className="property-title">
+                        <Link
+                          to={`/properties/${property.id}`}
+                          className="property-title-link"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(`/properties/${property.id}`);
+                          }}
+                        >
                           {property.title || "Untitled Property"}
-                        </strong>
+                        </Link>
                       </div>
 
                       {property.city && (
                         <span className="property-location">
-                          {property.city}
+                          📍 {property.city}
                           {property.state
                             ? `, ${property.state}`
                             : ""}
                         </span>
                       )}
+
+                      <Link
+                        to={`/properties/${property.id}`}
+                        className="inline-inquire-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/properties/${property.id}`);
+                        }}
+                      >
+                        View / Inquire →
+                      </Link>
                     </div>
                   </td>
 
@@ -426,24 +448,37 @@ function Properties() {
                     </td>
                   )}
 
-                  {isAdmin && (
-                    <td>
-                      <button
-                        type="button"
-                        className="delete-btn"
-                        disabled={
-                          deletingId === property.id
-                        }
-                        onClick={() =>
-                          deleteProperty(property.id)
-                        }
+                  <td className="actions-cell">
+                    <div className="row-action-buttons">
+                      <Link
+                        to={`/properties/${property.id}`}
+                        className="view-inquire-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/properties/${property.id}`);
+                        }}
                       >
-                        {deletingId === property.id
-                          ? "Deleting..."
-                          : "Delete"}
-                      </button>
-                    </td>
-                  )}
+                        View / Inquire →
+                      </Link>
+
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          className="delete-btn"
+                          disabled={
+                            deletingId === property.id
+                          }
+                          onClick={() =>
+                            deleteProperty(property.id)
+                          }
+                        >
+                          {deletingId === property.id
+                            ? "Deleting..."
+                            : "Delete"}
+                        </button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

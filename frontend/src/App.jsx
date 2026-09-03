@@ -3,11 +3,14 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Agents from "./pages/Agents";
 import Properties from "./pages/Properties";
+import PropertyDetails from "./pages/PropertyDetails";
+import Inquiries from "./pages/Inquiries";
 import Favorites from "./pages/Favorites";
 import Users from "./pages/Users";
 
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("token");
+  const token =
+    localStorage.getItem("token") || localStorage.getItem("adminToken");
 
   if (!token) {
     return <Navigate to="/" replace />;
@@ -53,6 +56,24 @@ function App() {
         element={
           <ProtectedRoute>
             <Properties />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/properties/:id"
+        element={
+          <ProtectedRoute>
+            <PropertyDetails />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/inquiries"
+        element={
+          <ProtectedRoute>
+            <Inquiries />
           </ProtectedRoute>
         }
       />

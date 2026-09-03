@@ -243,6 +243,33 @@ VALUES
 (10, 'https://images.unsplash.com/photo-1497366216548-37526070297c', TRUE);
 
 
+INSERT INTO inquiries
+(property_id, user_id, agent_id, name, email, phone, message, status, agent_notes)
+VALUES
+(
+    1,
+    3,
+    1,
+    'Demo User',
+    'user@realestate.com',
+    '+91 9000000003',
+    'Hello, I am interested in this 3 BHK apartment. Is it possible to schedule a site visit this Saturday afternoon?',
+    'Pending',
+    NULL
+),
+(
+    2,
+    3,
+    1,
+    'Demo User',
+    'user@realestate.com',
+    '+91 9000000003',
+    'Can you provide more details about the maintenance charges and parking facilities for this villa?',
+    'Contacted',
+    'Called client on Thursday. Shared brochure and scheduled a meeting for Sunday 11 AM.'
+);
+
+
 SELECT id, name, email, role
 FROM users;
 
@@ -254,3 +281,6 @@ FROM properties;
 
 SELECT id, property_id, image_url
 FROM property_images;
+
+SELECT id, property_id, user_id, agent_id, name, status
+FROM inquiries;

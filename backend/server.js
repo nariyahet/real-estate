@@ -44,11 +44,13 @@ app.use(express.json());
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
+const inquiryRoutes = require("./routes/inquiryRoutes");
 const favoriteRoutes = require("./routes/favoriteRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/properties", propertyRoutes);
+app.use("/api/inquiries", inquiryRoutes);
 app.use("/api/favorites", favoriteRoutes);
 
 app.get("/", (req, res) => {
