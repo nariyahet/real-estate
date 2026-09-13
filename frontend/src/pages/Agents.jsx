@@ -41,9 +41,16 @@ function Agents() {
   if (loading) {
     return (
       <div className="page-container">
-        <DashboardBackLink />
-        <h1>Agents</h1>
-        <p>Loading agents...</p>
+        <div className="page-header">
+          <div>
+            <h1>Agents</h1>
+            <p>Loading agents...</p>
+          </div>
+
+          <div className="agents-header-actions">
+            <DashboardBackLink />
+          </div>
+        </div>
       </div>
     );
   }
@@ -52,14 +59,16 @@ function Agents() {
     <div className="page-container">
       <div className="page-header">
         <div>
-          <DashboardBackLink />
           <h1>Agents</h1>
           <p>Manage all registered agents</p>
         </div>
 
-        <button type="button" onClick={fetchAgents}>
-          Refresh
-        </button>
+        <div className="agents-header-actions">
+          <DashboardBackLink />
+          <button type="button" onClick={fetchAgents}>
+            ↻ Refresh
+          </button>
+        </div>
       </div>
 
       {error && <div className="error-box">{error}</div>}

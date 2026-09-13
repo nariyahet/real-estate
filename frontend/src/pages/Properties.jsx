@@ -234,7 +234,6 @@ function Properties() {
       {/* Header */}
       <div className="page-header">
         <div>
-          <DashboardBackLink />
           <span className="page-label">PROPERTY MANAGEMENT</span>
           <h1>Properties</h1>
           <p>
@@ -247,6 +246,8 @@ function Properties() {
         </div>
 
         <div className="properties-header-actions">
+          <DashboardBackLink />
+
           {user && (
             <Link to="/favorites" className="favorites-nav-btn">
               ♥ Favorites ({favoriteIds.size})

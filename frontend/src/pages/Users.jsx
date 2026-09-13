@@ -88,10 +88,13 @@ function Users() {
       <div className="users-page">
         <div className="users-header">
           <div>
-            <DashboardBackLink />
             <span className="users-label">ADMIN MANAGEMENT</span>
             <h1>Users</h1>
             <p>Manage all registered users.</p>
+          </div>
+
+          <div className="users-header-actions">
+            <DashboardBackLink />
           </div>
         </div>
 
@@ -107,20 +110,22 @@ function Users() {
     <div className="users-page">
       <div className="users-header">
         <div>
-          <DashboardBackLink />
           <span className="users-label">ADMIN MANAGEMENT</span>
           <h1>Users</h1>
           <p>Manage all registered users from one place.</p>
         </div>
 
-        <button
-          type="button"
-          className="users-refresh-btn"
-          onClick={fetchUsers}
-          disabled={loading}
-        >
-          ↻ Refresh
-        </button>
+        <div className="users-header-actions">
+          <DashboardBackLink />
+          <button
+            type="button"
+            className="users-refresh-btn"
+            onClick={fetchUsers}
+            disabled={loading}
+          >
+            ↻ Refresh
+          </button>
+        </div>
       </div>
 
       {error && (

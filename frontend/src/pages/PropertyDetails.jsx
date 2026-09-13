@@ -205,11 +205,13 @@ function PropertyDetails() {
   if (error || !property) {
     return (
       <div className="property-details-container">
-        <DashboardBackLink />
         <div className="details-header-nav">
           <button type="button" className="back-btn" onClick={() => navigate("/properties")}>
             ← Back to Properties
           </button>
+          <div className="header-actions">
+            <DashboardBackLink />
+          </div>
         </div>
 
         <div className="error-box">
@@ -226,7 +228,6 @@ function PropertyDetails() {
 
   return (
     <div className="property-details-container">
-      <DashboardBackLink />
       {/* Navigation & Header */}
       <div className="details-header-nav">
         <button type="button" className="back-btn" onClick={() => navigate("/properties")}>
@@ -234,6 +235,7 @@ function PropertyDetails() {
         </button>
 
         <div className="header-actions">
+          <DashboardBackLink />
           <Link to="/favorites" className="favorites-shortcut-link">
             ♥ My Favorites
           </Link>

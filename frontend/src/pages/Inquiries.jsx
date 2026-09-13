@@ -202,8 +202,6 @@ function Inquiries() {
       {/* Page Header */}
       <div className="inquiries-page-header">
         <div>
-          <DashboardBackLink />
-
           <span className="inquiries-label">
             {isAdmin
               ? "ADMINISTRATION"
@@ -224,6 +222,7 @@ function Inquiries() {
         </div>
 
         <div className="header-controls">
+          <DashboardBackLink />
           <div className="filter-group">
             <label htmlFor="status-filter">Status:</label>
             <select

@@ -84,7 +84,6 @@ function Favorites() {
       {/* Header */}
       <div className="favorites-header">
         <div className="favorites-title-wrap">
-          <DashboardBackLink />
           <span className="favorites-label">SAVED PROPERTIES</span>
           <h1>
             My Favorites
@@ -96,6 +95,7 @@ function Favorites() {
         </div>
 
         <div className="favorites-header-actions">
+          <DashboardBackLink />
           <Link to="/properties" className="browse-properties-btn">
             🏠 Browse All Properties
           </Link>

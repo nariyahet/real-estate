@@ -454,6 +454,13 @@
   gap: 8px;
 }
 
+.properties-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .favorites-nav-btn {
   display: inline-flex;
   align-items: center;
