@@ -58,7 +58,7 @@ const getDashboardStats = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch dashboard statistics.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -89,7 +89,7 @@ const getAllUsers = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch users.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -126,7 +126,7 @@ const getAllAgents = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch agents.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -244,7 +244,7 @@ const updateUserRole = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to update user role.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   } finally {
     connection.release();
@@ -275,7 +275,7 @@ const getAllAdminProperties = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch admin properties.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -327,7 +327,7 @@ const updateAdminPropertyStatus = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to update property status.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -389,7 +389,7 @@ const deleteAdminProperty = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to delete property.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };

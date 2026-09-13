@@ -95,7 +95,7 @@ const createInquiry = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to submit inquiry. Please try again later.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -151,7 +151,7 @@ const getInquiries = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to retrieve inquiries.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -223,7 +223,7 @@ const getInquiry = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch inquiry details.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -297,7 +297,7 @@ const updateInquiryStatus = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to update inquiry.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -350,7 +350,7 @@ const deleteInquiry = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to delete inquiry.",
-      error: error.message,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };

@@ -6,11 +6,11 @@ const {
   updateInquiryStatus,
   deleteInquiry,
 } = require("../controllers/inquiryController");
-const { protect } = require("../middleware/authMiddleware");
+const { protect, optionalProtect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.post("/", protect, createInquiry);
+router.post("/", optionalProtect, createInquiry);
 router.get("/", protect, getInquiries);
 router.get("/:id", protect, getInquiry);
 router.put("/:id/status", protect, updateInquiryStatus);

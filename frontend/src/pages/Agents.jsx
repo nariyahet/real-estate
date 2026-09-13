@@ -1,30 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 import "./Agents.css";
-
-const API_URL = "https://real-estate-backend-kved.onrender.com/api";
 
 function Agents() {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const getHeaders = useCallback(() => {
-    const token = localStorage.getItem("token");
-
-    return {
-      Authorization: `Bearer ${token}`,
-    };
-  }, []);
-
   const fetchAgents = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await axios.get(`${API_URL}/admin/agents`, {
-        headers: getHeaders(),
-      });
+      const response = await api.get("/admin/agents");
 
       if (response.data.success) {
         setAgents(response.data.agents || []);
@@ -43,7 +31,7 @@ function Agents() {
     } finally {
       setLoading(false);
     }
-  }, [getHeaders]);
+  }, []);
 
   useEffect(() => {
     fetchAgents();

@@ -60,7 +60,14 @@ CREATE TABLE properties (
     CONSTRAINT fk_properties_agent
         FOREIGN KEY (agent_id)
         REFERENCES agents(id)
-        ON DELETE SET NULL
+        ON DELETE SET NULL,
+
+    INDEX idx_properties_status (status),
+    INDEX idx_properties_city (city),
+    INDEX idx_properties_type (property_type),
+    INDEX idx_properties_listing (listing_type),
+    INDEX idx_properties_price (price),
+    INDEX idx_properties_featured (featured)
 );
 
 
@@ -125,6 +132,11 @@ CREATE TABLE inquiries (
     CONSTRAINT fk_inquiries_agent
         FOREIGN KEY (agent_id)
         REFERENCES agents(id)
-        ON DELETE SET NULL
+        ON DELETE SET NULL,
+
+    INDEX idx_inquiries_status (status),
+    INDEX idx_inquiries_user (user_id),
+    INDEX idx_inquiries_agent (agent_id),
+    INDEX idx_inquiries_property (property_id)
 );
 

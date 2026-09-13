@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Agents from "./pages/Agents";
 import Properties from "./pages/Properties";
@@ -9,8 +10,7 @@ import Favorites from "./pages/Favorites";
 import Users from "./pages/Users";
 
 function ProtectedRoute({ children }) {
-  const token =
-    localStorage.getItem("token") || localStorage.getItem("adminToken");
+  const token = localStorage.getItem("token");
 
   if (!token) {
     return <Navigate to="/" replace />;
@@ -23,6 +23,10 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      <Route path="/properties" element={<Properties />} />
+      <Route path="/properties/:id" element={<PropertyDetails />} />
 
       <Route
         path="/dashboard"
@@ -47,24 +51,6 @@ function App() {
         element={
           <ProtectedRoute>
             <Agents />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/properties"
-        element={
-          <ProtectedRoute>
-            <Properties />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/properties/:id"
-        element={
-          <ProtectedRoute>
-            <PropertyDetails />
           </ProtectedRoute>
         }
       />

@@ -159,7 +159,22 @@ const getAllProperties = async ({
         a.agency_name,
         u.name AS agent_name,
         u.email AS agent_email,
-        u.phone AS agent_phone
+        u.phone AS agent_phone,
+
+        (
+          SELECT pi.image_url
+          FROM property_images pi
+          WHERE pi.property_id = p.id
+          ORDER BY pi.is_primary DESC, pi.id ASC
+          LIMIT 1
+        ) AS primary_image,
+        (
+          SELECT pi.image_url
+          FROM property_images pi
+          WHERE pi.property_id = p.id
+          ORDER BY pi.is_primary DESC, pi.id ASC
+          LIMIT 1
+        ) AS image_url
 
       FROM properties p
 
@@ -173,10 +188,10 @@ const getAllProperties = async ({
 
       ORDER BY p.created_at DESC
 
-      LIMIT ${pageLimit}
-      OFFSET ${offset}
+      LIMIT ?
+      OFFSET ?
     `,
-    values,
+    [...values, pageLimit, offset],
   );
 
   return {

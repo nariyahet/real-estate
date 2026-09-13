@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 import "./Users.css";
-
-const API_URL = "https://real-estate-backend-kved.onrender.com/api";
 
 function Users() {
   const [users, setUsers] = useState([]);
@@ -10,23 +8,12 @@ function Users() {
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
 
-  const getHeaders = useCallback(() => {
-    const token =
-      localStorage.getItem("adminToken") || localStorage.getItem("token");
-
-    return {
-      Authorization: `Bearer ${token}`,
-    };
-  }, []);
-
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await axios.get(`${API_URL}/admin/users`, {
-        headers: getHeaders(),
-      });
+      const response = await api.get("/admin/users");
 
       if (response.data.success) {
         setUsers(response.data.users || []);
@@ -45,7 +32,7 @@ function Users() {
     } finally {
       setLoading(false);
     }
-  }, [getHeaders]);
+  }, []);
 
   useEffect(() => {
     fetchUsers();
@@ -56,13 +43,7 @@ function Users() {
       setUpdatingId(userId);
       setError("");
 
-      const response = await axios.put(
-        `${API_URL}/admin/users/${userId}/role`,
-        { role },
-        {
-          headers: getHeaders(),
-        },
-      );
+      const response = await api.put(`/admin/users/${userId}/role`, { role });
 
       if (response.data.success) {
         setUsers((currentUsers) =>

@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../api/axios";
 import "./Favorites.css";
 
 function Favorites() {
-  const navigate = useNavigate();
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -211,12 +210,8 @@ function Favorites() {
               <div className="fav-card-body">
                 <div className="fav-card-top">
                   <Link
-                    to="/properties"
+                    to={`/properties/${property.id}`}
                     className="fav-property-title"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate("/properties");
-                    }}
                   >
                     {property.title || "Untitled Property"}
                   </Link>
@@ -267,12 +262,8 @@ function Favorites() {
                 {/* Actions */}
                 <div className="fav-card-actions">
                   <Link
-                    to="/properties"
+                    to={`/properties/${property.id}`}
                     className="fav-view-btn"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate("/properties");
-                    }}
                   >
                     View Property →
                   </Link>

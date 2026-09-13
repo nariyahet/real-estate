@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import "../App.css";
-
-const API_URL = "https://real-estate-backend-kved.onrender.com/api";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -38,14 +35,6 @@ function Dashboard() {
   const user = getUser();
   const isAdmin = user?.role === "admin";
 
-  const getHeaders = useCallback(() => {
-    const token = localStorage.getItem("token");
-
-    return {
-      Authorization: `Bearer ${token}`,
-    };
-  }, []);
-
   const fetchDashboardStats = useCallback(async () => {
     const token = localStorage.getItem("token");
 
@@ -59,9 +48,7 @@ function Dashboard() {
       setError("");
 
       if (isAdmin) {
-        const response = await axios.get(`${API_URL}/admin/dashboard-stats`, {
-          headers: getHeaders(),
-        });
+        const response = await api.get("/admin/dashboard-stats");
 
         if (!response.data?.success) {
           setError(
@@ -93,9 +80,7 @@ function Dashboard() {
           console.warn("Inquiries fetch info:", inqErr.message);
         }
       } else {
-        const response = await axios.get(`${API_URL}/properties`, {
-          headers: getHeaders(),
-        });
+        const response = await api.get("/properties");
 
         if (!response.data?.success) {
           setError(response.data?.message || "Unable to load properties.");
@@ -130,7 +115,6 @@ function Dashboard() {
       if (err.response?.status === 401 || err.response?.status === 403) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        localStorage.removeItem("adminToken");
 
         navigate("/", { replace: true });
         return;
@@ -140,7 +124,7 @@ function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [getHeaders, navigate, isAdmin]);
+  }, [navigate, isAdmin]);
 
   useEffect(() => {
     fetchDashboardStats();
@@ -149,7 +133,6 @@ function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    localStorage.removeItem("adminToken");
 
     navigate("/", { replace: true });
   };

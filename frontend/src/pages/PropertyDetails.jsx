@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import api from "../api/axios";
 import "./PropertyDetails.css";
 
@@ -42,18 +41,7 @@ function PropertyDetails() {
       setLoading(true);
       setError("");
 
-      let response;
-      try {
-        response = await api.get(`/properties/${id}`);
-      } catch (primaryErr) {
-        try {
-          response = await axios.get(
-            `https://real-estate-backend-kved.onrender.com/api/properties/${id}`
-          );
-        } catch {
-          throw primaryErr;
-        }
-      }
+      const response = await api.get(`/properties/${id}`);
 
       if (response.data?.success && response.data?.property) {
         setProperty(response.data.property);
@@ -144,39 +132,13 @@ function PropertyDetails() {
     try {
       setSubmitting(true);
 
-      let response;
-      try {
-        response = await api.post("/inquiries", {
-          property_id: Number(id),
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          phone: formData.phone ? formData.phone.trim() : null,
-          message: formData.message.trim(),
-        });
-      } catch (primaryErr) {
-        try {
-          const token =
-            localStorage.getItem("token") || localStorage.getItem("adminToken");
-          response = await axios.post(
-            "https://real-estate-backend-kved.onrender.com/api/inquiries",
-            {
-              property_id: Number(id),
-              name: formData.name.trim(),
-              email: formData.email.trim(),
-              phone: formData.phone ? formData.phone.trim() : null,
-              message: formData.message.trim(),
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-        } catch {
-          throw primaryErr;
-        }
-      }
+      const response = await api.post("/inquiries", {
+        property_id: Number(id),
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone ? formData.phone.trim() : null,
+        message: formData.message.trim(),
+      });
 
       if (response.data?.success) {
         setInquirySuccess(

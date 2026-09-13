@@ -79,12 +79,44 @@ const authorize = (...roles) => {
   };
 };
 
+const optionalProtect = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      req.user = null;
+      return next();
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (!token) {
+      req.user = null;
+      return next();
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await findUserById(decoded.id);
+      req.user = user || null;
+    } catch {
+      req.user = null;
+    }
+
+    next();
+  } catch {
+    req.user = null;
+    next();
+  }
+};
+
 const adminOnly = authorize("admin");
 
 const agentOrAdmin = authorize("agent", "admin");
 
 module.exports = {
   protect,
+  optionalProtect,
   authorize,
   adminOnly,
   agentOrAdmin,

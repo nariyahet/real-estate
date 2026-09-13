@@ -138,3 +138,30 @@
     font-size: 28px;
   }
 }
+
+.auth-switch {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-switch a {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-switch a:hover {
+  color: #1d4ed8;
+}
+
+.browse-link-wrap {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
