@@ -356,7 +356,7 @@ function Properties() {
                   <th>Price</th>
                   <th>Agent</th>
                   {(isAdmin || isAgent) && <th>Status</th>}
-                  <th>Action</th>
+                  {(isAdmin || isAgent) && <th>Action</th>}
                 </tr>
               </thead>
 
@@ -380,12 +380,9 @@ function Properties() {
                         )}
 
                         <div className="property-info">
-                          <Link
-                            to={`/properties/${property.id}`}
-                            className="property-title-link"
-                          >
+                          <span className="property-title-text">
                             {property.title || "Untitled Property"}
-                          </Link>
+                          </span>
 
                           {property.city && (
                             <span className="property-location">
@@ -393,13 +390,6 @@ function Properties() {
                               {property.state ? `, ${property.state}` : ""}
                             </span>
                           )}
-
-                          <Link
-                            to={`/properties/${property.id}`}
-                            className="view-details-btn"
-                          >
-                            View Details →
-                          </Link>
                         </div>
                       </div>
                     </td>
@@ -458,29 +448,26 @@ function Properties() {
                       </td>
                     )}
 
-                    <td className="actions-cell">
-                      <div className="row-action-buttons">
-                        <Link
-                          to={`/properties/${property.id}`}
-                          className="view-action-btn"
-                        >
-                          View Details →
-                        </Link>
-
-                        {(isAdmin || (isAgent && Number(property.agent_id) === Number(user?.agent_id))) && (
-                          <button
-                            type="button"
-                            className="delete-btn"
-                            disabled={deletingId === property.id}
-                            onClick={() => deleteProperty(property.id)}
-                          >
-                            {deletingId === property.id
-                              ? "Deleting..."
-                              : "Delete"}
-                          </button>
-                        )}
-                      </div>
-                    </td>
+                    {(isAdmin || isAgent) && (
+                      <td className="actions-cell">
+                        <div className="row-action-buttons">
+                          {(isAdmin || (isAgent && Number(property.agent_id) === Number(user?.agent_id))) ? (
+                            <button
+                              type="button"
+                              className="delete-btn"
+                              disabled={deletingId === property.id}
+                              onClick={() => deleteProperty(property.id)}
+                            >
+                              {deletingId === property.id
+                                ? "Deleting..."
+                                : "Delete"}
+                            </button>
+                          ) : (
+                            <span className="no-actions-dash">—</span>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

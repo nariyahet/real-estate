@@ -4,7 +4,6 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Agents from "./pages/Agents";
 import Properties from "./pages/Properties";
-import PropertyDetails from "./pages/PropertyDetails";
 import Users from "./pages/Users";
 
 function ProtectedRoute({ children }) {
@@ -24,7 +23,6 @@ function App() {
       <Route path="/register" element={<Register />} />
 
       <Route path="/properties" element={<Properties />} />
-      <Route path="/properties/:id" element={<PropertyDetails />} />
 
       <Route
         path="/dashboard"
