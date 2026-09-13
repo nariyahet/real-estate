@@ -188,10 +188,10 @@ const getAllProperties = async ({
 
       ORDER BY p.created_at DESC
 
-      LIMIT ?
-      OFFSET ?
+      LIMIT ${pageLimit}
+      OFFSET ${offset}
     `,
-    [...values, pageLimit, offset],
+    values,
   );
 
   return {
