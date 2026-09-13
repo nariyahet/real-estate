@@ -43,6 +43,7 @@ function Agents() {
       <div className="page-container">
         <div className="page-header">
           <div>
+            <span className="agents-label">ADMIN MANAGEMENT</span>
             <h1>Agents</h1>
             <p>Loading agents...</p>
           </div>
@@ -59,6 +60,7 @@ function Agents() {
     <div className="page-container">
       <div className="page-header">
         <div>
+          <span className="agents-label">ADMIN MANAGEMENT</span>
           <h1>Agents</h1>
           <p>Manage all registered agents</p>
         </div>

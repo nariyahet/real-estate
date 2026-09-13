@@ -12,8 +12,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 28px;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 24px;
 }
 
 .header-actions {
@@ -21,6 +20,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
   flex-wrap: wrap;
 }
 
@@ -28,9 +28,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   height: 42px;
-  min-height: 42px;
   padding: 0 18px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
@@ -42,8 +41,7 @@
   box-sizing: border-box;
   line-height: 1;
   white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.15s ease-in-out;
+  transition: all 0.15s ease;
 }
 
 .back-btn:hover {
@@ -59,7 +57,6 @@
   justify-content: center;
   gap: 6px;
   height: 42px;
-  min-height: 42px;
   padding: 0 16px;
   background: #fff1f2;
   color: #e11d48;
@@ -71,7 +68,8 @@
   line-height: 1;
   box-sizing: border-box;
   white-space: nowrap;
-  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .favorites-shortcut-link:hover {
@@ -86,11 +84,10 @@
   justify-content: center;
   gap: 6px;
   height: 42px;
-  min-height: 42px;
   padding: 0 16px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
@@ -98,13 +95,28 @@
   line-height: 1;
   box-sizing: border-box;
   white-space: nowrap;
-  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .inquiries-shortcut-link:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
   transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .details-header-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 .details-grid {

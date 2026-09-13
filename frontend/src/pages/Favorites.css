@@ -10,15 +10,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 24px;
   margin-bottom: 28px;
-  flex-wrap: wrap;
 }
 
 .favorites-title-wrap {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .favorites-label {
@@ -63,6 +63,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
   flex-wrap: wrap;
 }
 
@@ -72,26 +73,26 @@
   justify-content: center;
   gap: 6px;
   height: 42px;
-  min-height: 42px;
   padding: 0 18px;
   background: #2563eb;
   color: #ffffff;
-  border: 1px solid transparent;
+  border: 1px solid #2563eb;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
   line-height: 1;
-  box-sizing: border-box;
   white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.15);
-  transition: background-color 0.15s ease-in-out, transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .browse-properties-btn:hover {
   background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
 }
 
 .favorites-refresh-btn {
@@ -100,7 +101,6 @@
   justify-content: center;
   gap: 6px;
   height: 42px;
-  min-height: 42px;
   padding: 0 16px;
   background: #ffffff;
   color: #475569;
@@ -109,18 +109,36 @@
   font-size: 14px;
   font-weight: 600;
   line-height: 1;
-  box-sizing: border-box;
   white-space: nowrap;
+  box-sizing: border-box;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.15s ease-in-out;
+  transition: all 0.15s ease;
 }
 
-.favorites-refresh-btn:hover {
+.favorites-refresh-btn:hover:not(:disabled) {
   background: #f8fafc;
-  color: #0f172a;
   border-color: #94a3b8;
+  color: #0f172a;
   transform: translateY(-1px);
+}
+
+.favorites-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 860px) {
+  .favorites-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .favorites-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 /* Alert Boxes */

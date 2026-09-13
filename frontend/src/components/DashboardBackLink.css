@@ -2,48 +2,36 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 6px;
   height: 42px;
-  min-height: 42px;
   padding: 0 18px;
   background: #2563eb;
   color: #ffffff !important;
-  border: 1px solid transparent;
+  border: 1px solid #2563eb;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
   line-height: 1;
-  cursor: pointer;
   white-space: nowrap;
   box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.15s ease;
   margin: 0;
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.15);
-  transition: background-color 0.15s ease-in-out, transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 .dashboard-back-link:hover {
   background: #1d4ed8;
+  border-color: #1d4ed8;
   color: #ffffff !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
 }
 
 .dashboard-back-link:active {
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.15);
 }
 
 .dashboard-back-link:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
-}
-
-@media (max-width: 640px) {
-  .dashboard-back-link {
-    height: 38px;
-    min-height: 38px;
-    padding: 0 14px;
-    font-size: 13px;
-  }
 }
