@@ -65,7 +65,12 @@ function Agents() {
 
         <div className="agents-header-actions">
           <DashboardBackLink />
-          <button type="button" onClick={fetchAgents}>
+          <button
+            type="button"
+            className="agents-refresh-btn"
+            onClick={fetchAgents}
+            disabled={loading}
+          >
             ↻ Refresh
           </button>
         </div>
