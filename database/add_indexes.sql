@@ -8,9 +8,3 @@ CREATE INDEX IF NOT EXISTS idx_properties_type ON properties(property_type);
 CREATE INDEX IF NOT EXISTS idx_properties_listing ON properties(listing_type);
 CREATE INDEX IF NOT EXISTS idx_properties_price ON properties(price);
 CREATE INDEX IF NOT EXISTS idx_properties_featured ON properties(featured);
-
--- Inquiries Indexes
-CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status);
-CREATE INDEX IF NOT EXISTS idx_inquiries_user ON inquiries(user_id);
-CREATE INDEX IF NOT EXISTS idx_inquiries_agent ON inquiries(agent_id);
-CREATE INDEX IF NOT EXISTS idx_inquiries_property ON inquiries(property_id);

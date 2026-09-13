@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/axios";
 import DashboardBackLink from "../components/DashboardBackLink";
 import "./PropertyDetails.css";
@@ -10,32 +10,8 @@ function PropertyDetails() {
 
   const [property, setProperty] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [favLoading, setFavLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  // Inquiry form states
-  const getUser = () => {
-    try {
-      return JSON.parse(localStorage.getItem("user") || "null");
-    } catch {
-      return null;
-    }
-  };
-
-  const user = getUser();
-
-  const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    message: "Hello, I am interested in this property and would like to schedule a viewing or request further details.",
-  });
-
-  const [submitting, setSubmitting] = useState(false);
-  const [inquirySuccess, setInquirySuccess] = useState("");
-  const [inquiryError, setInquiryError] = useState("");
 
   const fetchProperty = useCallback(async () => {
     try {
@@ -65,103 +41,9 @@ function PropertyDetails() {
     }
   }, [id]);
 
-  const checkFavoriteStatus = useCallback(async () => {
-    try {
-      const res = await api.get(`/favorites/check/${id}`);
-      if (res.data?.success) {
-        setIsFavorite(Boolean(res.data.isFavorite));
-      }
-    } catch (err) {
-      console.warn("Favorite check warning:", err.message);
-    }
-  }, [id]);
-
   useEffect(() => {
     fetchProperty();
-    checkFavoriteStatus();
-  }, [fetchProperty, checkFavoriteStatus]);
-
-  const handleToggleFavorite = async () => {
-    try {
-      setFavLoading(true);
-      if (isFavorite) {
-        const res = await api.delete(`/favorites/${id}`);
-        if (res.data?.success) {
-          setIsFavorite(false);
-        }
-      } else {
-        const res = await api.post(`/favorites/${id}`);
-        if (res.data?.success) {
-          setIsFavorite(true);
-        }
-      }
-    } catch (err) {
-      console.error("Toggle Favorite Error:", err);
-    } finally {
-      setFavLoading(false);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleInquirySubmit = async (e) => {
-    e.preventDefault();
-    setInquiryError("");
-    setInquirySuccess("");
-
-    if (!formData.name.trim()) {
-      setInquiryError("Please enter your name.");
-      return;
-    }
-
-    if (!formData.email.trim()) {
-      setInquiryError("Please enter your email address.");
-      return;
-    }
-
-    if (!formData.message.trim() || formData.message.trim().length < 5) {
-      setInquiryError("Please enter an inquiry message (minimum 5 characters).");
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-
-      const response = await api.post("/inquiries", {
-        property_id: Number(id),
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone ? formData.phone.trim() : null,
-        message: formData.message.trim(),
-      });
-
-      if (response.data?.success) {
-        setInquirySuccess(
-          response.data.message || "Your inquiry has been submitted successfully!",
-        );
-        // Reset message but keep contact info
-        setFormData((prev) => ({
-          ...prev,
-          message: "",
-        }));
-      } else {
-        setInquiryError(response.data?.message || "Failed to submit inquiry.");
-      }
-    } catch (err) {
-      console.error("Submit Inquiry Error:", err);
-      setInquiryError(
-        err.response?.data?.message || "Unable to submit inquiry. Please try again later.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  }, [fetchProperty]);
 
   const formatPrice = (price, listingType) => {
     const value = Number(price || 0);
@@ -236,12 +118,6 @@ function PropertyDetails() {
 
         <div className="header-actions">
           <DashboardBackLink />
-          <Link to="/favorites" className="favorites-shortcut-link">
-            ♥ My Favorites
-          </Link>
-          <Link to="/inquiries" className="inquiries-shortcut-link">
-            ✉ View All Inquiries
-          </Link>
         </div>
       </div>
 
@@ -292,15 +168,6 @@ function PropertyDetails() {
                 <div className="summary-tags-row">
                   <span className="property-type-tag">{property.property_type}</span>
                   <span className="property-listing-tag">{property.listing_type}</span>
-                  <button
-                    type="button"
-                    className={`property-fav-btn ${isFavorite ? "favorited" : ""}`}
-                    onClick={handleToggleFavorite}
-                    disabled={favLoading}
-                    title={isFavorite ? "Remove from Favorites" : "Save to Favorites"}
-                  >
-                    {isFavorite ? "♥ Saved to Favorites" : "♡ Save to Favorites"}
-                  </button>
                 </div>
                 <h1 className="property-title">{property.title}</h1>
                 <p className="property-address">
@@ -366,7 +233,7 @@ function PropertyDetails() {
           </div>
         </div>
 
-        {/* Right Column: Agent Card & Inquiry Form */}
+        {/* Right Column: Agent Profile Card */}
         <div className="details-sidebar">
           {/* Agent Information Card */}
           <div className="agent-profile-card">
@@ -411,89 +278,6 @@ function PropertyDetails() {
             </div>
           </div>
 
-          {/* Inquiry Form Card */}
-          <div className="inquiry-form-card" id="inquiry-form">
-            <h3 className="sidebar-card-title">Inquire About This Property</h3>
-            <p className="inquiry-subtitle">
-              Send a direct inquiry to the listing agent. We will respond promptly.
-            </p>
-
-            {inquirySuccess && (
-              <div className="inquiry-success-box">
-                <p>✅ {inquirySuccess}</p>
-                <Link to="/inquiries" className="inquiry-success-link">
-                  View your inquiries dashboard →
-                </Link>
-              </div>
-            )}
-
-            {inquiryError && (
-              <div className="inquiry-error-box">
-                <span>{inquiryError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleInquirySubmit} className="inquiry-form">
-              <div className="form-group">
-                <label htmlFor="name">Your Name *</label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Full Name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="email">Your Email *</label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="phone">Phone Number (Optional)</label>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  placeholder="+91 98765 43210"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="message">Message *</label>
-                <textarea
-                  id="message"
-                  name="message"
-                  rows="4"
-                  placeholder="Write your question or request..."
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  required
-                ></textarea>
-              </div>
-
-              <button
-                type="submit"
-                className="submit-inquiry-btn"
-                disabled={submitting}
-              >
-                {submitting ? "Sending Inquiry..." : "Send Inquiry ✉"}
-              </button>
-            </form>
-          </div>
         </div>
       </div>
     </div>

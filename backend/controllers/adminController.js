@@ -30,14 +30,6 @@ const getDashboardStats = async (req, res) => {
       "SELECT COUNT(*) AS inactiveProperties FROM properties WHERE status = 'Inactive'",
     );
 
-    const [[totalInquiriesResult]] = await pool.execute(
-      "SELECT COUNT(*) AS totalInquiries FROM inquiries",
-    );
-
-    const [[pendingInquiriesResult]] = await pool.execute(
-      "SELECT COUNT(*) AS pendingInquiries FROM inquiries WHERE status = 'Pending'",
-    );
-
     return res.status(200).json({
       success: true,
       stats: {
@@ -48,8 +40,6 @@ const getDashboardStats = async (req, res) => {
         soldProperties: Number(soldResult.soldProperties),
         rentedProperties: Number(rentedResult.rentedProperties),
         inactiveProperties: Number(inactiveResult.inactiveProperties),
-        totalInquiries: Number(totalInquiriesResult.totalInquiries || 0),
-        pendingInquiries: Number(pendingInquiriesResult.pendingInquiries || 0),
       },
     });
   } catch (error) {

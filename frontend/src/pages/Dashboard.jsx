@@ -14,13 +14,9 @@ function Dashboard() {
     soldProperties: 0,
     rentedProperties: 0,
     inactiveProperties: 0,
-    totalInquiries: 0,
-    pendingInquiries: 0,
   });
 
   const [agentProperties, setAgentProperties] = useState(0);
-  const [inquiryCount, setInquiryCount] = useState(0);
-  const [favoriteCount, setFavoriteCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -67,18 +63,7 @@ function Dashboard() {
           soldProperties: Number(dashboardStats.soldProperties || 0),
           rentedProperties: Number(dashboardStats.rentedProperties || 0),
           inactiveProperties: Number(dashboardStats.inactiveProperties || 0),
-          totalInquiries: Number(dashboardStats.totalInquiries || 0),
-          pendingInquiries: Number(dashboardStats.pendingInquiries || 0),
         });
-
-        try {
-          const inqRes = await api.get("/inquiries");
-          if (inqRes.data?.success) {
-            setInquiryCount(inqRes.data.inquiries?.length || 0);
-          }
-        } catch (inqErr) {
-          console.warn("Inquiries fetch info:", inqErr.message);
-        }
       } else {
         const response = await api.get("/properties");
 
@@ -90,24 +75,6 @@ function Dashboard() {
         const properties = response.data.properties || [];
 
         setAgentProperties(properties.length);
-
-        try {
-          const inqRes = await api.get("/inquiries");
-          if (inqRes.data?.success) {
-            setInquiryCount(inqRes.data.inquiries?.length || 0);
-          }
-        } catch (inqErr) {
-          console.warn("Inquiries fetch info:", inqErr.message);
-        }
-
-        try {
-          const favRes = await api.get("/favorites");
-          if (favRes.data?.success) {
-            setFavoriteCount(favRes.data.favorites?.length || 0);
-          }
-        } catch (favErr) {
-          console.warn("Favorites fetch info:", favErr.message);
-        }
       }
     } catch (err) {
       console.error("Dashboard Error:", err);
@@ -188,24 +155,6 @@ function Dashboard() {
           >
             <span>🏠</span>
             Properties
-          </button>
-
-          <button
-            type="button"
-            className="nav-item"
-            onClick={() => navigate("/favorites")}
-          >
-            <span>♥</span>
-            My Favorites
-          </button>
-
-          <button
-            type="button"
-            className="nav-item"
-            onClick={() => navigate("/inquiries")}
-          >
-            <span>✉</span>
-            Inquiries
           </button>
         </nav>
 
@@ -328,42 +277,6 @@ function Dashboard() {
                     <div className="stat-title">Available Properties</div>
                   </div>
                 </div>
-
-                <div
-                  className="stat-card"
-                  onClick={() => navigate("/inquiries")}
-                  style={{ cursor: "pointer" }}
-                >
-                  <div className="stat-card-top">
-                    <div className="stat-icon">✉</div>
-                  </div>
-
-                  <div>
-                    <div className="stat-value">
-                      {loading ? "..." : stats.totalInquiries}
-                    </div>
-
-                    <div className="stat-title">Total Inquiries</div>
-                  </div>
-                </div>
-
-                <div
-                  className="stat-card"
-                  onClick={() => navigate("/inquiries")}
-                  style={{ cursor: "pointer" }}
-                >
-                  <div className="stat-card-top">
-                    <div className="stat-icon">⏳</div>
-                  </div>
-
-                  <div>
-                    <div className="stat-value">
-                      {loading ? "..." : stats.pendingInquiries}
-                    </div>
-
-                    <div className="stat-title">Pending Inquiries</div>
-                  </div>
-                </div>
               </div>
 
               <div className="overview-section">
@@ -443,26 +356,6 @@ function Dashboard() {
                   <span>View Properties</span>
 
                   <strong>🏠</strong>
-                </div>
-
-                <div
-                  className="status-card"
-                  onClick={() => navigate("/inquiries")}
-                  style={{ cursor: "pointer" }}
-                >
-                  <span>Inquiries</span>
-
-                  <strong>{loading ? "..." : inquiryCount}</strong>
-                </div>
-
-                <div
-                  className="status-card"
-                  onClick={() => navigate("/favorites")}
-                  style={{ cursor: "pointer" }}
-                >
-                  <span>My Favorites</span>
-
-                  <strong>{loading ? "..." : favoriteCount}</strong>
                 </div>
               </div>
             </div>

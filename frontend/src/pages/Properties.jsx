@@ -6,8 +6,6 @@ import "./Properties.css";
 
 function Properties() {
   const [properties, setProperties] = useState([]);
-  const [favoriteIds, setFavoriteIds] = useState(new Set());
-  const [togglingFavId, setTogglingFavId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
@@ -74,67 +72,9 @@ function Properties() {
     }
   }, [page, search, city, propertyType, listingType, bedrooms]);
 
-  const fetchFavoriteIds = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      const response = await api.get("/favorites/ids");
-      if (response.data?.success && Array.isArray(response.data?.favoriteIds)) {
-        setFavoriteIds(new Set(response.data.favoriteIds));
-      }
-    } catch (err) {
-      console.warn("Favorites fetch info:", err.message);
-    }
-  }, []);
-
   useEffect(() => {
     fetchProperties();
   }, [fetchProperties]);
-
-  useEffect(() => {
-    fetchFavoriteIds();
-  }, [fetchFavoriteIds]);
-
-  const handleToggleFavorite = async (e, propertyId) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Please log in to save properties to your favorites.");
-      return;
-    }
-
-    try {
-      setTogglingFavId(propertyId);
-      const isFav = favoriteIds.has(propertyId);
-
-      if (isFav) {
-        const response = await api.delete(`/favorites/${propertyId}`);
-        if (response.data?.success) {
-          setFavoriteIds((prev) => {
-            const next = new Set(prev);
-            next.delete(propertyId);
-            return next;
-          });
-        }
-      } else {
-        const response = await api.post(`/favorites/${propertyId}`);
-        if (response.data?.success) {
-          setFavoriteIds((prev) => {
-            const next = new Set(prev);
-            next.add(propertyId);
-            return next;
-          });
-        }
-      }
-    } catch (err) {
-      console.error("Toggle Favorite Error:", err);
-    } finally {
-      setTogglingFavId(null);
-    }
-  };
 
   const updatePropertyStatus = async (propertyId, status) => {
     try {
@@ -247,18 +187,6 @@ function Properties() {
 
         <div className="properties-header-actions">
           <DashboardBackLink />
-
-          {user && (
-            <Link to="/favorites" className="favorites-nav-btn">
-              ♥ Favorites ({favoriteIds.size})
-            </Link>
-          )}
-
-          {user && (
-            <Link to="/inquiries" className="inquiries-nav-btn">
-              ✉ Inquiries
-            </Link>
-          )}
 
           {!user && (
             <Link to="/" className="login-nav-btn">
@@ -452,30 +380,12 @@ function Properties() {
                         )}
 
                         <div className="property-info">
-                          <div className="property-title-with-heart">
-                            <button
-                              type="button"
-                              className={`heart-toggle-btn ${
-                                favoriteIds.has(property.id) ? "favorited" : ""
-                              }`}
-                              title={
-                                favoriteIds.has(property.id)
-                                  ? "Remove from favorites"
-                                  : "Save to favorites"
-                              }
-                              onClick={(e) => handleToggleFavorite(e, property.id)}
-                              disabled={togglingFavId === property.id}
-                            >
-                              {favoriteIds.has(property.id) ? "♥" : "♡"}
-                            </button>
-
-                            <Link
-                              to={`/properties/${property.id}`}
-                              className="property-title-link"
-                            >
-                              {property.title || "Untitled Property"}
-                            </Link>
-                          </div>
+                          <Link
+                            to={`/properties/${property.id}`}
+                            className="property-title-link"
+                          >
+                            {property.title || "Untitled Property"}
+                          </Link>
 
                           {property.city && (
                             <span className="property-location">
@@ -486,9 +396,9 @@ function Properties() {
 
                           <Link
                             to={`/properties/${property.id}`}
-                            className="inline-inquire-btn"
+                            className="view-details-btn"
                           >
-                            View / Inquire →
+                            View Details →
                           </Link>
                         </div>
                       </div>
@@ -552,9 +462,9 @@ function Properties() {
                       <div className="row-action-buttons">
                         <Link
                           to={`/properties/${property.id}`}
-                          className="view-inquire-btn"
+                          className="view-action-btn"
                         >
-                          View / Inquire →
+                          View Details →
                         </Link>
 
                         {(isAdmin || (isAgent && Number(property.agent_id) === Number(user?.agent_id))) && (
