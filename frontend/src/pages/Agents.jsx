@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../api/axios";
+import DashboardBackLink from "../components/DashboardBackLink";
 import "./Agents.css";
 
 function Agents() {
@@ -40,6 +41,7 @@ function Agents() {
   if (loading) {
     return (
       <div className="page-container">
+        <DashboardBackLink />
         <h1>Agents</h1>
         <p>Loading agents...</p>
       </div>
@@ -50,6 +52,7 @@ function Agents() {
     <div className="page-container">
       <div className="page-header">
         <div>
+          <DashboardBackLink />
           <h1>Agents</h1>
           <p>Manage all registered agents</p>
         </div>

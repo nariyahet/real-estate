@@ -1,0 +1,35 @@
+.dashboard-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 12px;
+  transition: color 0.2s ease, transform 0.2s ease;
+  line-height: 1.4;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: fit-content;
+}
+
+.dashboard-back-link:hover {
+  color: #2563eb;
+  transform: translateX(-2px);
+}
+
+.dashboard-back-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (max-width: 640px) {
+  .dashboard-back-link {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+}

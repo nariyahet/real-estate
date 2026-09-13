@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
+import DashboardBackLink from "../components/DashboardBackLink";
 import "./Properties.css";
 
 function Properties() {
@@ -233,6 +234,7 @@ function Properties() {
       {/* Header */}
       <div className="page-header">
         <div>
+          <DashboardBackLink />
           <span className="page-label">PROPERTY MANAGEMENT</span>
           <h1>Properties</h1>
           <p>

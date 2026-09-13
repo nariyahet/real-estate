@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../api/axios";
+import DashboardBackLink from "../components/DashboardBackLink";
 import "./Users.css";
 
 function Users() {
@@ -87,6 +88,7 @@ function Users() {
       <div className="users-page">
         <div className="users-header">
           <div>
+            <DashboardBackLink />
             <span className="users-label">ADMIN MANAGEMENT</span>
             <h1>Users</h1>
             <p>Manage all registered users.</p>
@@ -105,6 +107,7 @@ function Users() {
     <div className="users-page">
       <div className="users-header">
         <div>
+          <DashboardBackLink />
           <span className="users-label">ADMIN MANAGEMENT</span>
           <h1>Users</h1>
           <p>Manage all registered users from one place.</p>

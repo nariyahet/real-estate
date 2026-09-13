@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../api/axios";
+import DashboardBackLink from "../components/DashboardBackLink";
 import "./Inquiries.css";
 
 function Inquiries() {
-  const navigate = useNavigate();
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -202,13 +202,7 @@ function Inquiries() {
       {/* Page Header */}
       <div className="inquiries-page-header">
         <div>
-          <button
-            type="button"
-            className="inquiries-back-nav"
-            onClick={() => navigate("/dashboard")}
-          >
-            ← Back to Dashboard
-          </button>
+          <DashboardBackLink />
 
           <span className="inquiries-label">
             {isAdmin

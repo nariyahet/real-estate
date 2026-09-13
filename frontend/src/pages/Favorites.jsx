@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
+import DashboardBackLink from "../components/DashboardBackLink";
 import "./Favorites.css";
 
 function Favorites() {
@@ -83,6 +84,7 @@ function Favorites() {
       {/* Header */}
       <div className="favorites-header">
         <div className="favorites-title-wrap">
+          <DashboardBackLink />
           <span className="favorites-label">SAVED PROPERTIES</span>
           <h1>
             My Favorites

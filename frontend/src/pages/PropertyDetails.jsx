@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../api/axios";
+import DashboardBackLink from "../components/DashboardBackLink";
 import "./PropertyDetails.css";
 
 function PropertyDetails() {
@@ -204,6 +205,7 @@ function PropertyDetails() {
   if (error || !property) {
     return (
       <div className="property-details-container">
+        <DashboardBackLink />
         <div className="details-header-nav">
           <button type="button" className="back-btn" onClick={() => navigate("/properties")}>
             ← Back to Properties
@@ -224,6 +226,7 @@ function PropertyDetails() {
 
   return (
     <div className="property-details-container">
+      <DashboardBackLink />
       {/* Navigation & Header */}
       <div className="details-header-nav">
         <button type="button" className="back-btn" onClick={() => navigate("/properties")}>
