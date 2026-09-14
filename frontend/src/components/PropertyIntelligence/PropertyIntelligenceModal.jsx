@@ -7,9 +7,11 @@ import {
   getScoreBadgeClass,
   getValuationBadgeClass,
   getMarketPositionBadgeClass,
+  getQualityScoreClass,
   recalculateRentalYield,
   recalculateROI,
   recalculateAppreciation,
+  generateClientPropertyDescription,
 } from "../../utils/propertyIntelligence";
 import "./PropertyIntelligence.css";
 
@@ -23,6 +25,12 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
   const [customMonthlyRent, setCustomMonthlyRent] = useState("");
   const [holdingYears, setHoldingYears] = useState(5);
   const [appreciationRate, setAppreciationRate] = useState(5.5);
+
+  // AI Description Generator State
+  const [descriptionTone, setDescriptionTone] = useState("luxury");
+  const [activeDescription, setActiveDescription] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const propertyId = property?.id;
 
@@ -51,6 +59,11 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
         }
         if (intel.roiCalculator?.assumedAppreciationRate) {
           setAppreciationRate(intel.roiCalculator.assumedAppreciationRate);
+        }
+
+        if (intel.aiDescription) {
+          setActiveDescription(intel.aiDescription);
+          setDescriptionTone(intel.aiDescription.tone || "luxury");
         }
       } else {
         setError(response.data?.message || "Failed to load property intelligence.");
@@ -105,6 +118,29 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
     intelData?.price || property.price,
     appreciationRate
   );
+
+  // Fallback / Active Description for Feature 10
+  const displayDesc = activeDescription || intelData?.aiDescription || generateClientPropertyDescription(property, descriptionTone);
+
+  const handleGenerateDescription = (newTone = descriptionTone) => {
+    setIsGenerating(true);
+    setTimeout(() => {
+      const targetProp = intelData?.property ? { ...property, ...intelData.property } : property;
+      const generated = generateClientPropertyDescription(targetProp, newTone);
+      setActiveDescription(generated);
+      setIsGenerating(false);
+    }, 200);
+  };
+
+  const handleCopyDescription = () => {
+    if (!displayDesc?.fullDescription) return;
+    navigator.clipboard.writeText(displayDesc.fullDescription).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch((err) => {
+      console.error("Failed to copy description:", err);
+    });
+  };
 
   return (
     <div className="intel-modal-overlay" onClick={onClose}>
@@ -266,6 +302,25 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
                     {intelData.investmentScore?.rating || "Average"}
                   </span>
                 </div>
+
+                {/* 5. Quality Score Highlight */}
+                <div className="intel-quick-card">
+                  <div className="intel-quick-card-top">
+                    <span className="intel-quick-label">Quality Score</span>
+                    <span className="intel-quick-icon">✨</span>
+                  </div>
+                  <div className="intel-quick-val">
+                    {intelData.qualityScore?.score ?? 0}
+                    <span style={{ fontSize: "14px", color: "#64748b" }}> / 100</span>
+                  </div>
+                  <span
+                    className={`intel-quick-badge ${getQualityScoreClass(
+                      intelData.qualityScore?.rating
+                    )}`}
+                  >
+                    {intelData.qualityScore?.rating || "Average"}
+                  </span>
+                </div>
               </div>
 
               {/* Tabs Navigation */}
@@ -290,6 +345,20 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
                   onClick={() => setActiveTab("investment")}
                 >
                   <span>📈</span> Investment & Financials
+                </button>
+                <button
+                  type="button"
+                  className={`intel-tab-btn ${activeTab === "quality" ? "active" : ""}`}
+                  onClick={() => setActiveTab("quality")}
+                >
+                  <span>⭐</span> Quality Score
+                </button>
+                <button
+                  type="button"
+                  className={`intel-tab-btn ${activeTab === "description" ? "active" : ""}`}
+                  onClick={() => setActiveTab("description")}
+                >
+                  <span>🤖</span> AI Description
                 </button>
               </div>
 
@@ -1094,6 +1163,224 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
                       <span>
                         <strong>Model Methodology:</strong>{" "}
                         {intelData.appreciationForecast?.methodology}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ============================================================
+                  TAB 4: PROPERTY QUALITY SCORE (Feature 9)
+                  ============================================================ */}
+              {activeTab === "quality" && (
+                <div className="intel-tab-pane">
+                  <div className="intel-feature-card">
+                    <div className="intel-card-header">
+                      <div className="intel-card-title-wrap">
+                        <div className="intel-card-icon">⭐</div>
+                        <div>
+                          <h3 className="intel-card-title">Property Quality Score</h3>
+                          <p className="intel-card-subtitle">
+                            Algorithmic index evaluating space proportions, location tier, media completeness, and property type desirability.
+                          </p>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`intel-quick-badge ${getQualityScoreClass(
+                          intelData.qualityScore?.rating
+                        )}`}
+                        style={{ fontSize: "12px", padding: "5px 12px" }}
+                      >
+                        ● {intelData.qualityScore?.rating || "Average"}
+                      </span>
+                    </div>
+
+                    {/* Quality Hero Banner */}
+                    <div className="intel-quality-hero">
+                      <div className="intel-quality-gauge">
+                        <div className="intel-quality-gauge-num">
+                          {intelData.qualityScore?.score ?? 0}
+                        </div>
+                        <div className="intel-quality-gauge-den">/ 100</div>
+                      </div>
+                      <div className="intel-quality-hero-info">
+                        <div className="intel-quality-hero-title">
+                          Quality Rating: <strong>{intelData.qualityScore?.rating}</strong>
+                        </div>
+                        <p className="intel-quality-hero-desc">
+                          {intelData.qualityScore?.summary}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* 5 Factors Breakdown */}
+                    <div className="intel-quality-factors">
+                      <h4 className="intel-sub-heading">Individual Factor Breakdown</h4>
+                      <div className="intel-factors-grid">
+                        {intelData.qualityScore?.breakdown?.map((factor) => (
+                          <div key={factor.factor} className="intel-factor-card">
+                            <div className="intel-factor-header">
+                              <div>
+                                <span className="intel-factor-name">{factor.factor}</span>
+                                <span className="intel-factor-weight"> (Weight: {factor.weight})</span>
+                              </div>
+                              <div className="intel-factor-score-pill">
+                                <strong>{factor.score}</strong> / {factor.maxScore} pts
+                              </div>
+                            </div>
+
+                            {/* Progress bar */}
+                            <div className="intel-factor-progress-bg">
+                              <div
+                                className={`intel-factor-progress-fill ${getQualityScoreClass(factor.status)}`}
+                                style={{
+                                  width: `${Math.round((factor.score / factor.maxScore) * 100)}%`,
+                                }}
+                              ></div>
+                            </div>
+
+                            <div className="intel-factor-details">
+                              {factor.details}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Calculation Explanation */}
+                    <div className="intel-disclaimer-box">
+                      <span>ℹ️</span>
+                      <span>
+                        <strong>Scoring Methodology:</strong>{" "}
+                        {intelData.qualityScore?.methodology}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ============================================================
+                  TAB 5: AI PROPERTY DESCRIPTION GENERATOR (Feature 10)
+                  ============================================================ */}
+              {activeTab === "description" && (
+                <div className="intel-tab-pane">
+                  <div className="intel-feature-card">
+                    <div className="intel-card-header">
+                      <div className="intel-card-title-wrap">
+                        <div className="intel-card-icon">🤖</div>
+                        <div>
+                          <h3 className="intel-card-title">AI Property Description Generator</h3>
+                          <p className="intel-card-subtitle">
+                            Automated, publication-ready real-estate marketing copy generated from verified property specifications.
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="intel-quick-badge pos-badge-average">
+                        ⚡ Provider-Ready Generator
+                      </span>
+                    </div>
+
+                    {/* Generator Controls Bar */}
+                    <div className="intel-desc-controls">
+                      <div className="intel-desc-tone-group">
+                        <label htmlFor="intel-desc-tone" className="intel-input-label">
+                          Copywriting Tone / Style:
+                        </label>
+                        <select
+                          id="intel-desc-tone"
+                          className="intel-desc-select"
+                          value={descriptionTone}
+                          onChange={(e) => {
+                            const newTone = e.target.value;
+                            setDescriptionTone(newTone);
+                            handleGenerateDescription(newTone);
+                          }}
+                        >
+                          <option value="luxury">👑 Executive / Luxury Appeal</option>
+                          <option value="family">🏡 Family & Neighborhood Comfort</option>
+                          <option value="investment">📈 High-Yield Investor Focus</option>
+                          <option value="concise">⚡ Concise / Punchy Summary</option>
+                        </select>
+                      </div>
+
+                      <div className="intel-desc-btn-group">
+                        <button
+                          type="button"
+                          className="intel-desc-btn-gen"
+                          onClick={() => handleGenerateDescription(descriptionTone)}
+                          disabled={isGenerating}
+                        >
+                          {isGenerating ? "⏳ Generating..." : "🔄 Regenerate"}
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`intel-desc-btn-copy ${copied ? "copied" : ""}`}
+                          onClick={handleCopyDescription}
+                          disabled={!displayDesc?.fullDescription}
+                        >
+                          {copied ? "✓ Copied to Clipboard!" : "📋 Copy Description"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Generated Description Display Box */}
+                    <div className="intel-desc-preview-card">
+                      <div className="intel-desc-preview-top">
+                        <div className="intel-desc-headline">
+                          {displayDesc?.headline || property.title}
+                        </div>
+                        <div className="intel-desc-meta-tags">
+                          <span className="intel-desc-tag">
+                            📝 {displayDesc?.wordCount || 0} Words
+                          </span>
+                          <span className="intel-desc-tag">
+                            🔤 {displayDesc?.characterCount || 0} Chars
+                          </span>
+                          <span className="intel-desc-tag tone-tag">
+                            Tone: {descriptionTone}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="intel-desc-body-text">
+                        {displayDesc?.lead && (
+                          <p className="intel-desc-para intel-desc-lead">
+                            {displayDesc.lead}
+                          </p>
+                        )}
+                        {displayDesc?.body && (
+                          <p className="intel-desc-para">
+                            {displayDesc.body}
+                          </p>
+                        )}
+                        {displayDesc?.conclusion && (
+                          <p className="intel-desc-para intel-desc-conclusion">
+                            {displayDesc.conclusion}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Key Highlights Bullets */}
+                      {displayDesc?.highlights && displayDesc.highlights.length > 0 && (
+                        <div className="intel-desc-highlights">
+                          <div className="intel-desc-highlights-title">Key Property Highlights</div>
+                          <ul className="intel-desc-highlights-list">
+                            {displayDesc.highlights.map((item, idx) => (
+                              <li key={idx}>{item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Architecture & Provider Status Note */}
+                    <div className="intel-disclaimer-box">
+                      <span>ℹ️</span>
+                      <span>
+                        <strong>AI Provider Architecture:</strong> Built using our modular real-estate copywriting engine with verified property metadata. Pre-configured for direct connection with OpenAI, Gemini, or Claude providers when API keys are configured.
                       </span>
                     </div>
                   </div>

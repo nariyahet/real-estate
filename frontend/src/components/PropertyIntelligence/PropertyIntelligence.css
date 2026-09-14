@@ -187,7 +187,7 @@
 /* Quick Metrics Bar */
 .intel-quick-bar {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 14px;
 }
 
@@ -294,6 +294,27 @@
 .pos-badge-average {
   background: #f1f5f9;
   color: #475569;
+}
+
+/* Quality Score Badges */
+.quality-badge-excellent {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.quality-badge-good {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.quality-badge-average {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.quality-badge-improvement {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 /* Tabs Navigation */
@@ -940,6 +961,337 @@
   100% {
     background-position: -200% 0;
   }
+/* ============================================================
+   Feature 9: Property Quality Score Styles
+   ============================================================ */
+.intel-quality-hero {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+
+.intel-quality-gauge {
+  min-width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
+  flex-shrink: 0;
+}
+
+.intel-quality-gauge-num {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.intel-quality-gauge-den {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.intel-quality-hero-info {
+  flex: 1;
+}
+
+.intel-quality-hero-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.intel-quality-hero-title strong {
+  color: #2563eb;
+}
+
+.intel-quality-hero-desc {
+  font-size: 13px;
+  color: #475569;
+  margin: 6px 0 0 0;
+  line-height: 1.5;
+}
+
+.intel-quality-factors {
+  margin-top: 4px;
+}
+
+.intel-sub-heading {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+
+.intel-factors-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.intel-factor-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: border-color 0.15s ease;
+}
+
+.intel-factor-card:hover {
+  border-color: #cbd5e1;
+}
+
+.intel-factor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.intel-factor-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.intel-factor-weight {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.intel-factor-score-pill {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+  background: #f8fafc;
+  padding: 3px 9px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.intel-factor-progress-bg {
+  width: 100%;
+  height: 7px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  margin: 10px 0 8px 0;
+  overflow: hidden;
+}
+
+.intel-factor-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.intel-factor-details {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   Feature 10: AI Property Description Generator Styles
+   ============================================================ */
+.intel-desc-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: #f8fafc;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.intel-desc-tone-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 250px;
+}
+
+.intel-desc-select {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  background: #ffffff;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.intel-desc-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.intel-desc-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.intel-desc-btn-gen {
+  padding: 9px 16px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.intel-desc-btn-gen:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.intel-desc-btn-gen:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.intel-desc-btn-copy {
+  padding: 9px 16px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.intel-desc-btn-copy:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.intel-desc-btn-copy.copied {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.intel-desc-preview-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.intel-desc-preview-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.intel-desc-headline {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.intel-desc-meta-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.intel-desc-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.intel-desc-tag.tone-tag {
+  background: #eff6ff;
+  color: #2563eb;
+  text-transform: capitalize;
+}
+
+.intel-desc-body-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #334155;
+}
+
+.intel-desc-para {
+  margin: 0 0 14px 0;
+}
+
+.intel-desc-lead {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.intel-desc-conclusion {
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
+.intel-desc-highlights {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 14px 18px;
+  border: 1px solid #e2e8f0;
+  margin-top: 18px;
+}
+
+.intel-desc-highlights-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.intel-desc-highlights-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #1e293b;
 }
 
 /* Responsive Breakpoints */

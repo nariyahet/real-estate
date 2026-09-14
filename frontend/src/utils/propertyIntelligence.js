@@ -174,3 +174,107 @@ export const recalculateAppreciation = (baseValue, annualRate) => {
     };
   });
 };
+
+/**
+ * Property Quality Score Badge Class
+ */
+export const getQualityScoreClass = (rating) => {
+  switch (rating) {
+    case "Excellent":
+      return "quality-badge-excellent";
+    case "Good":
+      return "quality-badge-good";
+    case "Average":
+      return "quality-badge-average";
+    case "Needs Improvement":
+    default:
+      return "quality-badge-improvement";
+  }
+};
+
+/**
+ * Client-Side Dynamic AI Property Description Generator
+ * Enables instant interactive tone switching and regeneration in the modal
+ */
+export const generateClientPropertyDescription = (property, tone = "luxury") => {
+  const selectedTone = (tone || "luxury").toLowerCase();
+  const propType = property.property_type || "Residence";
+  const city = property.city || "Prime City";
+  const state = property.state ? `, ${property.state}` : "";
+  const bedrooms = Number(property.bedrooms) || 0;
+  const bathrooms = Number(property.bathrooms) || 0;
+  const area = Number(property.area) || 0;
+  const listingType = property.listing_type || "Sale";
+  const price = Number(property.price) || 0;
+  const status = property.status || "Available";
+  const featured = Boolean(property.featured && property.featured !== 0 && property.featured !== "0");
+
+  const formattedPrice = price > 0 ? `₹${Math.round(price).toLocaleString("en-IN")}` : "Price on Request";
+  const formattedArea = area > 0 ? `${Math.round(area).toLocaleString("en-IN")} sq.ft` : "generous layout";
+  const bedText = bedrooms > 0 ? `${bedrooms} BHK` : "";
+  const bedLong = bedrooms > 0 ? `${bedrooms} spacious bedroom${bedrooms > 1 ? "s" : ""}` : "versatile living spaces";
+  const bathLong = bathrooms > 0 ? `${bathrooms} modern bathroom${bathrooms > 1 ? "s" : ""}` : "well-appointed bathrooms";
+  const rentSuffix = listingType === "Rent" ? "/month" : "";
+
+  let headline;
+  let lead;
+  let body;
+  let conclusion;
+
+  switch (selectedTone) {
+    case "family":
+      headline = `Welcoming ${bedText ? `${bedText} ` : ""}${propType} – The Ideal Home in ${city}`;
+      lead = `Welcome to this warm and inviting ${propType.toLowerCase()} nestled in the heart of ${city}${state}. Designed for family comfort and modern harmony, this home provides a serene sanctuary while keeping you seamlessly connected to neighborhood conveniences.`;
+      body = `Spanning ${formattedArea}, the residence features ${bedLong} and ${bathLong}. Every room has been planned to optimize daily comfort, natural airflow, and family togetherness.`;
+      conclusion = `Offered for ${listingType.toLowerCase()} at ${formattedPrice}${rentSuffix}, this property represents an outstanding opportunity for families seeking lasting security, community, and comfort in ${city}.`;
+      break;
+
+    case "investment":
+      headline = `High-Growth Real Estate Opportunity: ${propType} in ${city}`;
+      lead = `A high-potential real-estate asset strategically positioned in one of ${city}'s high-demand growth corridors. This ${propType.toLowerCase()} delivers an exceptional combination of capital appreciation and attractive rental liquidity.`;
+      body = `Encompassing a high-efficiency footprint of ${formattedArea} with ${bedLong} and ${bathLong}, the asset is engineered for strong tenant attraction and durable long-term valuation in ${city}${state}.`;
+      conclusion = `Competitively priced at ${formattedPrice}${rentSuffix} for ${listingType.toLowerCase()}, this asset offers immediate market readiness and compelling risk-adjusted yields for astute investors.`;
+      break;
+
+    case "concise":
+      headline = `Prime ${bedText ? `${bedText} ` : ""}${propType} | ${city} | ${formattedPrice}`;
+      lead = `Well-maintained ${propType.toLowerCase()} available for ${listingType.toLowerCase()} in a sought-after precinct of ${city}${state}.`;
+      body = `Key specs include ${formattedArea} total area, ${bedLong}, ${bathLong}, and verified active status (${status}).`;
+      conclusion = `Offered at ${formattedPrice}${rentSuffix}. Immediate inspection and acquisition available upon inquiry.`;
+      break;
+
+    case "luxury":
+    default:
+      headline = `Exclusive ${bedText ? `${bedText} ` : ""}${propType} in Prime ${city}`;
+      lead = `Presenting an extraordinary opportunity to acquire this distinguished ${propType.toLowerCase()} located in ${city}${state}. Crafted for discerning occupants who value quality, elegance, and effortless urban connectivity.`;
+      body = `Boasting an expansive ${formattedArea} floor plan, this fine property accommodates ${bedLong} and ${bathLong}. Contemporary finishes, abundant natural sunlight, and balanced proportions define every corner of the living space.`;
+      conclusion = `Available for ${listingType.toLowerCase()} at ${formattedPrice}${rentSuffix}. Positioned moments away from premier business districts, transport links, and lifestyle destinations.`;
+      break;
+  }
+
+  const fullDescription = `${headline}\n\n${lead}\n\n${body}\n\n${conclusion}`;
+
+  const highlights = [
+    `📐 Total Footprint: ${formattedArea}`,
+    `🛏️ Living Spaces: ${bedrooms > 0 ? `${bedrooms} Bedroom${bedrooms > 1 ? "s" : ""}` : "Open Plan"}${bathrooms > 0 ? `, ${bathrooms} Bathroom${bathrooms > 1 ? "s" : ""}` : ""}`,
+    `📍 Prime Location: ${city}${state}`,
+    `🏷️ Listed For: ${listingType} at ${formattedPrice}${rentSuffix}`,
+    `⚡ Listing Status: ${status} ${featured ? "(⭐ Featured Listing)" : ""}`.trim(),
+  ];
+
+  return {
+    tone: selectedTone,
+    headline,
+    lead,
+    body,
+    conclusion,
+    fullDescription,
+    highlights,
+    wordCount: fullDescription.split(/\s+/).filter(Boolean).length,
+    characterCount: fullDescription.length,
+    provider: "deterministic_copywriter",
+    providerReady: true,
+    model: "antigravity-realestate-copywriter-v1",
+    generatedAt: new Date().toISOString(),
+  };
+};
