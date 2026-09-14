@@ -7,6 +7,7 @@ const {
   editProperty,
   removeProperty,
   getMyProperties,
+  getPropertyIntelligence,
 } = require("../controllers/propertyController");
 
 const {
@@ -22,6 +23,8 @@ router.get(
   protect,
   getMyProperties
 );
+
+router.get("/:id/intelligence", getPropertyIntelligence);
 
 router.get("/:id", getProperty);
 

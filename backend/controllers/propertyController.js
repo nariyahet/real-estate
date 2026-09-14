@@ -8,6 +8,9 @@ const {
 } = require("../models/propertyModel");
 
 const { pool } = require("../config/db");
+const {
+  generateIntegratedPropertyIntelligence,
+} = require("../utils/propertyIntelligence");
 
 const getProperties = async (req, res) => {
 
@@ -617,6 +620,147 @@ const getMyProperties = async (req, res) => {
   }
 };
 
+const getPropertyIntelligence = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!Number.isInteger(Number(id)) || Number(id) <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid property ID.",
+      });
+    }
+
+    const propertyId = Number(id);
+    const property = await getPropertyById(propertyId);
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        message: "Property not found.",
+      });
+    }
+
+    // Query genuine comparable properties from the database
+    // Exclude target property, only active/relevant statuses
+    // Prioritize same listing type, same city, same property type
+    const [comparables] = await pool.execute(
+      `
+      SELECT
+        p.id,
+        p.title,
+        p.property_type,
+        p.listing_type,
+        p.price,
+        p.bedrooms,
+        p.bathrooms,
+        p.area,
+        p.city,
+        p.status,
+        (
+          SELECT pi.image_url
+          FROM property_images pi
+          WHERE pi.property_id = p.id
+          ORDER BY pi.is_primary DESC, pi.id ASC
+          LIMIT 1
+        ) AS primary_image
+      FROM properties p
+      WHERE p.id != ?
+        AND p.status != 'Inactive'
+        AND p.listing_type = ?
+        AND (
+          (p.city = ? AND p.property_type = ?)
+          OR (p.city = ?)
+          OR (p.property_type = ?)
+        )
+      ORDER BY
+        (p.city = ? AND p.property_type = ?) DESC,
+        (p.city = ?) DESC,
+        ABS(p.price - ?) ASC
+      LIMIT 12
+      `,
+      [
+        propertyId,
+        property.listing_type || "Sale",
+        property.city || "",
+        property.property_type || "",
+        property.city || "",
+        property.property_type || "",
+        property.city || "",
+        property.property_type || "",
+        property.city || "",
+        Number(property.price) || 0,
+      ]
+    );
+
+    // If target property is for Sale, query rental listings in same city/type for yield benchmark
+    let rentalComps = [];
+    if (property.listing_type === "Sale") {
+      const [rentRows] = await pool.execute(
+        `
+        SELECT p.id, p.title, p.price, p.area, p.city, p.property_type
+        FROM properties p
+        WHERE p.listing_type = 'Rent'
+          AND p.status != 'Inactive'
+          AND (p.city = ? OR p.property_type = ?)
+        LIMIT 10
+        `,
+        [property.city || "", property.property_type || ""]
+      );
+      rentalComps = rentRows;
+    }
+
+    // Options from query params (e.g. for custom calculators)
+    const { monthlyRent, holdingYears, appreciationRate, propertyValue } = req.query;
+    const options = {};
+    if (monthlyRent !== undefined && !Number.isNaN(Number(monthlyRent))) {
+      options.monthlyRent = Number(monthlyRent);
+    }
+    if (holdingYears !== undefined && !Number.isNaN(Number(holdingYears))) {
+      options.holdingYears = Number(holdingYears);
+    }
+    if (appreciationRate !== undefined && !Number.isNaN(Number(appreciationRate))) {
+      options.appreciationRate = Number(appreciationRate);
+    }
+    if (propertyValue !== undefined && !Number.isNaN(Number(propertyValue))) {
+      options.propertyValue = Number(propertyValue);
+    }
+
+    const intelligence = generateIntegratedPropertyIntelligence(
+      property,
+      comparables,
+      options,
+      rentalComps
+    );
+
+    return res.status(200).json({
+      success: true,
+      property: {
+        id: property.id,
+        title: property.title,
+        property_type: property.property_type,
+        listing_type: property.listing_type,
+        price: property.price,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        area: property.area,
+        city: property.city,
+        state: property.state,
+        status: property.status,
+        featured: property.featured,
+        primary_image: property.images?.[0]?.image_url || null,
+      },
+      intelligence,
+    });
+  } catch (error) {
+    console.error("Property Intelligence Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate property intelligence.",
+    });
+  }
+};
+
 module.exports = {
   getProperties,
   getProperty,
@@ -624,4 +768,5 @@ module.exports = {
   editProperty,
   removeProperty,
   getMyProperties,
+  getPropertyIntelligence,
 };

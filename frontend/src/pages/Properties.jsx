@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import DashboardBackLink from "../components/DashboardBackLink";
+import PropertyIntelligenceModal from "../components/PropertyIntelligence/PropertyIntelligenceModal";
 import "./Properties.css";
 
 function Properties() {
@@ -10,6 +11,10 @@ function Properties() {
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+
+  // Property Intelligence Modal state
+  const [selectedIntelProperty, setSelectedIntelProperty] = useState(null);
+  const [isIntelOpen, setIsIntelOpen] = useState(false);
 
   // Search, Filter & Pagination states
   const [search, setSearch] = useState("");
@@ -355,6 +360,7 @@ function Properties() {
                   <th>Listing</th>
                   <th>Price</th>
                   <th>Agent</th>
+                  <th>Intelligence</th>
                   {(isAdmin || isAgent) && <th>Status</th>}
                   {(isAdmin || isAgent) && <th>Action</th>}
                 </tr>
@@ -420,6 +426,19 @@ function Properties() {
                       <span className="agent-name">
                         {property.agent_name || "Not Assigned"}
                       </span>
+                    </td>
+
+                    <td className="intel-cell">
+                      <button
+                        type="button"
+                        className="intel-btn"
+                        onClick={() => {
+                          setSelectedIntelProperty(property);
+                          setIsIntelOpen(true);
+                        }}
+                      >
+                        📊 Intelligence
+                      </button>
                     </td>
 
                     {(isAdmin || isAgent) && (
@@ -506,6 +525,16 @@ function Properties() {
           )}
         </>
       )}
+
+      {/* Property Intelligence Modal */}
+      <PropertyIntelligenceModal
+        isOpen={isIntelOpen}
+        property={selectedIntelProperty}
+        onClose={() => {
+          setIsIntelOpen(false);
+          setSelectedIntelProperty(null);
+        }}
+      />
     </div>
   );
 }
