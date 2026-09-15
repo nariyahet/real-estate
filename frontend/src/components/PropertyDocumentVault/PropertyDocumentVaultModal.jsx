@@ -150,7 +150,7 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
   }, [propertyId]);
 
   useEffect(() => {
-    if (isOpen && propertyId) {
+    if (isOpen && propertyId && canManageVault) {
       fetchDocuments();
       setSuccessMsg("");
       setError("");
@@ -159,7 +159,7 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
       setFileError("");
       setDeleteConfirmDoc(null);
     }
-  }, [isOpen, propertyId, fetchDocuments]);
+  }, [isOpen, propertyId, canManageVault, fetchDocuments]);
 
   // Handle escape key
   useEffect(() => {
@@ -341,7 +341,7 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
     }
   };
 
-  if (!isOpen || !property) return null;
+  if (!isOpen || !property || !canManageVault) return null;
 
   // Filter documents
   const filteredDocs = documents.filter((doc) => {

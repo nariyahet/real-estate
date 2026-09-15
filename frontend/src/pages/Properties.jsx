@@ -43,6 +43,19 @@ function Properties() {
   const isAdmin = user?.role === "admin";
   const isAgent = user?.role === "agent";
 
+  const canAccessVault = (property) => {
+    if (!user) return false;
+    if (isAdmin) return true;
+    if (isAgent && Number(property.agent_id) === Number(user?.agent_id)) return true;
+    return false;
+  };
+
+  const handleOpenVault = (property) => {
+    if (!canAccessVault(property)) return;
+    setSelectedVaultProperty(property);
+    setIsVaultOpen(true);
+  };
+
   const fetchProperties = useCallback(async () => {
     try {
       setLoading(true);
@@ -365,7 +378,7 @@ function Properties() {
                   <th>Listing</th>
                   <th>Price</th>
                   <th>Agent</th>
-                  <th>Intelligence & Vault</th>
+                  <th>Intelligence</th>
                   {(isAdmin || isAgent) && <th>Status</th>}
                   {(isAdmin || isAgent) && <th>Action</th>}
                 </tr>
@@ -445,17 +458,16 @@ function Properties() {
                         >
                           📊 Intelligence
                         </button>
-                        <button
-                          type="button"
-                          className="vault-btn"
-                          title="Open Property Document Vault"
-                          onClick={() => {
-                            setSelectedVaultProperty(property);
-                            setIsVaultOpen(true);
-                          }}
-                        >
-                          📁 Vault
-                        </button>
+                        {canAccessVault(property) && (
+                          <button
+                            type="button"
+                            className="vault-btn"
+                            title="Open Property Document Vault"
+                            onClick={() => handleOpenVault(property)}
+                          >
+                            📁 Vault
+                          </button>
+                        )}
                       </div>
                     </td>
 
