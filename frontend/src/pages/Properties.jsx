@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import DashboardBackLink from "../components/DashboardBackLink";
@@ -41,15 +41,14 @@ function Properties() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const getUser = () => {
+  const user = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("user") || "null");
     } catch {
       return null;
     }
-  };
+  }, []);
 
-  const user = getUser();
   const isAdmin = user?.role === "admin";
   const isAgent = user?.role === "agent";
 
@@ -73,16 +72,20 @@ function Properties() {
   };
 
   const fetchSavedIds = useCallback(async () => {
-    if (!user) return;
+    if (!user?.id) return;
     try {
       const res = await api.get("/saved-properties");
       if (res.data?.success) {
-        setSavedIds((res.data.savedProperties || []).map((s) => s.property.id));
+        setSavedIds(
+          (res.data.savedProperties || [])
+            .map((s) => s.property?.id)
+            .filter(Boolean),
+        );
       }
     } catch {
       // ignore
     }
-  }, [user]);
+  }, [user?.id]);
 
   const handleToggleSave = async (propertyId) => {
     if (!user) {
@@ -169,8 +172,13 @@ function Properties() {
 
   useEffect(() => {
     fetchProperties();
-    fetchSavedIds();
-  }, [fetchProperties, fetchSavedIds]);
+  }, [fetchProperties]);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchSavedIds();
+    }
+  }, [user?.id, fetchSavedIds]);
 
   const updatePropertyStatus = async (propertyId, status) => {
     try {
