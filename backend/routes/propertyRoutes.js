@@ -11,6 +11,15 @@ const {
 } = require("../controllers/propertyController");
 
 const {
+  getPropertyDocuments,
+  uploadPropertyDocument,
+} = require("../controllers/documentController");
+
+const {
+  handleDocumentUpload,
+} = require("../middleware/uploadMiddleware");
+
+const {
   protect,
 } = require("../middleware/authMiddleware");
 
@@ -25,6 +34,14 @@ router.get(
 );
 
 router.get("/:id/intelligence", getPropertyIntelligence);
+
+router.get("/:propertyId/documents", protect, getPropertyDocuments);
+router.post(
+  "/:propertyId/documents",
+  protect,
+  handleDocumentUpload("file"),
+  uploadPropertyDocument
+);
 
 router.get("/:id", getProperty);
 

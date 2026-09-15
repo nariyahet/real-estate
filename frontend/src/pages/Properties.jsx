@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import DashboardBackLink from "../components/DashboardBackLink";
 import PropertyIntelligenceModal from "../components/PropertyIntelligence/PropertyIntelligenceModal";
+import PropertyDocumentVaultModal from "../components/PropertyDocumentVault/PropertyDocumentVaultModal";
 import "./Properties.css";
 
 function Properties() {
@@ -15,6 +16,10 @@ function Properties() {
   // Property Intelligence Modal state
   const [selectedIntelProperty, setSelectedIntelProperty] = useState(null);
   const [isIntelOpen, setIsIntelOpen] = useState(false);
+
+  // Property Document Vault Modal state
+  const [selectedVaultProperty, setSelectedVaultProperty] = useState(null);
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
 
   // Search, Filter & Pagination states
   const [search, setSearch] = useState("");
@@ -360,7 +365,7 @@ function Properties() {
                   <th>Listing</th>
                   <th>Price</th>
                   <th>Agent</th>
-                  <th>Intelligence</th>
+                  <th>Intelligence & Vault</th>
                   {(isAdmin || isAgent) && <th>Status</th>}
                   {(isAdmin || isAgent) && <th>Action</th>}
                 </tr>
@@ -429,16 +434,29 @@ function Properties() {
                     </td>
 
                     <td className="intel-cell">
-                      <button
-                        type="button"
-                        className="intel-btn"
-                        onClick={() => {
-                          setSelectedIntelProperty(property);
-                          setIsIntelOpen(true);
-                        }}
-                      >
-                        📊 Intelligence
-                      </button>
+                      <div className="property-actions-pill-wrap">
+                        <button
+                          type="button"
+                          className="intel-btn"
+                          onClick={() => {
+                            setSelectedIntelProperty(property);
+                            setIsIntelOpen(true);
+                          }}
+                        >
+                          📊 Intelligence
+                        </button>
+                        <button
+                          type="button"
+                          className="vault-btn"
+                          title="Open Property Document Vault"
+                          onClick={() => {
+                            setSelectedVaultProperty(property);
+                            setIsVaultOpen(true);
+                          }}
+                        >
+                          📁 Vault
+                        </button>
+                      </div>
                     </td>
 
                     {(isAdmin || isAgent) && (
@@ -533,6 +551,16 @@ function Properties() {
         onClose={() => {
           setIsIntelOpen(false);
           setSelectedIntelProperty(null);
+        }}
+      />
+
+      {/* Property Document Vault Modal */}
+      <PropertyDocumentVaultModal
+        isOpen={isVaultOpen}
+        property={selectedVaultProperty}
+        onClose={() => {
+          setIsVaultOpen(false);
+          setSelectedVaultProperty(null);
         }}
       />
     </div>
