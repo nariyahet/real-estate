@@ -104,7 +104,7 @@ VALUES
     'Surat',
     'Gujarat',
     'India',
-    'Available',
+    'Rented',
     FALSE
 ),
 (
