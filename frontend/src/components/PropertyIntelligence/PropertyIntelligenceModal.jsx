@@ -235,7 +235,7 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
             <>
               {/* Quick Key Metrics Bar */}
               <div className="intel-quick-bar">
-                {/* 1. Valuation Highlight */}
+                {/* 1. Valuation Highlight (Property Asset Valuation) */}
                 <div className="intel-quick-card">
                   <div className="intel-quick-card-top">
                     <span className="intel-quick-label">Automated Valuation</span>
@@ -244,7 +244,7 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
                   <div className="intel-quick-val">
                     {formatCurrency(
                       intelData.valuation?.estimatedMarketValue,
-                      intelData.listingType
+                      "Sale"
                     )}
                   </div>
                   <span
@@ -256,10 +256,14 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
                   </span>
                 </div>
 
-                {/* 2. Price Estimate Highlight */}
+                {/* 2. Price Estimate Highlight (Rent Recommendation for Rent, Price for Sale) */}
                 <div className="intel-quick-card">
                   <div className="intel-quick-card-top">
-                    <span className="intel-quick-label">Price Recommendation</span>
+                    <span className="intel-quick-label">
+                      {intelData.listingType === "Rent"
+                        ? "Rent Recommendation"
+                        : "Price Recommendation"}
+                    </span>
                     <span className="intel-quick-icon">🎯</span>
                   </div>
                   <div className="intel-quick-val">
@@ -397,51 +401,89 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
                       </span>
                     </div>
 
-                    <div className="intel-grid-3">
-                      <div className="intel-stat-box">
-                        <span className="intel-stat-box-label">Estimated Market Value</span>
-                        <span className="intel-stat-box-value">
-                          {formatCurrency(
-                            intelData.valuation?.estimatedMarketValue,
-                            intelData.listingType
-                          )}
-                        </span>
-                        <span className="intel-stat-box-sub">Model Target Valuation</span>
-                      </div>
+                    {intelData.listingType === "Rent" ? (
+                      <div className="intel-grid-3">
+                        <div className="intel-stat-box">
+                          <span className="intel-stat-box-label">Estimated Property Asset Value</span>
+                          <span className="intel-stat-box-value">
+                            {formatCurrency(intelData.valuation?.estimatedMarketValue, "Sale")}
+                          </span>
+                          <span className="intel-stat-box-sub">Capital Asset Valuation</span>
+                        </div>
 
-                      <div className="intel-stat-box">
-                        <span className="intel-stat-box-label">Current Listed Price</span>
-                        <span className="intel-stat-box-value">
-                          {formatCurrency(
-                            intelData.valuation?.currentListedPrice,
-                            intelData.listingType
-                          )}
-                        </span>
-                        <span className="intel-stat-box-sub">Asking Value</span>
-                      </div>
+                        <div className="intel-stat-box">
+                          <span className="intel-stat-box-label">Current Listed Rent</span>
+                          <span className="intel-stat-box-value">
+                            {formatCurrency(intelData.valuation?.currentListedPrice, "Rent")}
+                          </span>
+                          <span className="intel-stat-box-sub">Asking Tenant Rate</span>
+                        </div>
 
-                      <div className="intel-stat-box">
-                        <span className="intel-stat-box-label">Variance</span>
-                        <span
-                          className="intel-stat-box-value"
-                          style={{
-                            color:
-                              (intelData.valuation?.differenceAmount || 0) >= 0
-                                ? "#16a34a"
-                                : "#dc2626",
-                          }}
-                        >
-                          {formatCurrency(
-                            intelData.valuation?.differenceAmount,
-                            intelData.listingType
-                          )}{" "}
-                          ({formatPercent(intelData.valuation?.differencePercentage, true)})
-                        </span>
-                        <span className="intel-stat-box-sub">
-                          {intelData.valuation?.statusDetail || "Market alignment"}
-                        </span>
+                        <div className="intel-stat-box">
+                          <span className="intel-stat-box-label">Estimated Market Rent</span>
+                          <span
+                            className="intel-stat-box-value"
+                            style={{
+                              color:
+                                (intelData.valuation?.differenceAmount || 0) >= 0
+                                  ? "#16a34a"
+                                  : "#dc2626",
+                            }}
+                          >
+                            {formatCurrency(intelData.valuation?.estimatedMonthlyRent, "Rent")}
+                          </span>
+                          <span className="intel-stat-box-sub">
+                            Variance: {formatCurrency(intelData.valuation?.differenceAmount, "Rent")} ({formatPercent(intelData.valuation?.differencePercentage, true)})
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="intel-grid-3">
+                        <div className="intel-stat-box">
+                          <span className="intel-stat-box-label">Estimated Market Value</span>
+                          <span className="intel-stat-box-value">
+                            {formatCurrency(
+                              intelData.valuation?.estimatedMarketValue,
+                              intelData.listingType
+                            )}
+                          </span>
+                          <span className="intel-stat-box-sub">Model Target Valuation</span>
+                        </div>
+
+                        <div className="intel-stat-box">
+                          <span className="intel-stat-box-label">Current Listed Price</span>
+                          <span className="intel-stat-box-value">
+                            {formatCurrency(
+                              intelData.valuation?.currentListedPrice,
+                              intelData.listingType
+                            )}
+                          </span>
+                          <span className="intel-stat-box-sub">Asking Value</span>
+                        </div>
+
+                        <div className="intel-stat-box">
+                          <span className="intel-stat-box-label">Variance</span>
+                          <span
+                            className="intel-stat-box-value"
+                            style={{
+                              color:
+                                (intelData.valuation?.differenceAmount || 0) >= 0
+                                  ? "#16a34a"
+                                  : "#dc2626",
+                            }}
+                          >
+                            {formatCurrency(
+                              intelData.valuation?.differenceAmount,
+                              intelData.listingType
+                            )}{" "}
+                            ({formatPercent(intelData.valuation?.differencePercentage, true)})
+                          </span>
+                          <span className="intel-stat-box-sub">
+                            {intelData.valuation?.statusDetail || "Market alignment"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Contributing Factors */}
                     {intelData.valuation?.contributingFactors?.length > 0 && (
@@ -593,15 +635,10 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
                                   : "#d97706",
                             }}
                           >
-                            {formatCurrency(
-                              intelData.pricePerSqFtAnalytics.difference
-                            )}
-                            /sq.ft (
-                            {formatPercent(
+                            ₹{Math.abs(Math.round(intelData.pricePerSqFtAnalytics.difference || 0)).toLocaleString("en-IN")}/sq.ft ({formatPercent(
                               intelData.pricePerSqFtAnalytics.differencePercentage,
                               true
-                            )}
-                            )
+                            )})
                           </span>
                           <span className="intel-stat-box-sub">
                             {intelData.pricePerSqFtAnalytics.marketPosition}

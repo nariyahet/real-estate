@@ -216,6 +216,30 @@ export const generateClientPropertyDescription = (property, tone = "luxury") => 
   const bathLong = bathrooms > 0 ? `${bathrooms} modern bathroom${bathrooms > 1 ? "s" : ""}` : "well-appointed bathrooms";
   const rentSuffix = listingType === "Rent" ? "/month" : "";
 
+  const isRent = listingType === "Rent";
+  const isAvailable = status === "Available";
+  const isSold = status === "Sold";
+  const isRented = status === "Rented";
+  const isInactive = status === "Inactive";
+
+  // Truthful status-aware transaction phrasing
+  let statusPhrase;
+  if (isAvailable) {
+    statusPhrase = isRent
+      ? `Available for rent at ${formattedPrice}/month.`
+      : `Available for purchase at ${formattedPrice}.`;
+  } else if (isSold) {
+    statusPhrase = isRent
+      ? `Previously listed for rent at ${formattedPrice}/month (Current Status: Sold).`
+      : `Previously sold / off-market at ${formattedPrice}.`;
+  } else if (isRented) {
+    statusPhrase = `Currently rented at ${formattedPrice}/month.`;
+  } else if (isInactive) {
+    statusPhrase = `Currently off-market (previously listed at ${formattedPrice}${rentSuffix}).`;
+  } else {
+    statusPhrase = `Listed at ${formattedPrice}${rentSuffix} (${status}).`;
+  }
+
   let headline;
   let lead;
   let body;
@@ -224,23 +248,23 @@ export const generateClientPropertyDescription = (property, tone = "luxury") => 
   switch (selectedTone) {
     case "family":
       headline = `Welcoming ${bedText ? `${bedText} ` : ""}${propType} – The Ideal Home in ${city}`;
-      lead = `Welcome to this warm and inviting ${propType.toLowerCase()} nestled in the heart of ${city}${state}. Designed for family comfort and modern harmony, this home provides a serene sanctuary while keeping you seamlessly connected to neighborhood conveniences.`;
+      lead = `Welcome to this warm and inviting ${propType.toLowerCase()} nestled in ${city}${state}. Designed for family comfort and modern harmony, this home provides a serene sanctuary while keeping you seamlessly connected to neighborhood conveniences.`;
       body = `Spanning ${formattedArea}, the residence features ${bedLong} and ${bathLong}. Every room has been planned to optimize daily comfort, natural airflow, and family togetherness.`;
-      conclusion = `Offered for ${listingType.toLowerCase()} at ${formattedPrice}${rentSuffix}, this property represents an outstanding opportunity for families seeking lasting security, community, and comfort in ${city}.`;
+      conclusion = `${statusPhrase} This property represents an outstanding opportunity for families seeking lasting security, community, and comfort in ${city}.`;
       break;
 
     case "investment":
       headline = `High-Growth Real Estate Opportunity: ${propType} in ${city}`;
       lead = `A high-potential real-estate asset strategically positioned in one of ${city}'s high-demand growth corridors. This ${propType.toLowerCase()} delivers an exceptional combination of capital appreciation and attractive rental liquidity.`;
       body = `Encompassing a high-efficiency footprint of ${formattedArea} with ${bedLong} and ${bathLong}, the asset is engineered for strong tenant attraction and durable long-term valuation in ${city}${state}.`;
-      conclusion = `Competitively priced at ${formattedPrice}${rentSuffix} for ${listingType.toLowerCase()}, this asset offers immediate market readiness and compelling risk-adjusted yields for astute investors.`;
+      conclusion = `${statusPhrase} This asset offers immediate market readiness and compelling risk-adjusted yields for astute investors.`;
       break;
 
     case "concise":
       headline = `Prime ${bedText ? `${bedText} ` : ""}${propType} | ${city} | ${formattedPrice}`;
-      lead = `Well-maintained ${propType.toLowerCase()} available for ${listingType.toLowerCase()} in a sought-after precinct of ${city}${state}.`;
-      body = `Key specs include ${formattedArea} total area, ${bedLong}, ${bathLong}, and verified active status (${status}).`;
-      conclusion = `Offered at ${formattedPrice}${rentSuffix}. Immediate inspection and acquisition available upon inquiry.`;
+      lead = `Well-maintained ${propType.toLowerCase()} in a sought-after precinct of ${city}${state}. Current Status: ${status}.`;
+      body = `Key specs include ${formattedArea} total area, ${bedLong}, ${bathLong}, and verified ${listingType.toLowerCase()} tier.`;
+      conclusion = `${statusPhrase} Immediate inspection and acquisition details available upon inquiry.`;
       break;
 
     case "luxury":
@@ -248,7 +272,7 @@ export const generateClientPropertyDescription = (property, tone = "luxury") => 
       headline = `Exclusive ${bedText ? `${bedText} ` : ""}${propType} in Prime ${city}`;
       lead = `Presenting an extraordinary opportunity to acquire this distinguished ${propType.toLowerCase()} located in ${city}${state}. Crafted for discerning occupants who value quality, elegance, and effortless urban connectivity.`;
       body = `Boasting an expansive ${formattedArea} floor plan, this fine property accommodates ${bedLong} and ${bathLong}. Contemporary finishes, abundant natural sunlight, and balanced proportions define every corner of the living space.`;
-      conclusion = `Available for ${listingType.toLowerCase()} at ${formattedPrice}${rentSuffix}. Positioned moments away from premier business districts, transport links, and lifestyle destinations.`;
+      conclusion = `${statusPhrase} Positioned moments away from premier business districts, transport links, and lifestyle destinations.`;
       break;
   }
 

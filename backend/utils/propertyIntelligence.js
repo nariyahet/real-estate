@@ -15,28 +15,63 @@
 /**
  * Feature 4: Calculate Price per Sq.Ft Analytics
  * Price per Sq.Ft = Property Price / Property Area
+ * For Rent properties, assetPrice basis is used for asset PPSF while rent/sq.ft is tracked separately
  */
-function calculatePricePerSqFt(price, area) {
+function calculatePricePerSqFt(price, area, listingType = "Sale", assetPrice = null, saleComps = []) {
   const numPrice = Number(price);
   const numArea = Number(area);
+  const isRent = listingType === "Rent";
+  const numAssetPrice = Number(assetPrice);
 
-  if (!Number.isFinite(numPrice) || numPrice <= 0 || !Number.isFinite(numArea) || numArea <= 0) {
+  if (!Number.isFinite(numArea) || numArea <= 0) {
     return {
       pricePerSqFt: null,
       formattedPricePerSqFt: "N/A",
       hasValidArea: false,
-      rawArea: Number.isFinite(numArea) && numArea > 0 ? numArea : 0,
+      rawArea: 0,
       rawPrice: Number.isFinite(numPrice) && numPrice > 0 ? numPrice : 0,
+      assetPricePerSqFt: null,
+      rentPerSqFt: null,
+      formattedRentPerSqFt: null,
+      comparableSalePpsf: 0,
     };
   }
 
-  const ppsf = Math.round((numPrice / numArea) * 100) / 100;
+  // Asset price per sq.ft basis (never from monthly rent!)
+  const effectiveAssetPrice = isRent
+    ? (Number.isFinite(numAssetPrice) && numAssetPrice > 0 ? numAssetPrice : numPrice * 12 * 20)
+    : numPrice;
+
+  const assetPpsf = effectiveAssetPrice > 0
+    ? Math.round((effectiveAssetPrice / numArea) * 100) / 100
+    : null;
+
+  // For rental properties, also track monthly rent per sq.ft
+  const rentPpsf = isRent && numPrice > 0
+    ? Math.round((numPrice / numArea) * 100) / 100
+    : null;
+
+  // Comparable sale PPSF benchmark
+  let comparableSalePpsf = 0;
+  if (saleComps && saleComps.length > 0) {
+    const validSaleComps = saleComps.filter((s) => Number(s.price) > 0 && Number(s.area) > 0);
+    if (validSaleComps.length > 0) {
+      const total = validSaleComps.reduce((acc, s) => acc + (Number(s.price) / Number(s.area)), 0);
+      comparableSalePpsf = Math.round((total / validSaleComps.length) * 100) / 100;
+    }
+  }
+
   return {
-    pricePerSqFt: ppsf,
-    formattedPricePerSqFt: `₹${Math.round(ppsf).toLocaleString("en-IN")}/sq.ft`,
+    pricePerSqFt: assetPpsf,
+    formattedPricePerSqFt: assetPpsf ? `₹${Math.round(assetPpsf).toLocaleString("en-IN")}/sq.ft` : "N/A",
+    assetPricePerSqFt: assetPpsf,
+    rentPerSqFt: rentPpsf,
+    formattedRentPerSqFt: rentPpsf ? `₹${Math.round(rentPpsf).toLocaleString("en-IN")}/sq.ft/mo` : null,
+    comparableSalePpsf,
     hasValidArea: true,
     rawArea: numArea,
     rawPrice: numPrice,
+    rawAssetPrice: effectiveAssetPrice,
   };
 }
 
@@ -50,13 +85,14 @@ function calculateComparableStats(targetProperty, comparables = []) {
   const targetListing = targetProperty.listing_type || "Sale";
   const targetPpsf = targetArea > 0 ? targetPrice / targetArea : null;
 
-  // Filter out target property if present, only consider valid price items, and enforce identical property type
+  // Filter out target property if present, only consider valid price items, and enforce identical property type and listing type
   const targetType = targetProperty.property_type;
   const validComps = comparables.filter(
     (c) =>
       Number(c.id) !== Number(targetProperty.id) &&
       Number(c.price) > 0 &&
-      (!targetType || c.property_type === targetType)
+      (!targetType || c.property_type === targetType) &&
+      (!targetListing || c.listing_type === targetListing)
   );
 
   if (validComps.length === 0) {
@@ -154,47 +190,22 @@ function calculateComparableStats(targetProperty, comparables = []) {
 
 /**
  * Feature 1: Automated Property Valuation
- * Calculates estimated market value based on location, area, bedrooms, bathrooms, listing type, and comps
+ * Calculates estimated market value based on location, area, bedrooms, bathrooms, listing type, and comps.
+ * For Rent properties, separates monthly rent estimation from the underlying property asset valuation.
  */
-function calculateValuation(targetProperty, compStats) {
+function calculateValuation(targetProperty, compStats, saleComps = []) {
   const currentPrice = Number(targetProperty.price) || 0;
   const area = Number(targetProperty.area) || 0;
   const bedrooms = Number(targetProperty.bedrooms) || 0;
   const bathrooms = Number(targetProperty.bathrooms) || 0;
   const isFeatured = Boolean(targetProperty.featured);
   const status = targetProperty.status || "Available";
+  const isRentListing = targetProperty.listing_type === "Rent";
 
   const factors = [];
-  let baseValue = currentPrice;
 
-  if (compStats.hasSufficientData && compStats.averagePricePerSqFt > 0 && area > 0) {
-    // Benchmark driven by genuine market PPSF
-    baseValue = compStats.averagePricePerSqFt * area;
-    factors.push({
-      name: "Market Rate per Sq.Ft",
-      impact: "neutral",
-      description: `Baseline market rate: ₹${Math.round(compStats.averagePricePerSqFt).toLocaleString("en-IN")}/sq.ft for ${targetProperty.city || "this city"}.`,
-    });
-  } else if (compStats.hasSufficientData && compStats.averagePrice > 0) {
-    baseValue = compStats.averagePrice;
-    factors.push({
-      name: "Comparable Property Baseline",
-      impact: "neutral",
-      description: `Derived from average price of ${compStats.comparableCount} comparable properties.`,
-    });
-  } else {
-    // Transparent heuristic baseline when no direct comps exist
-    baseValue = currentPrice > 0 ? currentPrice : 1000000;
-    factors.push({
-      name: "Listing Price Baseline",
-      impact: "neutral",
-      description: "Baseline set to listed price due to limited historical comparables in this specific category.",
-    });
-  }
-
-  // Bedroom adjustment: check if bedrooms add/subtract value
+  // Compute attribute adjustment multiplier
   let adjustmentMultiplier = 1.0;
-
   if (bedrooms >= 4) {
     adjustmentMultiplier += 0.06;
     factors.push({
@@ -218,7 +229,6 @@ function calculateValuation(targetProperty, compStats) {
     });
   }
 
-  // Bathroom adjustment
   if (bathrooms >= 3) {
     adjustmentMultiplier += 0.03;
     factors.push({
@@ -228,7 +238,6 @@ function calculateValuation(targetProperty, compStats) {
     });
   }
 
-  // Featured listing
   if (isFeatured) {
     adjustmentMultiplier += 0.02;
     factors.push({
@@ -238,12 +247,11 @@ function calculateValuation(targetProperty, compStats) {
     });
   }
 
-  // Status adjustment
-  if (status === "Sold") {
+  if (status === "Sold" || status === "Rented") {
     factors.push({
-      name: "Realized Market Sale",
+      name: "Realized Market Transaction",
       impact: "neutral",
-      description: "Property is already sold; valuation reflects finalized market transaction.",
+      description: `Property status is ${status}; valuation reflects finalized market pricing.`,
     });
   } else if (status === "Inactive") {
     adjustmentMultiplier -= 0.05;
@@ -254,52 +262,165 @@ function calculateValuation(targetProperty, compStats) {
     });
   }
 
-  const estimatedValue = Math.round(baseValue * adjustmentMultiplier);
-  const diffAmount = estimatedValue - currentPrice;
-  const diffPct = currentPrice > 0
-    ? Math.round(((estimatedValue - currentPrice) / currentPrice) * 1000) / 10
-    : 0;
-
-  // Valuation Status
-  // Undervalued: listed price is at least 5% lower than estimated value
-  // Overvalued: listed price is at least 5% higher than estimated value
-  // Fair Value: listed price is within +/- 5% of estimated value
+  let estimatedValue = 0;
+  let estimatedMonthlyRent = null;
+  let estimatedAssetValue = null;
+  let diffAmount = 0;
+  let diffPct = 0;
   let valuationStatus = "Fair Value";
   let statusDetail = "Listed price is aligned with fair market value.";
+  let valuationBasis = "Direct Market Comparables";
 
-  if (currentPrice > 0) {
-    const ratio = currentPrice / estimatedValue;
-    if (ratio < 0.95) {
-      valuationStatus = "Undervalued";
-      statusDetail = `Attractively priced at ${Math.abs(diffPct)}% below estimated market value.`;
-    } else if (ratio > 1.05) {
-      valuationStatus = "Overvalued";
-      statusDetail = `Listed at a ${Math.abs(diffPct)}% premium over estimated market value.`;
+  if (isRentListing) {
+    // --- RENT PROPERTY VALUATION ---
+    // A. Estimate monthly rent from rental comparables
+    let baseRent = currentPrice;
+    if (compStats.hasSufficientData && compStats.averagePricePerSqFt > 0 && area > 0) {
+      baseRent = compStats.averagePricePerSqFt * area;
+      factors.push({
+        name: "Market Rental Rate per Sq.Ft",
+        impact: "neutral",
+        description: `Baseline rental rate: ₹${Math.round(compStats.averagePricePerSqFt).toLocaleString("en-IN")}/sq.ft/mo for ${targetProperty.city || "this city"}.`,
+      });
+    } else if (compStats.hasSufficientData && compStats.averagePrice > 0) {
+      baseRent = compStats.averagePrice;
+      factors.push({
+        name: "Comparable Rental Baseline",
+        impact: "neutral",
+        description: `Derived from average rent of ${compStats.comparableCount} comparable rental properties.`,
+      });
+    } else {
+      baseRent = currentPrice > 0 ? currentPrice : 20000;
+      factors.push({
+        name: "Listing Rent Baseline",
+        impact: "neutral",
+        description: "Baseline set to listed rent due to limited historical rental comparables in this category.",
+      });
+    }
+    estimatedMonthlyRent = Math.round(baseRent * adjustmentMultiplier);
+
+    // B. Estimate property asset value from sale comps (or capitalization fallback)
+    let baseAsset = 0;
+    if (saleComps && saleComps.length > 0) {
+      const validSalePpsf = saleComps
+        .filter((s) => Number(s.price) > 0 && Number(s.area) > 0)
+        .map((s) => Number(s.price) / Number(s.area));
+      if (validSalePpsf.length > 0 && area > 0) {
+        const avgPpsf = validSalePpsf.reduce((a, b) => a + b, 0) / validSalePpsf.length;
+        baseAsset = avgPpsf * area;
+        valuationBasis = "Market Sale Comparables & Area Synthesis";
+      } else {
+        const validPrices = saleComps.map((s) => Number(s.price)).filter((p) => p > 0);
+        if (validPrices.length > 0) {
+          baseAsset = validPrices.reduce((a, b) => a + b, 0) / validPrices.length;
+          valuationBasis = "Market Sale Comparables Baseline";
+        }
+      }
+    }
+    if (baseAsset <= 0) {
+      // Standard 5% cap rate capitalization fallback (20x annual rent)
+      const annualRentBasis = (estimatedMonthlyRent || currentPrice || 20000) * 12;
+      baseAsset = annualRentBasis * 20;
+      valuationBasis = "Standard 5% Cap Rate Benchmark (20x Annual Rent)";
+    }
+    estimatedAssetValue = Math.round(baseAsset * adjustmentMultiplier);
+    estimatedValue = estimatedAssetValue; // Automated Property Valuation represents the property asset value!
+
+    // Rent variance against market rent estimate
+    diffAmount = estimatedMonthlyRent - currentPrice;
+    diffPct = currentPrice > 0
+      ? Math.round(((estimatedMonthlyRent - currentPrice) / currentPrice) * 1000) / 10
+      : 0;
+
+    if (currentPrice > 0) {
+      const ratio = currentPrice / estimatedMonthlyRent;
+      if (ratio < 0.95) {
+        valuationStatus = "Undervalued";
+        statusDetail = `Attractively priced rental: asking rent of ₹${currentPrice.toLocaleString("en-IN")}/mo is ${Math.abs(diffPct)}% below estimated market rent benchmark.`;
+      } else if (ratio > 1.05) {
+        valuationStatus = "Overvalued";
+        statusDetail = `Asking rent of ₹${currentPrice.toLocaleString("en-IN")}/mo is ${Math.abs(diffPct)}% above estimated market rent benchmark.`;
+      } else {
+        statusDetail = `Listed rent of ₹${currentPrice.toLocaleString("en-IN")}/mo is closely aligned with prevailing market rent benchmarks.`;
+      }
+    }
+  } else {
+    // --- SALE PROPERTY VALUATION ---
+    let baseValue = currentPrice;
+    if (compStats.hasSufficientData && compStats.averagePricePerSqFt > 0 && area > 0) {
+      baseValue = compStats.averagePricePerSqFt * area;
+      factors.push({
+        name: "Market Rate per Sq.Ft",
+        impact: "neutral",
+        description: `Baseline market rate: ₹${Math.round(compStats.averagePricePerSqFt).toLocaleString("en-IN")}/sq.ft for ${targetProperty.city || "this city"}.`,
+      });
+    } else if (compStats.hasSufficientData && compStats.averagePrice > 0) {
+      baseValue = compStats.averagePrice;
+      factors.push({
+        name: "Comparable Property Baseline",
+        impact: "neutral",
+        description: `Derived from average price of ${compStats.comparableCount} comparable properties.`,
+      });
+    } else {
+      baseValue = currentPrice > 0 ? currentPrice : 1000000;
+      factors.push({
+        name: "Listing Price Baseline",
+        impact: "neutral",
+        description: "Baseline set to listed price due to limited historical comparables in this specific category.",
+      });
+    }
+
+    estimatedValue = Math.round(baseValue * adjustmentMultiplier);
+    diffAmount = estimatedValue - currentPrice;
+    diffPct = currentPrice > 0
+      ? Math.round(((estimatedValue - currentPrice) / currentPrice) * 1000) / 10
+      : 0;
+
+    if (currentPrice > 0) {
+      const ratio = currentPrice / estimatedValue;
+      if (ratio < 0.95) {
+        valuationStatus = "Undervalued";
+        statusDetail = `Attractively priced at ${Math.abs(diffPct)}% below estimated market value.`;
+      } else if (ratio > 1.05) {
+        valuationStatus = "Overvalued";
+        statusDetail = `Listed at a ${Math.abs(diffPct)}% premium over estimated market value.`;
+      }
     }
   }
 
   return {
-    estimatedMarketValue: estimatedValue,
+    isRentListing,
+    estimatedMarketValue: estimatedValue, // Property asset valuation (NEVER monthly rent!)
+    estimatedMonthlyRent,
+    estimatedAssetValue: isRentListing ? estimatedAssetValue : estimatedValue,
     currentListedPrice: currentPrice,
     differenceAmount: diffAmount,
     differencePercentage: diffPct,
     valuationStatus,
     statusDetail,
+    valuationBasis,
     contributingFactors: factors,
-    disclaimer: "This automated valuation is an algorithmic estimate based on statistical market data and property attributes. It is not a certified professional appraisal.",
+    disclaimer: isRentListing
+      ? "For rental listings, Estimated Market Value represents the underlying capital asset valuation (derived from local market sale benchmarks or capitalization), while rent metrics reflect monthly tenant pricing. It is an algorithmic estimate, not a certified appraisal."
+      : "This automated valuation is an algorithmic estimate based on statistical market data and property attributes. It is not a certified professional appraisal.",
   };
 }
 
 /**
  * Feature 3: Automated Price Estimate
- * Recommended price based on attribute analysis and market comparables
+ * Recommended price based on attribute analysis and market comparables.
+ * For Rent properties, recommended price represents monthly rent recommendation.
  */
 function calculatePriceEstimate(targetProperty, compStats, valuation) {
   const currentPrice = Number(targetProperty.price) || 0;
-  const estimatedVal = valuation.estimatedMarketValue || currentPrice;
+  const isRent = targetProperty.listing_type === "Rent";
 
-  // Recommended price blends estimated market value with listed price for stabilization
-  let recommendedPrice = estimatedVal;
+  // For rent: estimate is monthly rent. For sale: estimate is sale price.
+  const targetValuationBasis = isRent
+    ? (valuation.estimatedMonthlyRent || currentPrice)
+    : (valuation.estimatedMarketValue || currentPrice);
+
+  let recommendedPrice = targetValuationBasis;
   let confidence = "Moderate";
   let confidenceScore = 65;
   let explanation = "";
@@ -307,19 +428,18 @@ function calculatePriceEstimate(targetProperty, compStats, valuation) {
   if (compStats.hasSufficientData && compStats.comparableCount >= 3) {
     confidence = "High";
     confidenceScore = 88;
-    // 80% weighted on comps valuation, 20% on current price
-    recommendedPrice = Math.round(estimatedVal * 0.85 + currentPrice * 0.15);
-    explanation = `High confidence estimate backed by ${compStats.comparableCount} comparable market properties in ${targetProperty.city || "this city"}.`;
+    recommendedPrice = Math.round(targetValuationBasis * 0.85 + currentPrice * 0.15);
+    explanation = `High confidence ${isRent ? "rental" : "pricing"} estimate backed by ${compStats.comparableCount} comparable market properties in ${targetProperty.city || "this city"}.`;
   } else if (compStats.hasSufficientData && compStats.comparableCount >= 1) {
     confidence = "Moderate";
     confidenceScore = 65;
-    recommendedPrice = Math.round(estimatedVal * 0.7 + currentPrice * 0.3);
-    explanation = `Moderate confidence estimate based on ${compStats.comparableCount} comparable property and attribute adjustments.`;
+    recommendedPrice = Math.round(targetValuationBasis * 0.7 + currentPrice * 0.3);
+    explanation = `Moderate confidence ${isRent ? "rental" : "pricing"} estimate based on ${compStats.comparableCount} comparable property and attribute adjustments.`;
   } else {
     confidence = "Preliminary Estimate";
     confidenceScore = 40;
-    recommendedPrice = currentPrice > 0 ? currentPrice : estimatedVal;
-    explanation = "Preliminary estimate based on property attributes; localized historical comparable density is limited.";
+    recommendedPrice = currentPrice > 0 ? currentPrice : targetValuationBasis;
+    explanation = `Preliminary ${isRent ? "rental" : "price"} estimate based on property attributes; localized historical comparable density is limited.`;
   }
 
   const diffAmount = recommendedPrice - currentPrice;
@@ -330,6 +450,7 @@ function calculatePriceEstimate(targetProperty, compStats, valuation) {
   return {
     currentPrice,
     recommendedPrice,
+    recommendedAssetValue: valuation.estimatedMarketValue,
     differenceAmount: diffAmount,
     differencePercentage: diffPct,
     confidence,
@@ -921,6 +1042,30 @@ function generatePropertyDescription(property, options = {}) {
   const bathLong = bathrooms > 0 ? `${bathrooms} modern bathroom${bathrooms > 1 ? "s" : ""}` : "well-appointed sanitary spaces";
   const rentSuffix = listingType === "Rent" ? "/month" : "";
 
+  const isRent = listingType === "Rent";
+  const isAvailable = status === "Available";
+  const isSold = status === "Sold";
+  const isRented = status === "Rented";
+  const isInactive = status === "Inactive";
+
+  // Truthful status-aware transaction phrasing
+  let statusPhrase = "";
+  if (isAvailable) {
+    statusPhrase = isRent
+      ? `Available for rent at ${formattedPrice}/month.`
+      : `Available for purchase at ${formattedPrice}.`;
+  } else if (isSold) {
+    statusPhrase = isRent
+      ? `Previously listed for rent at ${formattedPrice}/month (Current Status: Sold).`
+      : `Previously sold / off-market at ${formattedPrice}.`;
+  } else if (isRented) {
+    statusPhrase = `Currently rented at ${formattedPrice}/month.`;
+  } else if (isInactive) {
+    statusPhrase = `Currently off-market (previously listed at ${formattedPrice}${rentSuffix}).`;
+  } else {
+    statusPhrase = `Listed at ${formattedPrice}${rentSuffix} (${status}).`;
+  }
+
   let headline;
   let lead;
   let body;
@@ -929,31 +1074,31 @@ function generatePropertyDescription(property, options = {}) {
   switch (tone) {
     case "family":
       headline = `Welcoming ${bedText ? `${bedText} ` : ""}${propType} – The Ideal Home in ${city}`;
-      lead = `Welcome to this warm and inviting ${propType.toLowerCase()} nestled in the heart of ${city}${state}. Designed for family comfort and modern harmony, this home provides a serene sanctuary while keeping you seamlessly connected to neighborhood conveniences.`;
+      lead = `Welcome to this warm and inviting ${propType.toLowerCase()} nestled in ${city}${state}. Designed for family comfort and modern harmony, this property provides a serene sanctuary with seamless connectivity.`;
       body = `Spanning ${formattedArea}, the residence features ${bedLong} and ${bathLong}. Every room has been planned to optimize daily comfort, natural airflow, and family togetherness.`;
-      conclusion = `Offered for ${listingType.toLowerCase()} at ${formattedPrice}${rentSuffix}, this property represents an outstanding opportunity for families seeking lasting security, community, and comfort in ${city}.`;
+      conclusion = `${statusPhrase} This property represents an outstanding opportunity for families seeking lasting security, community, and comfort in ${city}.`;
       break;
 
     case "investment":
       headline = `High-Growth Real Estate Opportunity: ${propType} in ${city}`;
-      lead = `A high-potential real-estate asset strategically positioned in one of ${city}'s high-demand growth corridors. This ${propType.toLowerCase()} delivers an exceptional combination of capital appreciation and attractive rental liquidity.`;
+      lead = `A high-potential real-estate asset strategically positioned in one of ${city}'s high-demand growth corridors. This ${propType.toLowerCase()} delivers an exceptional combination of capital appreciation and durable rental demand.`;
       body = `Encompassing a high-efficiency footprint of ${formattedArea} with ${bedLong} and ${bathLong}, the asset is engineered for strong tenant attraction and durable long-term valuation in ${city}${state}.`;
-      conclusion = `Competitively priced at ${formattedPrice}${rentSuffix} for ${listingType.toLowerCase()}, this asset offers immediate market readiness and compelling risk-adjusted yields for astute investors.`;
+      conclusion = `${statusPhrase} This asset offers high market relevance and compelling risk-adjusted fundamentals for astute real estate portfolios.`;
       break;
 
     case "concise":
       headline = `Prime ${bedText ? `${bedText} ` : ""}${propType} | ${city} | ${formattedPrice}`;
-      lead = `Well-maintained ${propType.toLowerCase()} available for ${listingType.toLowerCase()} in a sought-after precinct of ${city}${state}.`;
-      body = `Key specs include ${formattedArea} total area, ${bedLong}, ${bathLong}, and verified active status (${status}).`;
-      conclusion = `Offered at ${formattedPrice}${rentSuffix}. Immediate inspection and acquisition available upon inquiry.`;
+      lead = `Well-maintained ${propType.toLowerCase()} in a sought-after precinct of ${city}${state}. Current Status: ${status}.`;
+      body = `Key specs include ${formattedArea} total area, ${bedLong}, ${bathLong}, and verified ${listingType.toLowerCase()} tier.`;
+      conclusion = `${statusPhrase} Inquire for verified property records and inspection schedule.`;
       break;
 
     case "luxury":
     default:
       headline = `Exclusive ${bedText ? `${bedText} ` : ""}${propType} in Prime ${city}`;
-      lead = `Presenting an extraordinary opportunity to acquire this distinguished ${propType.toLowerCase()} located in ${city}${state}. Crafted for discerning occupants who value quality, elegance, and effortless urban connectivity.`;
+      lead = `Presenting an extraordinary ${propType.toLowerCase()} located in ${city}${state}. Crafted for discerning occupants who value quality, elegance, and effortless urban connectivity.`;
       body = `Boasting an expansive ${formattedArea} floor plan, this fine property accommodates ${bedLong} and ${bathLong}. Contemporary finishes, abundant natural sunlight, and balanced proportions define every corner of the living space.`;
-      conclusion = `Available for ${listingType.toLowerCase()} at ${formattedPrice}${rentSuffix}. Positioned moments away from premier business districts, transport links, and lifestyle destinations.`;
+      conclusion = `${statusPhrase} Positioned moments away from premier business districts, transport links, and lifestyle destinations.`;
       break;
   }
 
@@ -963,7 +1108,7 @@ function generatePropertyDescription(property, options = {}) {
     `📐 Total Footprint: ${formattedArea}`,
     `🛏️ Living Spaces: ${bedrooms > 0 ? `${bedrooms} Bedroom${bedrooms > 1 ? "s" : ""}` : "Open Plan"}${bathrooms > 0 ? `, ${bathrooms} Bathroom${bathrooms > 1 ? "s" : ""}` : ""}`,
     `📍 Prime Location: ${city}${state}`,
-    `🏷️ Listed For: ${listingType} at ${formattedPrice}${rentSuffix}`,
+    `🏷️ Transaction Terms: ${isRent ? "Rental Listing" : "Sale Listing"} (${formattedPrice}${rentSuffix})`,
     `⚡ Listing Status: ${status} ${featured ? "(⭐ Featured Listing)" : ""}`.trim(),
   ];
 
@@ -988,23 +1133,38 @@ function generatePropertyDescription(property, options = {}) {
  * Integrated Master Function: Combines all 10 features into one unified payload
  */
 function generateIntegratedPropertyIntelligence(targetProperty, comparables = [], userOptions = {}, rentalComps = [], saleComps = []) {
-  // 1. Price per Sq.Ft
-  const ppsfStats = calculatePricePerSqFt(targetProperty.price, targetProperty.area);
+  const isRentListing = targetProperty.listing_type === "Rent";
 
-  // 2. Comparable Analysis
+  // 2. Comparable Analysis (Visible Comparables of same property_type and same listing_type)
   const compStats = calculateComparableStats(targetProperty, comparables);
 
-  // 3. Automated Valuation
-  const valuation = calculateValuation(targetProperty, compStats);
+  // 1. Automated Valuation (Calculates estimated property asset value, and monthly rent estimate for rent listings)
+  const valuation = calculateValuation(targetProperty, compStats, saleComps);
 
-  // 4. Automated Price Estimate
+  // Property Asset Valuation basis (NEVER monthly rent!)
+  const propertyAssetVal =
+    userOptions.propertyValue ||
+    (isRentListing
+      ? (valuation.estimatedMarketValue || (Number(targetProperty.price) || 0) * 12 * 20)
+      : (Number(targetProperty.price) || 0));
+
+  // 3. Automated Price Estimate (Rental pricing for rent, sale pricing for sale)
   const priceEstimate = calculatePriceEstimate(targetProperty, compStats, valuation);
 
-  // 5. Rental Yield
+  // 4. Price per Sq.Ft Analytics (Asset PPSF basis, plus rent PPSF for rental listings)
+  const ppsfStats = calculatePricePerSqFt(
+    targetProperty.price,
+    targetProperty.area,
+    targetProperty.listing_type,
+    propertyAssetVal,
+    saleComps
+  );
+
+  // 5. Rental Yield (Gross yield = annual rent / propertyAssetVal)
   const rentalYield = calculateRentalYield(
     targetProperty,
     userOptions.monthlyRent,
-    userOptions.propertyValue,
+    propertyAssetVal,
     compStats,
     rentalComps,
     saleComps
@@ -1019,14 +1179,7 @@ function generateIntegratedPropertyIntelligence(targetProperty, comparables = []
     rentalYield
   );
 
-  // Realistic property asset valuation basis (avoids using monthly rent for rental listings)
-  const propertyAssetVal =
-    userOptions.propertyValue ||
-    (targetProperty.listing_type === "Rent"
-      ? rentalYield.propertyValue
-      : Number(targetProperty.price) || 0);
-
-  // 7. ROI Calculator
+  // 7. ROI Calculator (initial value = propertyAssetVal)
   const roi = calculateROI(targetProperty, {
     holdingYears: userOptions.holdingYears || 5,
     appreciationRate: userOptions.appreciationRate || 5.5,
@@ -1034,7 +1187,7 @@ function generateIntegratedPropertyIntelligence(targetProperty, comparables = []
     customInitialValue: propertyAssetVal,
   });
 
-  // 8. Appreciation Forecast
+  // 8. Appreciation Forecast (base value = propertyAssetVal)
   const appreciationForecast = calculateAppreciationForecast(targetProperty, {
     annualRate: userOptions.appreciationRate || 5.5,
     baseValue: propertyAssetVal,
@@ -1043,7 +1196,7 @@ function generateIntegratedPropertyIntelligence(targetProperty, comparables = []
   // 9. Property Quality Score (0-100)
   const qualityScore = calculatePropertyQualityScore(targetProperty);
 
-  // 10. AI Property Description Generator
+  // 10. AI Property Description Generator (status-aware, truthful copy)
   const aiDescription = generatePropertyDescription(targetProperty, {
     tone: userOptions.tone || "luxury",
   });
@@ -1062,20 +1215,36 @@ function generateIntegratedPropertyIntelligence(targetProperty, comparables = []
     valuation,
     comparableAnalysis: compStats,
     priceEstimate,
-    pricePerSqFtAnalytics: {
-      ...ppsfStats,
-      comparableAveragePricePerSqFt: compStats.averagePricePerSqFt,
-      difference: compStats.pricePerSqFtComparisonDiff,
-      differencePercentage: compStats.pricePerSqFtComparisonPercentage,
-      marketPosition:
-        compStats.hasSufficientData && compStats.averagePricePerSqFt > 0 && ppsfStats.hasValidArea
-          ? ppsfStats.pricePerSqFt < compStats.averagePricePerSqFt * 0.95
-            ? "Below Market Average"
-            : ppsfStats.pricePerSqFt > compStats.averagePricePerSqFt * 1.05
-            ? "Above Market Average"
-            : "At Market Average"
-          : "Market Average Benchmark Unavailable",
-    },
+    pricePerSqFtAnalytics: (() => {
+      const benchmarkPpsf = isRentListing
+        ? (ppsfStats.comparableSalePpsf > 0 ? ppsfStats.comparableSalePpsf : compStats.averagePricePerSqFt)
+        : compStats.averagePricePerSqFt;
+
+      const subjectPpsf = ppsfStats.pricePerSqFt || 0;
+      let diff = 0;
+      let diffPct = 0;
+      let pos = "Market Benchmark";
+
+      if (subjectPpsf > 0 && benchmarkPpsf > 0) {
+        diff = Math.round((subjectPpsf - benchmarkPpsf) * 100) / 100;
+        diffPct = Math.round(((subjectPpsf - benchmarkPpsf) / benchmarkPpsf) * 1000) / 10;
+        if (subjectPpsf < benchmarkPpsf * 0.95) {
+          pos = "Below Market Average";
+        } else if (subjectPpsf > benchmarkPpsf * 1.05) {
+          pos = "Above Market Average";
+        } else {
+          pos = "At Market Average";
+        }
+      }
+
+      return {
+        ...ppsfStats,
+        comparableAveragePricePerSqFt: benchmarkPpsf,
+        difference: diff,
+        differencePercentage: diffPct,
+        marketPosition: pos,
+      };
+    })(),
     investmentScore,
     rentalYield,
     roiCalculator: roi,
