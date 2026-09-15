@@ -211,9 +211,14 @@ export const generateClientPropertyDescription = (property, tone = "luxury") => 
 
   const formattedPrice = price > 0 ? `₹${Math.round(price).toLocaleString("en-IN")}` : "Price on Request";
   const formattedArea = area > 0 ? `${Math.round(area).toLocaleString("en-IN")} sq.ft` : "generous layout";
+  const isOffice = propType.toLowerCase() === "office";
   const bedText = bedrooms > 0 ? `${bedrooms} BHK` : "";
-  const bedLong = bedrooms > 0 ? `${bedrooms} spacious bedroom${bedrooms > 1 ? "s" : ""}` : "versatile living spaces";
-  const bathLong = bathrooms > 0 ? `${bathrooms} modern bathroom${bathrooms > 1 ? "s" : ""}` : "well-appointed bathrooms";
+  const bedLong = isOffice
+    ? "flexible executive workstation areas"
+    : (bedrooms > 0 ? `${bedrooms} spacious bedroom${bedrooms > 1 ? "s" : ""}` : "versatile living spaces");
+  const bathLong = isOffice
+    ? `${bathrooms > 0 ? `${bathrooms} modern restroom ${bathrooms > 1 ? "facilities" : "facility"}` : "dedicated sanitary facilities"}`
+    : `${bathrooms > 0 ? `${bathrooms} modern bathroom${bathrooms > 1 ? "s" : ""}` : "well-appointed bathrooms"}`;
   const rentSuffix = listingType === "Rent" ? "/month" : "";
 
   const isRent = listingType === "Rent";
@@ -226,14 +231,14 @@ export const generateClientPropertyDescription = (property, tone = "luxury") => 
   let statusPhrase;
   if (isAvailable) {
     statusPhrase = isRent
-      ? `Available for rent at ${formattedPrice}/month.`
+      ? `Available for lease at ${formattedPrice}/month.`
       : `Available for purchase at ${formattedPrice}.`;
   } else if (isSold) {
     statusPhrase = isRent
-      ? `Previously listed for rent at ${formattedPrice}/month (Current Status: Sold).`
+      ? `Previously listed for lease at ${formattedPrice}/month (Current Status: Sold).`
       : `Previously sold / off-market at ${formattedPrice}.`;
   } else if (isRented) {
-    statusPhrase = `Currently rented at ${formattedPrice}/month.`;
+    statusPhrase = `Currently leased at ${formattedPrice}/month.`;
   } else if (isInactive) {
     statusPhrase = `Currently off-market (previously listed at ${formattedPrice}${rentSuffix}).`;
   } else {
@@ -245,42 +250,77 @@ export const generateClientPropertyDescription = (property, tone = "luxury") => 
   let body;
   let conclusion;
 
-  switch (selectedTone) {
-    case "family":
-      headline = `Welcoming ${bedText ? `${bedText} ` : ""}${propType} – The Ideal Home in ${city}`;
-      lead = `Welcome to this warm and inviting ${propType.toLowerCase()} nestled in ${city}${state}. Designed for family comfort and modern harmony, this home provides a serene sanctuary while keeping you seamlessly connected to neighborhood conveniences.`;
-      body = `Spanning ${formattedArea}, the residence features ${bedLong} and ${bathLong}. Every room has been planned to optimize daily comfort, natural airflow, and family togetherness.`;
-      conclusion = `${statusPhrase} This property represents an outstanding opportunity for families seeking lasting security, community, and comfort in ${city}.`;
-      break;
+  if (isOffice) {
+    switch (selectedTone) {
+      case "family": // fallback for commercial: collaborative enterprise environment
+        headline = `Well-Appointed Commercial Office Space in ${city}`;
+        lead = `A high-functioning commercial office environment situated in a well-connected business sector of ${city}${state}. Engineered to support seamless business operations, team productivity, and convenient client access.`;
+        body = `Covering an efficient layout of ${formattedArea}, the premises features ${bedLong} and ${bathLong}. The floor plate is designed to promote professional workflow, high connectivity, and a collaborative enterprise culture.`;
+        conclusion = `${statusPhrase} An outstanding opportunity for businesses and professional organizations seeking an established corporate presence in ${city}.`;
+        break;
 
-    case "investment":
-      headline = `High-Growth Real Estate Opportunity: ${propType} in ${city}`;
-      lead = `A high-potential real-estate asset strategically positioned in one of ${city}'s high-demand growth corridors. This ${propType.toLowerCase()} delivers an exceptional combination of capital appreciation and attractive rental liquidity.`;
-      body = `Encompassing a high-efficiency footprint of ${formattedArea} with ${bedLong} and ${bathLong}, the asset is engineered for strong tenant attraction and durable long-term valuation in ${city}${state}.`;
-      conclusion = `${statusPhrase} This asset offers immediate market readiness and compelling risk-adjusted yields for astute investors.`;
-      break;
+      case "investment":
+        headline = `High-Yield Commercial Real Estate: Office Asset in ${city}`;
+        lead = `A premier commercial office asset strategically located within one of ${city}'s premier business districts. This commercial property presents high capital stability paired with robust corporate tenant demand.`;
+        body = `Encompassing a high-efficiency floor plan of ${formattedArea} with ${bedLong} and ${bathLong}, the workspace is engineered for reliable corporate occupancy and durable commercial asset appreciation in ${city}${state}.`;
+        conclusion = `${statusPhrase} This commercial property delivers immediate market readiness and compelling risk-adjusted yields for institutional and private investors.`;
+        break;
 
-    case "concise":
-      headline = `Prime ${bedText ? `${bedText} ` : ""}${propType} | ${city} | ${formattedPrice}`;
-      lead = `Well-maintained ${propType.toLowerCase()} in a sought-after precinct of ${city}${state}. Current Status: ${status}.`;
-      body = `Key specs include ${formattedArea} total area, ${bedLong}, ${bathLong}, and verified ${listingType.toLowerCase()} tier.`;
-      conclusion = `${statusPhrase} Immediate inspection and acquisition details available upon inquiry.`;
-      break;
+      case "concise":
+        headline = `Prime Commercial Office | ${city} | ${formattedPrice}`;
+        lead = `Well-maintained commercial office space in a sought-after commercial corridor of ${city}${state}. Current Status: ${status}.`;
+        body = `Key specifications include ${formattedArea} total floor area, ${bedLong}, ${bathLong}, and verified commercial zoning.`;
+        conclusion = `${statusPhrase} Contact for corporate inspection appointments and verified property documentation.`;
+        break;
 
-    case "luxury":
-    default:
-      headline = `Exclusive ${bedText ? `${bedText} ` : ""}${propType} in Prime ${city}`;
-      lead = `Presenting an extraordinary opportunity to acquire this distinguished ${propType.toLowerCase()} located in ${city}${state}. Crafted for discerning occupants who value quality, elegance, and effortless urban connectivity.`;
-      body = `Boasting an expansive ${formattedArea} floor plan, this fine property accommodates ${bedLong} and ${bathLong}. Contemporary finishes, abundant natural sunlight, and balanced proportions define every corner of the living space.`;
-      conclusion = `${statusPhrase} Positioned moments away from premier business districts, transport links, and lifestyle destinations.`;
-      break;
+      case "luxury":
+      default:
+        headline = `Distinguished Executive Office Space in Prime ${city}`;
+        lead = `Presenting an extraordinary commercial office space located in the prestigious business hub of ${city}${state}. Crafted for modern corporate enterprises that demand executive distinction, seamless logistics, and prestige.`;
+        body = `Boasting an expansive ${formattedArea} floor plan, this professional workspace accommodates ${bedLong} and ${bathLong}. Contemporary finishes, abundant natural sunlight, and balanced architectural proportions define every corner of the corporate environment.`;
+        conclusion = `${statusPhrase} Positioned moments away from premier business districts, transport links, and essential commercial infrastructure.`;
+        break;
+    }
+  } else {
+    switch (selectedTone) {
+      case "family":
+        headline = `Welcoming ${bedText ? `${bedText} ` : ""}${propType} – The Ideal Home in ${city}`;
+        lead = `Welcome to this warm and inviting ${propType.toLowerCase()} nestled in ${city}${state}. Designed for family comfort and modern harmony, this home provides a serene sanctuary while keeping you seamlessly connected to neighborhood conveniences.`;
+        body = `Spanning ${formattedArea}, the residence features ${bedLong} and ${bathLong}. Every room has been planned to optimize daily comfort, natural airflow, and family togetherness.`;
+        conclusion = `${statusPhrase} This property represents an outstanding opportunity for families seeking lasting security, community, and comfort in ${city}.`;
+        break;
+
+      case "investment":
+        headline = `High-Growth Real Estate Opportunity: ${propType} in ${city}`;
+        lead = `A high-potential real-estate asset strategically positioned in one of ${city}'s high-demand growth corridors. This ${propType.toLowerCase()} delivers an exceptional combination of capital appreciation and attractive rental liquidity.`;
+        body = `Encompassing a high-efficiency footprint of ${formattedArea} with ${bedLong} and ${bathLong}, the asset is engineered for strong tenant attraction and durable long-term valuation in ${city}${state}.`;
+        conclusion = `${statusPhrase} This asset offers immediate market readiness and compelling risk-adjusted yields for astute investors.`;
+        break;
+
+      case "concise":
+        headline = `Prime ${bedText ? `${bedText} ` : ""}${propType} | ${city} | ${formattedPrice}`;
+        lead = `Well-maintained ${propType.toLowerCase()} in a sought-after precinct of ${city}${state}. Current Status: ${status}.`;
+        body = `Key specs include ${formattedArea} total area, ${bedLong}, ${bathLong}, and verified ${listingType.toLowerCase()} tier.`;
+        conclusion = `${statusPhrase} Immediate inspection and acquisition details available upon inquiry.`;
+        break;
+
+      case "luxury":
+      default:
+        headline = `Exclusive ${bedText ? `${bedText} ` : ""}${propType} in Prime ${city}`;
+        lead = `Presenting an extraordinary opportunity to acquire this distinguished ${propType.toLowerCase()} located in ${city}${state}. Crafted for discerning occupants who value quality, elegance, and effortless urban connectivity.`;
+        body = `Boasting an expansive ${formattedArea} floor plan, this fine property accommodates ${bedLong} and ${bathLong}. Contemporary finishes, abundant natural sunlight, and balanced proportions define every corner of the living space.`;
+        conclusion = `${statusPhrase} Positioned moments away from premier business districts, transport links, and lifestyle destinations.`;
+        break;
+    }
   }
 
   const fullDescription = `${headline}\n\n${lead}\n\n${body}\n\n${conclusion}`;
 
   const highlights = [
     `📐 Total Footprint: ${formattedArea}`,
-    `🛏️ Living Spaces: ${bedrooms > 0 ? `${bedrooms} Bedroom${bedrooms > 1 ? "s" : ""}` : "Open Plan"}${bathrooms > 0 ? `, ${bathrooms} Bathroom${bathrooms > 1 ? "s" : ""}` : ""}`,
+    isOffice
+      ? `🏢 Workspace Layout: Professional layout with ${bathLong}`
+      : `🛏️ Living Spaces: ${bedrooms > 0 ? `${bedrooms} Bedroom${bedrooms > 1 ? "s" : ""}` : "Open Plan"}${bathrooms > 0 ? `, ${bathrooms} Bathroom${bathrooms > 1 ? "s" : ""}` : ""}`,
     `📍 Prime Location: ${city}${state}`,
     `🏷️ Listed For: ${listingType} at ${formattedPrice}${rentSuffix}`,
     `⚡ Listing Status: ${status} ${featured ? "(⭐ Featured Listing)" : ""}`.trim(),

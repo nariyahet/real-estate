@@ -280,7 +280,11 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
                 {/* 3. Price per Sq.Ft Highlight */}
                 <div className="intel-quick-card">
                   <div className="intel-quick-card-top">
-                    <span className="intel-quick-label">Price per Sq.Ft</span>
+                    <span className="intel-quick-label">
+                      {intelData.listingType === "Rent"
+                        ? "Asset Value / Sq.Ft"
+                        : "Price per Sq.Ft"}
+                    </span>
                     <span className="intel-quick-icon">📐</span>
                   </div>
                   <div className="intel-quick-val">
@@ -599,52 +603,111 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
                     </div>
 
                     {intelData.pricePerSqFtAnalytics?.hasValidArea ? (
-                      <div className="intel-grid-3">
-                        <div className="intel-stat-box">
-                          <span className="intel-stat-box-label">Property Price/Sq.Ft</span>
-                          <span className="intel-stat-box-value">
-                            {intelData.pricePerSqFtAnalytics.formattedPricePerSqFt}
-                          </span>
-                          <span className="intel-stat-box-sub">
-                            Total Area: {formatSqFt(intelData.area)}
-                          </span>
-                        </div>
+                      intelData.listingType === "Rent" ? (
+                        <div className="intel-grid-4">
+                          <div className="intel-stat-box">
+                            <span className="intel-stat-box-label">Asset Value / Sq.Ft</span>
+                            <span className="intel-stat-box-value">
+                              {intelData.pricePerSqFtAnalytics.formattedPricePerSqFt}
+                            </span>
+                            <span className="intel-stat-box-sub">
+                              Total Area: {formatSqFt(intelData.area)}
+                            </span>
+                          </div>
 
-                        <div className="intel-stat-box">
-                          <span className="intel-stat-box-label">Comparable Average Price/Sq.Ft</span>
-                          <span className="intel-stat-box-value">
-                            {intelData.pricePerSqFtAnalytics.comparableAveragePricePerSqFt > 0
-                              ? `₹${Math.round(
-                                  intelData.pricePerSqFtAnalytics.comparableAveragePricePerSqFt
-                                ).toLocaleString("en-IN")}/sq.ft`
-                              : "No Area Comps"}
-                          </span>
-                          <span className="intel-stat-box-sub">
-                            Neighborhood Average
-                          </span>
-                        </div>
+                          <div className="intel-stat-box">
+                            <span className="intel-stat-box-label">Monthly Rent / Sq.Ft</span>
+                            <span className="intel-stat-box-value">
+                              ₹{Math.round(intelData.pricePerSqFtAnalytics.rentPerSqFt || 0).toLocaleString("en-IN")}/sq.ft/month
+                            </span>
+                            <span className="intel-stat-box-sub">
+                              Monthly Tenant Rate
+                            </span>
+                          </div>
 
-                        <div className="intel-stat-box">
-                          <span className="intel-stat-box-label">Rate Variance</span>
-                          <span
-                            className="intel-stat-box-value"
-                            style={{
-                              color:
-                                (intelData.pricePerSqFtAnalytics.difference || 0) <= 0
-                                  ? "#16a34a"
-                                  : "#d97706",
-                            }}
-                          >
-                            ₹{Math.abs(Math.round(intelData.pricePerSqFtAnalytics.difference || 0)).toLocaleString("en-IN")}/sq.ft ({formatPercent(
-                              intelData.pricePerSqFtAnalytics.differencePercentage,
-                              true
-                            )})
-                          </span>
-                          <span className="intel-stat-box-sub">
-                            {intelData.pricePerSqFtAnalytics.marketPosition}
-                          </span>
+                          <div className="intel-stat-box">
+                            <span className="intel-stat-box-label">Comparable Sale Asset Average</span>
+                            <span className="intel-stat-box-value">
+                              {intelData.pricePerSqFtAnalytics.comparableAveragePricePerSqFt > 0
+                                ? `₹${Math.round(
+                                    intelData.pricePerSqFtAnalytics.comparableAveragePricePerSqFt
+                                  ).toLocaleString("en-IN")}/sq.ft`
+                                : "No Area Comps"}
+                            </span>
+                            <span className="intel-stat-box-sub">
+                              Neighborhood Asset Comps
+                            </span>
+                          </div>
+
+                          <div className="intel-stat-box">
+                            <span className="intel-stat-box-label">Rate Variance</span>
+                            <span
+                              className="intel-stat-box-value"
+                              style={{
+                                color:
+                                  (intelData.pricePerSqFtAnalytics.difference || 0) <= 0
+                                    ? "#16a34a"
+                                    : "#d97706",
+                              }}
+                            >
+                              {formatPercent(
+                                intelData.pricePerSqFtAnalytics.differencePercentage,
+                                true
+                              )}
+                            </span>
+                            <span className="intel-stat-box-sub">
+                              {intelData.pricePerSqFtAnalytics.marketPosition}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="intel-grid-3">
+                          <div className="intel-stat-box">
+                            <span className="intel-stat-box-label">Property Price/Sq.Ft</span>
+                            <span className="intel-stat-box-value">
+                              {intelData.pricePerSqFtAnalytics.formattedPricePerSqFt}
+                            </span>
+                            <span className="intel-stat-box-sub">
+                              Total Area: {formatSqFt(intelData.area)}
+                            </span>
+                          </div>
+
+                          <div className="intel-stat-box">
+                            <span className="intel-stat-box-label">Comparable Average Price/Sq.Ft</span>
+                            <span className="intel-stat-box-value">
+                              {intelData.pricePerSqFtAnalytics.comparableAveragePricePerSqFt > 0
+                                ? `₹${Math.round(
+                                    intelData.pricePerSqFtAnalytics.comparableAveragePricePerSqFt
+                                  ).toLocaleString("en-IN")}/sq.ft`
+                                : "No Area Comps"}
+                            </span>
+                            <span className="intel-stat-box-sub">
+                              Neighborhood Average
+                            </span>
+                          </div>
+
+                          <div className="intel-stat-box">
+                            <span className="intel-stat-box-label">Rate Variance</span>
+                            <span
+                              className="intel-stat-box-value"
+                              style={{
+                                color:
+                                  (intelData.pricePerSqFtAnalytics.difference || 0) <= 0
+                                    ? "#16a34a"
+                                    : "#d97706",
+                              }}
+                            >
+                              ₹{Math.abs(Math.round(intelData.pricePerSqFtAnalytics.difference || 0)).toLocaleString("en-IN")}/sq.ft ({formatPercent(
+                                intelData.pricePerSqFtAnalytics.differencePercentage,
+                                true
+                              )})
+                            </span>
+                            <span className="intel-stat-box-sub">
+                              {intelData.pricePerSqFtAnalytics.marketPosition}
+                            </span>
+                          </div>
+                        </div>
+                      )
                     ) : (
                       <div className="intel-empty-state">
                         <div className="intel-empty-icon">📏</div>
@@ -794,7 +857,9 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
                                   <td>{comp.area ? formatSqFt(comp.area) : "N/A"}</td>
                                   <td style={{ color: "#475569", fontWeight: 600 }}>
                                     {comp.pricePerSqFt
-                                      ? `₹${comp.pricePerSqFt.toLocaleString("en-IN")}/sq.ft`
+                                      ? comp.listing_type === "Rent"
+                                        ? `₹${comp.pricePerSqFt.toLocaleString("en-IN")}/sq.ft/month`
+                                        : `₹${comp.pricePerSqFt.toLocaleString("en-IN")}/sq.ft`
                                       : "N/A"}
                                   </td>
                                   <td>{comp.bedrooms ? `${comp.bedrooms} BHK` : "-"}</td>

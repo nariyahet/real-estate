@@ -186,7 +186,7 @@ const getAllProperties = async ({
 
       ${whereClause}
 
-      ORDER BY p.created_at DESC
+      ORDER BY p.id ASC
 
       LIMIT ${pageLimit}
       OFFSET ${offset}
