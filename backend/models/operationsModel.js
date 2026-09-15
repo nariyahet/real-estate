@@ -5,12 +5,15 @@ const { pool } = require('../config/db');
 // ==========================================
 
 const DEFAULT_VERIFICATION_CHECKLIST = [
-  { key: 'title_deed', label: 'Clear Title Deed & Encumbrance Certificate' },
-  { key: 'tax_receipts', label: 'Property Tax Receipts Up to Date' },
-  { key: 'occupancy_cert', label: 'Occupancy / Completion Certificate' },
-  { key: 'utility_bills', label: 'Utility Bills (Electricity & Water) Verified' },
-  { key: 'physical_inspection', label: 'Physical Site & Boundary Inspection' },
-  { key: 'noc_approvals', label: 'Local Authority Approvals & NOC' },
+  { key: 'title_deed', label: 'Title Deed Verification' },
+  { key: 'encumbrance_cert', label: 'Encumbrance Certificate' },
+  { key: 'municipal_tax_clearance', label: 'Municipal Tax Clearance' },
+  { key: 'approved_building_plan', label: 'Approved Building Plan' },
+  { key: 'occupancy_cert', label: 'Occupancy Certificate' },
+  { key: 'local_authority_noc', label: 'Local Authority NOC' },
+  { key: 'ownership_verification', label: 'Property Ownership Verification' },
+  { key: 'tax_dues_verification', label: 'Property Tax / Dues Verification' },
+  { key: 'physical_inspection', label: 'Physical Property Inspection' },
 ];
 
 const getVerificationByPropertyId = async (propertyId) => {
@@ -112,6 +115,7 @@ const ensureChecklistSeeded = async (propertyId) => {
     [propertyId]
   );
   const existingKeys = new Set(rows.map(r => r.item_key));
+  const validKeys = new Set(DEFAULT_VERIFICATION_CHECKLIST.map(i => i.key));
 
   for (const item of DEFAULT_VERIFICATION_CHECKLIST) {
     if (!existingKeys.has(item.key)) {
@@ -119,6 +123,20 @@ const ensureChecklistSeeded = async (propertyId) => {
         `INSERT INTO property_checklists (property_id, item_key, item_label, is_completed)
          VALUES (?, ?, ?, FALSE)`,
         [propertyId, item.key, item.label]
+      );
+    } else {
+      await pool.execute(
+        `UPDATE property_checklists SET item_label = ? WHERE property_id = ? AND item_key = ?`,
+        [item.label, propertyId, item.key]
+      );
+    }
+  }
+
+  for (const key of existingKeys) {
+    if (!validKeys.has(key)) {
+      await pool.execute(
+        `DELETE FROM property_checklists WHERE property_id = ? AND item_key = ?`,
+        [propertyId, key]
       );
     }
   }

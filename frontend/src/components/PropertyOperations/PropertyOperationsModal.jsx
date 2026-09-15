@@ -41,6 +41,7 @@ function PropertyOperationsModal({ isOpen, property, onClose, onPropertyUpdated 
   const [currentState, setCurrentState] = useState(property?.status || "Available");
   const [lifecycleHistory, setLifecycleHistory] = useState([]);
   const [toState, setToState] = useState("Available");
+  const [allowedTransitions, setAllowedTransitions] = useState([]);
   const [stateNotes, setStateNotes] = useState("");
 
   // Tab 6: Audit Logs State
@@ -88,6 +89,11 @@ function PropertyOperationsModal({ isOpen, property, onClose, onPropertyUpdated 
         if (res.data?.success) {
           setCurrentState(res.data.currentState);
           setLifecycleHistory(res.data.transitions || []);
+          const allowed = res.data.allowedTransitions || [];
+          setAllowedTransitions(allowed);
+          if (allowed.length > 0) {
+            setToState(allowed[0]);
+          }
         }
       } else if (activeTab === "audit") {
         const res = await api.get(`/properties/${propertyId}/audit-logs`);
@@ -236,6 +242,11 @@ function PropertyOperationsModal({ isOpen, property, onClose, onPropertyUpdated 
         setSuccessMsg(res.data.message);
         setCurrentState(res.data.currentState);
         setLifecycleHistory(res.data.transitions || []);
+        const allowed = res.data.allowedTransitions || [];
+        setAllowedTransitions(allowed);
+        if (allowed.length > 0) {
+          setToState(allowed[0]);
+        }
         setStateNotes("");
         if (onPropertyUpdated) onPropertyUpdated();
       }
@@ -718,13 +729,23 @@ function PropertyOperationsModal({ isOpen, property, onClose, onPropertyUpdated 
                         className="ops-select"
                         value={toState}
                         onChange={(e) => setToState(e.target.value)}
+                        disabled={allowedTransitions.length === 0}
                       >
-                        <option value="Available">Available (Active Public Listing)</option>
-                        <option value="Under Contract">Under Contract (Agreement Signed)</option>
-                        <option value="Pending">Pending (Escrow / Due Diligence)</option>
-                        <option value="Sold">Sold (Deed Registered)</option>
-                        <option value="Rented">Rented (Lease Executed)</option>
+                        {allowedTransitions.length > 0 ? (
+                          allowedTransitions.map((st) => (
+                            <option key={st} value={st}>
+                              {st}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="">No transitions available</option>
+                        )}
                       </select>
+                      {allowedTransitions.length > 0 && (
+                        <span style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", display: "block" }}>
+                          Allowed next: {allowedTransitions.join(" • ")}
+                        </span>
+                      )}
                     </div>
                     <div className="ops-form-group">
                       <label className="ops-label">Transition Reason / Notes</label>

@@ -570,6 +570,30 @@ const deletePropertyMaintenance = async (req, res) => {
 // FEATURE #7: PROPERTY LIFECYCLE TRACKING
 // ==========================================
 
+const LIFECYCLE_STATES = [
+  'Created',
+  'Listed',
+  'Under Review',
+  'Verified',
+  'Available',
+  'Reserved',
+  'Rented',
+  'Sold',
+  'Archived',
+];
+
+const ALLOWED_LIFECYCLE_TRANSITIONS = {
+  'Created': ['Listed', 'Archived'],
+  'Listed': ['Under Review', 'Available', 'Archived'],
+  'Under Review': ['Verified', 'Listed', 'Archived'],
+  'Verified': ['Available', 'Under Review', 'Archived'],
+  'Available': ['Reserved', 'Sold', 'Rented', 'Under Review', 'Archived'],
+  'Reserved': ['Available', 'Sold', 'Rented', 'Archived'],
+  'Rented': ['Available', 'Archived'],
+  'Sold': ['Archived'],
+  'Archived': ['Created', 'Listed', 'Available'],
+};
+
 const getPropertyLifecycle = async (req, res) => {
   try {
     const { propertyId } = req.params;
@@ -585,13 +609,24 @@ const getPropertyLifecycle = async (req, res) => {
 
     const transitions = await getLifecycleHistory(Number(propertyId));
     const latestTransition = transitions.length > 0 ? transitions[0] : null;
-    const currentState = latestTransition ? latestTransition.to_state : property.status;
+
+    let currentState = latestTransition ? latestTransition.to_state : null;
+    if (!currentState) {
+      if (property.status === 'Sold') currentState = 'Sold';
+      else if (property.status === 'Rented') currentState = 'Rented';
+      else if (property.status === 'Inactive') currentState = 'Archived';
+      else currentState = 'Available';
+    }
+
+    const allowedTransitions = ALLOWED_LIFECYCLE_TRANSITIONS[currentState] || [];
 
     return res.status(200).json({
       success: true,
       currentState,
       propertyStatus: property.status,
       propertyId: property.id,
+      allowedTransitions,
+      allLifecycleStates: LIFECYCLE_STATES,
       transitions,
     });
   } catch (error) {
@@ -615,25 +650,50 @@ const transitionPropertyLifecycle = async (req, res) => {
       return res.status(authCheck.status).json({ success: false, message: authCheck.message });
     }
 
-    const validStates = ['Available', 'Under Contract', 'Pending', 'Sold', 'Rented', 'Inactive'];
-    if (!validStates.includes(to_state)) {
-      return res.status(400).json({ success: false, message: `Invalid state. Must be one of: ${validStates.join(', ')}` });
+    if (!LIFECYCLE_STATES.includes(to_state)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid state '${to_state}'. Must be one of: ${LIFECYCLE_STATES.join(', ')}`,
+      });
     }
 
     const transitionsList = await getLifecycleHistory(Number(propertyId));
     const latestTransition = transitionsList.length > 0 ? transitionsList[0] : null;
-    const fromState = latestTransition ? latestTransition.to_state : property.status;
 
-    if (fromState === to_state) {
-      return res.status(400).json({ success: false, message: `Property is already in state '${to_state}'.` });
+    let fromState = latestTransition ? latestTransition.to_state : null;
+    if (!fromState) {
+      if (property.status === 'Sold') fromState = 'Sold';
+      else if (property.status === 'Rented') fromState = 'Rented';
+      else if (property.status === 'Inactive') fromState = 'Archived';
+      else fromState = 'Available';
     }
 
-    // Only update properties.status if target state is an allowed value of the DB enum ('Available', 'Sold', 'Rented', 'Inactive')
-    const dbSupportedStatuses = ['Available', 'Sold', 'Rented', 'Inactive'];
-    if (dbSupportedStatuses.includes(to_state)) {
+    if (fromState === to_state) {
+      return res.status(400).json({
+        success: false,
+        message: `Property is already in state '${to_state}'.`,
+      });
+    }
+
+    const allowedTransitions = ALLOWED_LIFECYCLE_TRANSITIONS[fromState] || [];
+    if (!allowedTransitions.includes(to_state)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid lifecycle transition from '${fromState}' to '${to_state}'. Allowed transitions: ${allowedTransitions.join(', ')}`,
+      });
+    }
+
+    // Sync database properties.status where enum is compatible
+    const dbStatusMap = {
+      'Available': 'Available',
+      'Sold': 'Sold',
+      'Rented': 'Rented',
+      'Archived': 'Inactive',
+    };
+    if (dbStatusMap[to_state]) {
       await pool.execute(
         `UPDATE properties SET status = ?, updated_at = NOW() WHERE id = ?`,
-        [to_state, Number(propertyId)]
+        [dbStatusMap[to_state], Number(propertyId)]
       );
     }
 
@@ -662,6 +722,7 @@ const transitionPropertyLifecycle = async (req, res) => {
       success: true,
       message: `Property transitioned from '${fromState}' to '${to_state}'.`,
       currentState: to_state,
+      allowedTransitions: ALLOWED_LIFECYCLE_TRANSITIONS[to_state] || [],
       transition,
       transitions,
     });
