@@ -102,20 +102,27 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
     ? Number(customMonthlyRent)
     : intelData?.rentalYield?.monthlyRent || 0;
 
+  // Realistic asset property value basis (ensures rental properties don't use monthly rent as asset value)
+  const propertyAssetVal =
+    property.listing_type === "Rent"
+      ? (intelData?.rentalYield?.propertyValue ||
+          (activeRentVal > 0 ? activeRentVal * 12 * 20 : (Number(property.price) || 0) * 12 * 20))
+      : (Number(intelData?.price || property.price) || 0);
+
   const currentYield = recalculateRentalYield(
-    intelData?.price || property.price,
+    propertyAssetVal,
     activeRentVal
   );
 
   const currentRoi = recalculateROI(
-    intelData?.price || property.price,
+    propertyAssetVal,
     currentYield.annualRentalIncome,
     holdingYears,
     appreciationRate
   );
 
   const currentForecasts = recalculateAppreciation(
-    intelData?.price || property.price,
+    propertyAssetVal,
     appreciationRate
   );
 

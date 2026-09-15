@@ -50,9 +50,13 @@ function calculateComparableStats(targetProperty, comparables = []) {
   const targetListing = targetProperty.listing_type || "Sale";
   const targetPpsf = targetArea > 0 ? targetPrice / targetArea : null;
 
-  // Filter out target property if present and only consider valid price items
+  // Filter out target property if present, only consider valid price items, and enforce identical property type
+  const targetType = targetProperty.property_type;
   const validComps = comparables.filter(
-    (c) => Number(c.id) !== Number(targetProperty.id) && Number(c.price) > 0
+    (c) =>
+      Number(c.id) !== Number(targetProperty.id) &&
+      Number(c.price) > 0 &&
+      (!targetType || c.property_type === targetType)
   );
 
   if (validComps.length === 0) {
@@ -463,7 +467,7 @@ function calculateInvestmentScore(targetProperty, valuation, compStats, ppsfStat
  * Feature 6: Rental Yield Calculator
  * Formula: (Annual Rental Income / Property Value) * 100
  */
-function calculateRentalYield(targetProperty, customRent = null, customValue = null, compStats = null, rentalComps = []) {
+function calculateRentalYield(targetProperty, customRent = null, customValue = null, compStats = null, rentalComps = [], saleComps = []) {
   const isRentListing = targetProperty.listing_type === "Rent";
   const listedPrice = Number(targetProperty.price) || 0;
 
@@ -499,9 +503,26 @@ function calculateRentalYield(targetProperty, customRent = null, customValue = n
     propertyValue = Number(customValue);
   } else if (!isRentListing) {
     propertyValue = listedPrice;
-  } else if (monthlyRent > 0) {
-    // For rent listings, estimate asset value from standard cap rate (approx 20x annual rent)
-    propertyValue = Math.round(monthlyRent * 12 * 20);
+  } else {
+    // For rent listings, benchmark property asset valuation from sale comps if available
+    if (saleComps && saleComps.length > 0) {
+      const validSalePpsf = saleComps
+        .filter((s) => Number(s.price) > 0 && Number(s.area) > 0)
+        .map((s) => Number(s.price) / Number(s.area));
+      if (validSalePpsf.length > 0 && Number(targetProperty.area) > 0) {
+        const avgSalePpsf = validSalePpsf.reduce((a, b) => a + b, 0) / validSalePpsf.length;
+        propertyValue = Math.round(avgSalePpsf * Number(targetProperty.area));
+      } else {
+        const validSalePrices = saleComps.map((s) => Number(s.price)).filter((p) => p > 0);
+        if (validSalePrices.length > 0) {
+          propertyValue = Math.round(validSalePrices.reduce((a, b) => a + b, 0) / validSalePrices.length);
+        }
+      }
+    }
+    // Standard valuation cap rate fallback (~20x annual rent, i.e. 5% cap rate)
+    if (propertyValue <= 0 && monthlyRent > 0) {
+      propertyValue = Math.round(monthlyRent * 12 * 20);
+    }
   }
 
   const annualRentalIncome = monthlyRent * 12;
@@ -592,7 +613,9 @@ function calculateROI(targetProperty, options = {}) {
  */
 function calculateAppreciationForecast(targetProperty, options = {}) {
   const currentPrice = Number(targetProperty.price) || 0;
-  const baseValue = currentPrice > 0 ? currentPrice : 1000000;
+  const baseValue = options.baseValue
+    ? Number(options.baseValue)
+    : (currentPrice > 0 ? currentPrice : 1000000);
   const annualRate = Number.isFinite(Number(options.annualRate))
     ? Number(options.annualRate)
     : 5.5;
@@ -964,7 +987,7 @@ function generatePropertyDescription(property, options = {}) {
 /**
  * Integrated Master Function: Combines all 10 features into one unified payload
  */
-function generateIntegratedPropertyIntelligence(targetProperty, comparables = [], userOptions = {}, rentalComps = []) {
+function generateIntegratedPropertyIntelligence(targetProperty, comparables = [], userOptions = {}, rentalComps = [], saleComps = []) {
   // 1. Price per Sq.Ft
   const ppsfStats = calculatePricePerSqFt(targetProperty.price, targetProperty.area);
 
@@ -983,7 +1006,8 @@ function generateIntegratedPropertyIntelligence(targetProperty, comparables = []
     userOptions.monthlyRent,
     userOptions.propertyValue,
     compStats,
-    rentalComps
+    rentalComps,
+    saleComps
   );
 
   // 6. Investment Score (0-100)
@@ -995,17 +1019,25 @@ function generateIntegratedPropertyIntelligence(targetProperty, comparables = []
     rentalYield
   );
 
+  // Realistic property asset valuation basis (avoids using monthly rent for rental listings)
+  const propertyAssetVal =
+    userOptions.propertyValue ||
+    (targetProperty.listing_type === "Rent"
+      ? rentalYield.propertyValue
+      : Number(targetProperty.price) || 0);
+
   // 7. ROI Calculator
   const roi = calculateROI(targetProperty, {
     holdingYears: userOptions.holdingYears || 5,
     appreciationRate: userOptions.appreciationRate || 5.5,
     annualRentalIncome: rentalYield.annualRentalIncome,
-    customInitialValue: userOptions.propertyValue || targetProperty.price,
+    customInitialValue: propertyAssetVal,
   });
 
   // 8. Appreciation Forecast
   const appreciationForecast = calculateAppreciationForecast(targetProperty, {
     annualRate: userOptions.appreciationRate || 5.5,
+    baseValue: propertyAssetVal,
   });
 
   // 9. Property Quality Score (0-100)

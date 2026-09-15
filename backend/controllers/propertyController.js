@@ -643,7 +643,7 @@ const getPropertyIntelligence = async (req, res) => {
 
     // Query genuine comparable properties from the database
     // Exclude target property, only active/relevant statuses
-    // Prioritize same listing type, same city, same property type
+    // Enforce identical property type and listing type, prioritizing same city
     const [comparables] = await pool.execute(
       `
       SELECT
@@ -668,13 +668,8 @@ const getPropertyIntelligence = async (req, res) => {
       WHERE p.id != ?
         AND p.status != 'Inactive'
         AND p.listing_type = ?
-        AND (
-          (p.city = ? AND p.property_type = ?)
-          OR (p.city = ?)
-          OR (p.property_type = ?)
-        )
+        AND (p.property_type = ? OR ? = '')
       ORDER BY
-        (p.city = ? AND p.property_type = ?) DESC,
         (p.city = ?) DESC,
         ABS(p.price - ?) ASC
       LIMIT 12
@@ -682,19 +677,17 @@ const getPropertyIntelligence = async (req, res) => {
       [
         propertyId,
         property.listing_type || "Sale",
-        property.city || "",
         property.property_type || "",
-        property.city || "",
-        property.property_type || "",
-        property.city || "",
         property.property_type || "",
         property.city || "",
         Number(property.price) || 0,
       ]
     );
 
-    // If target property is for Sale, query rental listings in same city/type for yield benchmark
+    // If target property is for Sale, query rental listings in same type for yield benchmark
+    // If target property is for Rent, query sale listings of same type for property valuation benchmark
     let rentalComps = [];
+    let saleComps = [];
     if (property.listing_type === "Sale") {
       const [rentRows] = await pool.execute(
         `
@@ -702,12 +695,27 @@ const getPropertyIntelligence = async (req, res) => {
         FROM properties p
         WHERE p.listing_type = 'Rent'
           AND p.status != 'Inactive'
-          AND (p.city = ? OR p.property_type = ?)
+          AND (p.property_type = ? OR ? = '')
+        ORDER BY (p.city = ?) DESC
         LIMIT 10
         `,
-        [property.city || "", property.property_type || ""]
+        [property.property_type || "", property.property_type || "", property.city || ""]
       );
       rentalComps = rentRows;
+    } else if (property.listing_type === "Rent") {
+      const [saleRows] = await pool.execute(
+        `
+        SELECT p.id, p.title, p.price, p.area, p.city, p.property_type
+        FROM properties p
+        WHERE p.listing_type = 'Sale'
+          AND p.status != 'Inactive'
+          AND (p.property_type = ? OR ? = '')
+        ORDER BY (p.city = ?) DESC
+        LIMIT 10
+        `,
+        [property.property_type || "", property.property_type || "", property.city || ""]
+      );
+      saleComps = saleRows;
     }
 
     // Options from query params (e.g. for custom calculators)
@@ -730,7 +738,8 @@ const getPropertyIntelligence = async (req, res) => {
       property,
       comparables,
       options,
-      rentalComps
+      rentalComps,
+      saleComps
     );
 
     return res.status(200).json({
