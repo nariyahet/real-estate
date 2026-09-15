@@ -4,6 +4,7 @@ import api from "../api/axios";
 import DashboardBackLink from "../components/DashboardBackLink";
 import PropertyIntelligenceModal from "../components/PropertyIntelligence/PropertyIntelligenceModal";
 import PropertyDocumentVaultModal from "../components/PropertyDocumentVault/PropertyDocumentVaultModal";
+import PropertyOperationsModal from "../components/PropertyOperations/PropertyOperationsModal";
 import "./Properties.css";
 
 function Properties() {
@@ -20,6 +21,15 @@ function Properties() {
   // Property Document Vault Modal state
   const [selectedVaultProperty, setSelectedVaultProperty] = useState(null);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
+
+  // Property Operations Modal state (Features #3 - #8)
+  const [selectedOpsProperty, setSelectedOpsProperty] = useState(null);
+  const [isOpsOpen, setIsOpsOpen] = useState(false);
+
+  // Saved Properties state (Features #9 & #10)
+  const [savedIds, setSavedIds] = useState([]);
+  const [showSaveSearchModal, setShowSaveSearchModal] = useState(false);
+  const [saveSearchName, setSaveSearchName] = useState("");
 
   // Search, Filter & Pagination states
   const [search, setSearch] = useState("");
@@ -54,6 +64,68 @@ function Properties() {
     if (!canAccessVault(property)) return;
     setSelectedVaultProperty(property);
     setIsVaultOpen(true);
+  };
+
+  const handleOpenOps = (property) => {
+    if (!canAccessVault(property)) return;
+    setSelectedOpsProperty(property);
+    setIsOpsOpen(true);
+  };
+
+  const fetchSavedIds = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await api.get("/saved-properties");
+      if (res.data?.success) {
+        setSavedIds((res.data.savedProperties || []).map((s) => s.property.id));
+      }
+    } catch {
+      // ignore
+    }
+  }, [user]);
+
+  const handleToggleSave = async (propertyId) => {
+    if (!user) {
+      alert("Please sign in to save properties.");
+      return;
+    }
+    try {
+      const res = await api.post(`/saved-properties/${propertyId}/toggle`);
+      if (res.data?.success) {
+        if (res.data.isSaved) {
+          setSavedIds((prev) => [...prev, propertyId]);
+        } else {
+          setSavedIds((prev) => prev.filter((id) => id !== propertyId));
+        }
+      }
+    } catch (e) {
+      console.error("Save toggle error:", e);
+    }
+  };
+
+  const handleSaveSearchSubmit = async (e) => {
+    e.preventDefault();
+    if (!saveSearchName.trim()) return;
+    try {
+      const filters = {};
+      if (search.trim()) filters.search = search.trim();
+      if (city !== "all") filters.city = city;
+      if (propertyType !== "all") filters.property_type = propertyType;
+      if (listingType !== "all") filters.listing_type = listingType;
+      if (bedrooms !== "all") filters.bedrooms = bedrooms;
+
+      const res = await api.post("/saved-searches", {
+        search_name: saveSearchName.trim(),
+        filters,
+      });
+      if (res.data?.success) {
+        setShowSaveSearchModal(false);
+        setSaveSearchName("");
+        alert("Search criteria saved to your Workspace!");
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to save search.");
+    }
   };
 
   const fetchProperties = useCallback(async () => {
@@ -97,7 +169,8 @@ function Properties() {
 
   useEffect(() => {
     fetchProperties();
-  }, [fetchProperties]);
+    fetchSavedIds();
+  }, [fetchProperties, fetchSavedIds]);
 
   const updatePropertyStatus = async (propertyId, status) => {
     try {
@@ -211,6 +284,12 @@ function Properties() {
         <div className="properties-header-actions">
           <DashboardBackLink />
 
+          {user && (
+            <Link to="/saved-properties" className="saved-nav-btn">
+              ❤️ Saved Workspace ({savedIds.length})
+            </Link>
+          )}
+
           {!user && (
             <Link to="/" className="login-nav-btn">
               🔑 Sign In
@@ -290,11 +369,8 @@ function Properties() {
                 <option value="all">All Types</option>
                 <option value="Apartment">Apartment</option>
                 <option value="Villa">Villa</option>
-                <option value="House">House</option>
+                <option value="Plot">Plot</option>
                 <option value="Office">Office</option>
-                <option value="Shop">Shop</option>
-                <option value="Land">Land</option>
-                <option value="Warehouse">Warehouse</option>
               </select>
             </div>
 
@@ -309,8 +385,8 @@ function Properties() {
                 }}
               >
                 <option value="all">All Listings</option>
-                <option value="Sale">Sale</option>
-                <option value="Rent">Rent</option>
+                <option value="Sale">For Sale</option>
+                <option value="Rent">For Rent</option>
               </select>
             </div>
 
@@ -331,6 +407,17 @@ function Properties() {
                 <option value="4">4+ BHK</option>
               </select>
             </div>
+
+            {user && (
+              <button
+                type="button"
+                className="save-search-btn"
+                onClick={() => setShowSaveSearchModal(true)}
+                title="Save current search criteria"
+              >
+                💾 Save Search
+              </button>
+            )}
 
             {(search || city !== "all" || propertyType !== "all" || listingType !== "all" || bedrooms !== "all") && (
               <button
@@ -373,12 +460,13 @@ function Properties() {
               <thead>
                 <tr>
                   <th>ID</th>
+                  <th>Save</th>
                   <th>Property</th>
                   <th>Type</th>
                   <th>Listing</th>
                   <th>Price</th>
                   <th>Agent</th>
-                  <th>Intelligence</th>
+                  <th>Intelligence & Operations</th>
                   {(isAdmin || isAgent) && <th>Status</th>}
                   {(isAdmin || isAgent) && <th>Action</th>}
                 </tr>
@@ -389,6 +477,21 @@ function Properties() {
                   <tr key={property.id}>
                     <td>
                       <span className="property-id">#{property.id}</span>
+                    </td>
+
+                    <td>
+                      {user ? (
+                        <button
+                          type="button"
+                          className={`save-btn ${savedIds.includes(property.id) ? "saved" : ""}`}
+                          onClick={() => handleToggleSave(property.id)}
+                          title={savedIds.includes(property.id) ? "Remove from saved" : "Save property"}
+                        >
+                          {savedIds.includes(property.id) ? "❤️" : "🤍"}
+                        </button>
+                      ) : (
+                        <span title="Sign in to save" style={{ opacity: 0.35, cursor: "not-allowed" }}>🤍</span>
+                      )}
                     </td>
 
                     <td>
@@ -466,6 +569,16 @@ function Properties() {
                             onClick={() => handleOpenVault(property)}
                           >
                             📁 Vault
+                          </button>
+                        )}
+                        {canAccessVault(property) && (
+                          <button
+                            type="button"
+                            className="ops-btn"
+                            title="Open Property Operations Hub"
+                            onClick={() => handleOpenOps(property)}
+                          >
+                            ⚙️ Operations
                           </button>
                         )}
                       </div>
@@ -575,6 +688,47 @@ function Properties() {
           setSelectedVaultProperty(null);
         }}
       />
+
+      {/* Property Operations Hub Modal (Features #3 - #8) */}
+      <PropertyOperationsModal
+        isOpen={isOpsOpen}
+        property={selectedOpsProperty}
+        onClose={() => {
+          setIsOpsOpen(false);
+          setSelectedOpsProperty(null);
+        }}
+        onPropertyUpdated={fetchProperties}
+      />
+
+      {/* Save Search Modal (Feature #10) */}
+      {showSaveSearchModal && (
+        <div className="ops-modal-overlay" onClick={() => setShowSaveSearchModal(false)}>
+          <div className="ops-modal-card" style={{ maxWidth: "420px" }} onClick={(e) => e.stopPropagation()}>
+            <div className="ops-modal-header">
+              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700 }}>Save Search Filters</h3>
+              <button type="button" className="ops-close-btn" onClick={() => setShowSaveSearchModal(false)}>×</button>
+            </div>
+            <div className="ops-modal-body">
+              <form onSubmit={handleSaveSearchSubmit}>
+                <div className="ops-form-group" style={{ marginBottom: "16px" }}>
+                  <label className="ops-label">Search Name *</label>
+                  <input
+                    type="text"
+                    className="ops-input"
+                    placeholder="e.g. Surat 3 BHK Apartments"
+                    value={saveSearchName}
+                    onChange={(e) => setSaveSearchName(e.target.value)}
+                    required
+                  />
+                </div>
+                <button type="submit" className="ops-btn-primary" style={{ width: "100%", justifyContent: "center" }}>
+                  Save Search Criteria
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

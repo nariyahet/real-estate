@@ -15,6 +15,8 @@ const getDocumentsByPropertyId = async (propertyId) => {
       d.file_path,
       d.file_size,
       d.mime_type,
+      d.issue_date,
+      d.expiry_date,
       d.uploaded_by,
       d.created_at,
       d.updated_at,
@@ -47,6 +49,8 @@ const getDocumentById = async (documentId) => {
       d.file_path,
       d.file_size,
       d.mime_type,
+      d.issue_date,
+      d.expiry_date,
       d.uploaded_by,
       d.created_at,
       d.updated_at,
@@ -79,6 +83,8 @@ const createDocument = async ({
   file_path,
   file_size,
   mime_type,
+  issue_date = null,
+  expiry_date = null,
   uploaded_by,
 }) => {
   const [result] = await pool.execute(
@@ -91,8 +97,10 @@ const createDocument = async ({
       file_path,
       file_size,
       mime_type,
+      issue_date,
+      expiry_date,
       uploaded_by
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       property_id,
@@ -102,6 +110,8 @@ const createDocument = async ({
       file_path,
       file_size,
       mime_type,
+      issue_date || null,
+      expiry_date || null,
       uploaded_by,
     ]
   );

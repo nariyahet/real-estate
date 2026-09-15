@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Agents from "./pages/Agents";
 import Properties from "./pages/Properties";
 import Users from "./pages/Users";
+import SavedProperties from "./pages/SavedProperties";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -23,6 +24,15 @@ function App() {
       <Route path="/register" element={<Register />} />
 
       <Route path="/properties" element={<Properties />} />
+
+      <Route
+        path="/saved-properties"
+        element={
+          <ProtectedRoute>
+            <SavedProperties />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/dashboard"

@@ -9,6 +9,7 @@ const {
   deleteDocumentById,
 } = require("../models/documentModel");
 const { uploadDir } = require("../middleware/uploadMiddleware");
+const { logAudit } = require("../utils/auditLogger");
 
 /**
  * Helper to get the agent_id for a given user_id
@@ -95,24 +96,70 @@ const getPropertyDocuments = async (req, res) => {
 
     const documents = await getDocumentsByPropertyId(Number(propertyId));
 
-    // Sanitize document output: don't expose raw server filesystem paths
-    const sanitizedDocuments = documents.map((doc) => ({
-      id: doc.id,
-      propertyId: doc.property_id,
-      title: doc.title,
-      documentType: doc.document_type,
-      originalFilename: doc.original_filename,
-      fileSize: doc.file_size,
-      mimeType: doc.mime_type,
-      uploadedBy: {
-        id: doc.uploaded_by,
-        name: doc.uploader_name || "Unknown",
-        email: doc.uploader_email || "",
-        role: doc.uploader_role || "agent",
-      },
-      createdAt: doc.created_at,
-      updatedAt: doc.updated_at,
-    }));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const summary = {
+      total: documents.length,
+      active: 0,
+      expiringSoon: 0,
+      expired: 0,
+      noExpiry: 0,
+    };
+
+    // Sanitize document output and calculate expiry state
+    const sanitizedDocuments = documents.map((doc) => {
+      let expiryStatus = "No Expiry";
+      let daysUntilExpiry = null;
+      let isExpired = false;
+      let isExpiringSoon = false;
+
+      if (doc.expiry_date) {
+        const expDate = new Date(doc.expiry_date);
+        expDate.setHours(0, 0, 0, 0);
+        const diffMs = expDate.getTime() - today.getTime();
+        daysUntilExpiry = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+        if (daysUntilExpiry < 0) {
+          expiryStatus = "Expired";
+          isExpired = true;
+          summary.expired += 1;
+        } else if (daysUntilExpiry <= 30) {
+          expiryStatus = "Expiring Soon";
+          isExpiringSoon = true;
+          summary.expiringSoon += 1;
+        } else {
+          expiryStatus = "Active";
+          summary.active += 1;
+        }
+      } else {
+        summary.noExpiry += 1;
+      }
+
+      return {
+        id: doc.id,
+        propertyId: doc.property_id,
+        title: doc.title,
+        documentType: doc.document_type,
+        originalFilename: doc.original_filename,
+        fileSize: doc.file_size,
+        mimeType: doc.mime_type,
+        issueDate: doc.issue_date || null,
+        expiryDate: doc.expiry_date || null,
+        expiryStatus,
+        daysUntilExpiry,
+        isExpired,
+        isExpiringSoon,
+        uploadedBy: {
+          id: doc.uploaded_by,
+          name: doc.uploader_name || "Unknown",
+          email: doc.uploader_email || "",
+          role: doc.uploader_role || "agent",
+        },
+        createdAt: doc.created_at,
+        updatedAt: doc.updated_at,
+      };
+    });
 
     return res.status(200).json({
       success: true,
@@ -123,6 +170,7 @@ const getPropertyDocuments = async (req, res) => {
         city: property.city,
         agentId: property.agent_id,
       },
+      summary,
       documents: sanitizedDocuments,
       totalCount: sanitizedDocuments.length,
     });
@@ -190,7 +238,7 @@ const uploadPropertyDocument = async (req, res) => {
       });
     }
 
-    const { title, document_type } = req.body;
+    const { title, document_type, issue_date, expiry_date } = req.body;
 
     if (!title || !String(title).trim()) {
       cleanupUploadedFile();
@@ -198,6 +246,44 @@ const uploadPropertyDocument = async (req, res) => {
         success: false,
         message: "Document title is required.",
       });
+    }
+
+    // Validate dates if provided
+    let parsedIssueDate = null;
+    let parsedExpiryDate = null;
+
+    if (issue_date && String(issue_date).trim()) {
+      const d = new Date(String(issue_date).trim());
+      if (isNaN(d.getTime())) {
+        cleanupUploadedFile();
+        return res.status(400).json({
+          success: false,
+          message: "Invalid issue date format. Expected YYYY-MM-DD.",
+        });
+      }
+      parsedIssueDate = String(issue_date).trim();
+    }
+
+    if (expiry_date && String(expiry_date).trim()) {
+      const d = new Date(String(expiry_date).trim());
+      if (isNaN(d.getTime())) {
+        cleanupUploadedFile();
+        return res.status(400).json({
+          success: false,
+          message: "Invalid expiry date format. Expected YYYY-MM-DD.",
+        });
+      }
+      parsedExpiryDate = String(expiry_date).trim();
+    }
+
+    if (parsedIssueDate && parsedExpiryDate) {
+      if (new Date(parsedExpiryDate) < new Date(parsedIssueDate)) {
+        cleanupUploadedFile();
+        return res.status(400).json({
+          success: false,
+          message: "Expiry date cannot be earlier than issue date.",
+        });
+      }
     }
 
     const allowedTypes = [
@@ -228,7 +314,27 @@ const uploadPropertyDocument = async (req, res) => {
       file_path: safeStoredFilename,
       file_size: uploadedFile.size,
       mime_type: uploadedFile.mimetype,
+      issue_date: parsedIssueDate,
+      expiry_date: parsedExpiryDate,
       uploaded_by: req.user.id,
+    });
+
+    // Audit log (Feature #8)
+    await logAudit({
+      propertyId: Number(propertyId),
+      userId: req.user.id,
+      userName: req.user.name,
+      userRole: req.user.role,
+      action: "UPLOAD_DOCUMENT",
+      entity: "DOCUMENT",
+      entityId: newDoc.id,
+      details: {
+        title: newDoc.title,
+        documentType: newDoc.document_type,
+        originalFilename: newDoc.original_filename,
+        issueDate: newDoc.issue_date,
+        expiryDate: newDoc.expiry_date,
+      },
     });
 
     return res.status(201).json({
@@ -242,6 +348,8 @@ const uploadPropertyDocument = async (req, res) => {
         originalFilename: newDoc.original_filename,
         fileSize: newDoc.file_size,
         mimeType: newDoc.mime_type,
+        issueDate: newDoc.issue_date,
+        expiryDate: newDoc.expiry_date,
         uploadedBy: {
           id: req.user.id,
           name: req.user.name,
@@ -381,6 +489,22 @@ const deletePropertyDocument = async (req, res) => {
     }
 
     await deleteDocumentById(Number(id));
+
+    // Audit log (Feature #8)
+    await logAudit({
+      propertyId: document.property_id,
+      userId: req.user.id,
+      userName: req.user.name,
+      userRole: req.user.role,
+      action: "DELETE_DOCUMENT",
+      entity: "DOCUMENT",
+      entityId: Number(id),
+      details: {
+        title: document.title,
+        documentType: document.document_type,
+        originalFilename: document.original_filename,
+      },
+    });
 
     return res.status(200).json({
       success: true,

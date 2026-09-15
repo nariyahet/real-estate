@@ -45,11 +45,15 @@ const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const documentRoutes = require("./routes/documentRoutes");
+const operationsRoutes = require("./routes/operationsRoutes");
+const savedRoutes = require("./routes/savedRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/properties", operationsRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/documents", documentRoutes);
+app.use("/api", savedRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({

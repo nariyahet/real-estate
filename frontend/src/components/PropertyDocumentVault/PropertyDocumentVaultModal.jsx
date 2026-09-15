@@ -83,6 +83,19 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
   const [successMsg, setSuccessMsg] = useState("");
   const [downloadingId, setDownloadingId] = useState(null);
 
+  // Feature #2: Expiry & Summary State
+  const [summary, setSummary] = useState({
+    total: 0,
+    active: 0,
+    expiringSoon: 0,
+    expired: 0,
+    noExpiry: 0,
+  });
+  const [issueDate, setIssueDate] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [expiryFilter, setExpiryFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
+
   // Upload Form State
   const [title, setTitle] = useState("");
   const [documentType, setDocumentType] = useState("Ownership Document");
@@ -126,6 +139,9 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
       const response = await api.get(`/properties/${propertyId}/documents`);
       if (response.data?.success) {
         setDocuments(response.data.documents || []);
+        if (response.data.summary) {
+          setSummary(response.data.summary);
+        }
       } else {
         setDocuments([]);
         setError(response.data?.message || "Failed to load documents.");
@@ -246,6 +262,11 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
       return;
     }
 
+    if (issueDate && expiryDate && new Date(expiryDate) < new Date(issueDate)) {
+      setError("Expiry date cannot be earlier than issue date.");
+      return;
+    }
+
     try {
       setIsUploading(true);
 
@@ -253,6 +274,8 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
       formData.append("title", title.trim());
       formData.append("document_type", documentType);
       formData.append("file", selectedFile);
+      if (issueDate) formData.append("issue_date", issueDate);
+      if (expiryDate) formData.append("expiry_date", expiryDate);
 
       const response = await api.post(
         `/properties/${propertyId}/documents`,
@@ -269,6 +292,8 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
           `Document "${title.trim()}" successfully uploaded to the vault.`
         );
         setTitle("");
+        setIssueDate("");
+        setExpiryDate("");
         setSelectedFile(null);
         setFileError("");
         fetchDocuments();
@@ -343,16 +368,31 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
 
   if (!isOpen || !property || !canManageVault) return null;
 
-  // Filter documents
-  const filteredDocs = documents.filter((doc) => {
-    const matchesCategory =
-      categoryFilter === "all" || doc.documentType === categoryFilter;
-    const matchesSearch =
-      !searchQuery.trim() ||
-      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.originalFilename.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // Filter & sort documents
+  const filteredDocs = documents
+    .filter((doc) => {
+      const matchesCategory =
+        categoryFilter === "all" || doc.documentType === categoryFilter;
+      const matchesExpiry =
+        expiryFilter === "all" || doc.expiryStatus === expiryFilter;
+      const matchesSearch =
+        !searchQuery.trim() ||
+        doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doc.originalFilename.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesExpiry && matchesSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "expiry_soonest") {
+        if (!a.expiryDate && !b.expiryDate) return 0;
+        if (!a.expiryDate) return 1;
+        if (!b.expiryDate) return -1;
+        return new Date(a.expiryDate) - new Date(b.expiryDate);
+      }
+      if (sortBy === "oldest") {
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      }
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
 
   // Calculate vault statistics
   const totalStorage = documents.reduce((acc, d) => acc + (d.fileSize || 0), 0);
@@ -501,6 +541,37 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
                   </div>
                 </div>
 
+                {/* Feature #2: Issue & Expiry Dates */}
+                <div className="vault-form-row vault-date-row">
+                  <div className="vault-form-group">
+                    <label htmlFor="doc-issue-date" className="vault-label">
+                      Issue Date <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 400 }}>(Optional)</span>
+                    </label>
+                    <input
+                      type="date"
+                      id="doc-issue-date"
+                      className="vault-date-input"
+                      value={issueDate}
+                      onChange={(e) => setIssueDate(e.target.value)}
+                      disabled={isUploading}
+                    />
+                  </div>
+
+                  <div className="vault-form-group">
+                    <label htmlFor="doc-expiry-date" className="vault-label">
+                      Expiry Date <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 400 }}>(Optional - Expiry Alert)</span>
+                    </label>
+                    <input
+                      type="date"
+                      id="doc-expiry-date"
+                      className="vault-date-input"
+                      value={expiryDate}
+                      onChange={(e) => setExpiryDate(e.target.value)}
+                      disabled={isUploading}
+                    />
+                  </div>
+                </div>
+
                 {/* Dropzone */}
                 <div
                   className={`vault-dropzone ${isDragOver ? "dragover" : ""} ${
@@ -627,7 +698,69 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
                     </option>
                   ))}
                 </select>
+
+                <select
+                  className="vault-filter-select"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="newest">Sort: Newest</option>
+                  <option value="oldest">Sort: Oldest</option>
+                  <option value="expiry_soonest">Sort: Expiry (Soonest)</option>
+                </select>
               </div>
+            </div>
+
+            {/* Feature #2: Expiry Alert Banner */}
+            {(summary.expired > 0 || summary.expiringSoon > 0) && (
+              <div className={`vault-expiry-alert-banner ${summary.expired > 0 ? "has-expired" : ""}`}>
+                <span>{summary.expired > 0 ? "⚠️" : "⏳"}</span>
+                <span>
+                  {summary.expired > 0 && <strong>{summary.expired} document(s) expired. </strong>}
+                  {summary.expiringSoon > 0 && <span>{summary.expiringSoon} document(s) expiring within 30 days. </span>}
+                  Please review compliance and renew necessary records.
+                </span>
+              </div>
+            )}
+
+            {/* Feature #2: Expiry Status Filter Strip */}
+            <div className="vault-expiry-strip">
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#475569" }}>Expiry Filter:</span>
+              <button
+                type="button"
+                className={`vault-expiry-pill ${expiryFilter === "all" ? "active-pill" : "none-pill"}`}
+                onClick={() => setExpiryFilter("all")}
+              >
+                All ({documents.length})
+              </button>
+              <button
+                type="button"
+                className={`vault-expiry-pill ${expiryFilter === "Active" ? "active-pill" : "none-pill"}`}
+                onClick={() => setExpiryFilter("Active")}
+              >
+                🟢 Active ({summary.active})
+              </button>
+              <button
+                type="button"
+                className={`vault-expiry-pill ${expiryFilter === "Expiring Soon" ? "expiring-pill" : "none-pill"}`}
+                onClick={() => setExpiryFilter("Expiring Soon")}
+              >
+                ⏳ Expiring Soon ({summary.expiringSoon})
+              </button>
+              <button
+                type="button"
+                className={`vault-expiry-pill ${expiryFilter === "Expired" ? "expired-pill" : "none-pill"}`}
+                onClick={() => setExpiryFilter("Expired")}
+              >
+                🔴 Expired ({summary.expired})
+              </button>
+              <button
+                type="button"
+                className={`vault-expiry-pill ${expiryFilter === "No Expiry" ? "active-pill" : "none-pill"}`}
+                onClick={() => setExpiryFilter("No Expiry")}
+              >
+                ⚪ No Expiry ({summary.noExpiry})
+              </button>
             </div>
 
             {loading ? (
@@ -650,16 +783,17 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
                       : "No public records are currently cataloged in this property vault."
                     : "Try selecting another category or clearing your search criteria."}
                 </p>
-                {categoryFilter !== "all" || searchQuery ? (
+                {categoryFilter !== "all" || expiryFilter !== "all" || searchQuery ? (
                   <button
                     type="button"
                     className="vault-reset-btn"
                     onClick={() => {
                       setCategoryFilter("all");
+                      setExpiryFilter("all");
                       setSearchQuery("");
                     }}
                   >
-                    Clear Filter
+                    Clear All Filters
                   </button>
                 ) : null}
               </div>
@@ -670,6 +804,7 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
                     <tr>
                       <th>Document</th>
                       <th>Category</th>
+                      <th>Validity & Expiry</th>
                       <th>File Size</th>
                       <th>Uploaded By</th>
                       <th>Date Added</th>
@@ -703,6 +838,29 @@ function PropertyDocumentVaultModal({ isOpen, property, onClose }) {
                           >
                             {doc.documentType}
                           </span>
+                        </td>
+
+                        {/* Feature #2: Validity & Expiry Status */}
+                        <td>
+                          <div className="vault-cell-date-info">
+                            <span
+                              className={`doc-expiry-badge status-${(
+                                doc.expiryStatus || "no-expiry"
+                              )
+                                .toLowerCase()
+                                .replace(/\s+/g, "-")}`}
+                            >
+                              {doc.expiryStatus === "Expired" && `🔴 Expired (${Math.abs(doc.daysUntilExpiry)}d ago)`}
+                              {doc.expiryStatus === "Expiring Soon" && `⏳ Expiring in ${doc.daysUntilExpiry}d`}
+                              {doc.expiryStatus === "Active" && `🟢 Active (${doc.daysUntilExpiry}d left)`}
+                              {doc.expiryStatus === "No Expiry" && `⚪ No Expiry`}
+                            </span>
+                            {doc.expiryDate && (
+                              <span className="vault-cell-subdate">
+                                Exp: {formatDate(doc.expiryDate)}
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         <td>
