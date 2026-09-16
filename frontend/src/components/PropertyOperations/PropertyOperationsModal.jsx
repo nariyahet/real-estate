@@ -49,6 +49,42 @@ function PropertyOperationsModal({ isOpen, property, onClose, onPropertyUpdated 
 
   const propertyId = property?.id;
 
+  // Clear success message after 5 seconds
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => setSuccessMsg(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
+
+  // Tab change handler that prevents stale feedback across tabs
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setError("");
+    setSuccessMsg("");
+  };
+
+  // Consistent format for scheduled dates to prevent timezone drift
+  const formatScheduledDateTime = (dateVal) => {
+    if (!dateVal) return "-";
+    if (typeof dateVal === "string") {
+      if (dateVal.includes("T") && dateVal.endsWith("Z")) {
+        const d = new Date(dateVal);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleString(undefined, { timeZone: "UTC" });
+        }
+      }
+      const normalized = dateVal.replace(" ", "T");
+      const d = new Date(normalized);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleString();
+      }
+      return dateVal;
+    }
+    const d = new Date(dateVal);
+    return isNaN(d.getTime()) ? String(dateVal) : d.toLocaleString();
+  };
+
   // Fetch data per tab
   const fetchTabData = useCallback(async () => {
     if (!propertyId || !isOpen) return;
@@ -261,7 +297,7 @@ function PropertyOperationsModal({ isOpen, property, onClose, onPropertyUpdated 
 
   return (
     <div className="ops-modal-overlay" onClick={onClose}>
-      <div className="ops-modal-card" onClick={(e) => e.stopPropagation()}>
+      <div className="ops-modal-card ops-hub-modal-card" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="ops-modal-header">
           <div>
@@ -284,42 +320,42 @@ function PropertyOperationsModal({ isOpen, property, onClose, onPropertyUpdated 
           <button
             type="button"
             className={`ops-tab-btn ${activeTab === "verification" ? "active" : ""}`}
-            onClick={() => setActiveTab("verification")}
+            onClick={() => handleTabChange("verification")}
           >
             🛡️ Verification
           </button>
           <button
             type="button"
             className={`ops-tab-btn ${activeTab === "checklist" ? "active" : ""}`}
-            onClick={() => setActiveTab("checklist")}
+            onClick={() => handleTabChange("checklist")}
           >
             ✅ Checklist
           </button>
           <button
             type="button"
             className={`ops-tab-btn ${activeTab === "inspections" ? "active" : ""}`}
-            onClick={() => setActiveTab("inspections")}
+            onClick={() => handleTabChange("inspections")}
           >
             🔍 Inspections
           </button>
           <button
             type="button"
             className={`ops-tab-btn ${activeTab === "maintenance" ? "active" : ""}`}
-            onClick={() => setActiveTab("maintenance")}
+            onClick={() => handleTabChange("maintenance")}
           >
             🔧 Maintenance
           </button>
           <button
             type="button"
             className={`ops-tab-btn ${activeTab === "lifecycle" ? "active" : ""}`}
-            onClick={() => setActiveTab("lifecycle")}
+            onClick={() => handleTabChange("lifecycle")}
           >
             🔄 Lifecycle
           </button>
           <button
             type="button"
             className={`ops-tab-btn ${activeTab === "audit" ? "active" : ""}`}
-            onClick={() => setActiveTab("audit")}
+            onClick={() => handleTabChange("audit")}
           >
             📜 Audit Trail
           </button>
@@ -327,8 +363,32 @@ function PropertyOperationsModal({ isOpen, property, onClose, onPropertyUpdated 
 
         {/* Body Content */}
         <div className="ops-modal-body">
-          {error && <div className="ops-alert ops-alert-error">⚠️ {error}</div>}
-          {successMsg && <div className="ops-alert ops-alert-success">✅ {successMsg}</div>}
+          {error && (
+            <div className="ops-alert ops-alert-error">
+              <span>⚠️ {error}</span>
+              <button
+                type="button"
+                className="ops-alert-dismiss"
+                onClick={() => setError("")}
+                aria-label="Dismiss error"
+              >
+                ×
+              </button>
+            </div>
+          )}
+          {successMsg && (
+            <div className="ops-alert ops-alert-success">
+              <span>✅ {successMsg}</span>
+              <button
+                type="button"
+                className="ops-alert-dismiss"
+                onClick={() => setSuccessMsg("")}
+                aria-label="Dismiss message"
+              >
+                ×
+              </button>
+            </div>
+          )}
 
           {/* TAB 1: VERIFICATION */}
           {activeTab === "verification" && (
@@ -451,7 +511,7 @@ function PropertyOperationsModal({ isOpen, property, onClose, onPropertyUpdated 
                       />
                       <div>
                         <span className="ops-checklist-label">{item.item_label}</span>
-                        {item.is_completed && item.completed_by_name && (
+                        {Boolean(item.is_completed) && item.completed_by_name && (
                           <div className="ops-checklist-meta">
                             Verified by {item.completed_by_name} on {new Date(item.completed_at).toLocaleDateString()}
                           </div>
@@ -565,7 +625,7 @@ function PropertyOperationsModal({ isOpen, property, onClose, onPropertyUpdated 
                       <tr key={insp.id}>
                         <td><strong>{insp.inspector_name}</strong></td>
                         <td>{insp.inspection_type}</td>
-                        <td>{new Date(insp.scheduled_date).toLocaleString()}</td>
+                        <td>{formatScheduledDateTime(insp.scheduled_date)}</td>
                         <td>
                           <span className="ops-pill ops-pill-low">{insp.status}</span>
                         </td>
