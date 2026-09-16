@@ -148,6 +148,51 @@ const updatePropertyVerification = async (req, res) => {
       details: { status, notes, ownership_document_id },
     });
 
+    let lifecycleState = null;
+    if (status === 'Rejected') {
+      const transitionsList = await getLifecycleHistory(Number(propertyId));
+      const latestTransition = transitionsList.length > 0 ? transitionsList[0] : null;
+
+      let fromState = latestTransition ? latestTransition.to_state : null;
+      if (!fromState) {
+        if (property.status === 'Sold') fromState = 'Sold';
+        else if (property.status === 'Rented') fromState = 'Rented';
+        else if (property.status === 'Inactive') fromState = 'Archived';
+        else fromState = 'Available';
+      }
+
+      if (fromState !== 'Under Review') {
+        const transitionNotes = notes ? `Ownership verification rejected: ${notes}` : 'Ownership verification rejected';
+        await recordLifecycleTransition(Number(propertyId), {
+          from_state: fromState,
+          to_state: 'Under Review',
+          notes: transitionNotes,
+          changed_by: req.user.id,
+        });
+
+        await logAudit({
+          propertyId: Number(propertyId),
+          userId: req.user.id,
+          userName: req.user.name,
+          userRole: req.user.role,
+          action: 'LIFECYCLE_STATE_TRANSITION',
+          entity: 'PROPERTY',
+          entityId: Number(propertyId),
+          details: { fromState, toState: 'Under Review', notes: transitionNotes },
+        });
+      }
+
+      lifecycleState = 'Under Review';
+
+      // Update the main property listing status consistently so it is not shown as Available
+      if (property.status === 'Available') {
+        await pool.execute(
+          `UPDATE properties SET status = 'Inactive', updated_at = NOW() WHERE id = ?`,
+          [Number(propertyId)]
+        );
+      }
+    }
+
     const history = await getVerificationHistory(Number(propertyId));
 
     return res.status(200).json({
@@ -155,6 +200,7 @@ const updatePropertyVerification = async (req, res) => {
       message: `Ownership verification updated to ${status}.`,
       verification: updated,
       history,
+      lifecycleState: lifecycleState || undefined,
     });
   } catch (error) {
     console.error('Update Verification Error:', error);
@@ -689,6 +735,7 @@ const transitionPropertyLifecycle = async (req, res) => {
       'Sold': 'Sold',
       'Rented': 'Rented',
       'Archived': 'Inactive',
+      'Under Review': 'Inactive',
     };
     if (dbStatusMap[to_state]) {
       await pool.execute(

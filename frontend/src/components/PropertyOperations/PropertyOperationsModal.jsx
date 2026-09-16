@@ -167,6 +167,12 @@ function PropertyOperationsModal({ isOpen, property, onClose, onPropertyUpdated 
         setSuccessMsg(res.data.message || "Verification status updated.");
         setVerification(res.data.verification);
         setVerificationHistory(res.data.history || []);
+        if (res.data.lifecycleState) {
+          setCurrentState(res.data.lifecycleState);
+        } else if (newStatus === "Rejected") {
+          setCurrentState("Under Review");
+        }
+        if (onPropertyUpdated) onPropertyUpdated();
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update verification.");

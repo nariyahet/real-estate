@@ -150,7 +150,13 @@ function Properties() {
       const response = await api.get("/properties", { params });
 
       if (response.data?.success) {
-        setProperties(response.data.properties || []);
+        const fetchedProps = response.data.properties || [];
+        setProperties(fetchedProps);
+        setSelectedOpsProperty((prev) => {
+          if (!prev) return null;
+          const updated = fetchedProps.find((p) => p.id === prev.id);
+          return updated || prev;
+        });
         if (response.data.pagination) {
           setTotalPages(response.data.pagination.totalPages || 1);
           setTotalCount(response.data.pagination.total || 0);
