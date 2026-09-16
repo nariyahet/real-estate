@@ -299,9 +299,14 @@ function Properties() {
           <DashboardBackLink />
 
           {user && (
-            <Link to="/saved-properties" className="saved-nav-btn">
-              ❤️ Saved Workspace ({savedIds.length})
-            </Link>
+            <>
+              <Link to="/enterprise" className="saved-nav-btn" style={{ background: "#2563eb", color: "#ffffff", textDecoration: "none" }}>
+                🚀 Enterprise Suite
+              </Link>
+              <Link to="/saved-properties" className="saved-nav-btn">
+                ❤️ Saved Workspace ({savedIds.length})
+              </Link>
+            </>
           )}
 
           {!user && (

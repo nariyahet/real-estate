@@ -47,12 +47,28 @@ const propertyRoutes = require("./routes/propertyRoutes");
 const documentRoutes = require("./routes/documentRoutes");
 const operationsRoutes = require("./routes/operationsRoutes");
 const savedRoutes = require("./routes/savedRoutes");
+const crmRoutes = require("./routes/crmRoutes");
+const brokerRoutes = require("./routes/brokerRoutes");
+const dealsRoutes = require("./routes/dealsRoutes");
+const financeRoutes = require("./routes/financeRoutes");
+const marketingRoutes = require("./routes/marketingRoutes");
+const communicationsRoutes = require("./routes/communicationsRoutes");
+const aiMapsRoutes = require("./routes/aiMapsRoutes");
+const enterpriseRoutes = require("./routes/enterpriseRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/properties", operationsRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/documents", documentRoutes);
+app.use("/api/crm", crmRoutes);
+app.use("/api/broker", brokerRoutes);
+app.use("/api/deals", dealsRoutes);
+app.use("/api/finance", financeRoutes);
+app.use("/api/marketing", marketingRoutes);
+app.use("/api/communications", communicationsRoutes);
+app.use("/api", aiMapsRoutes);
+app.use("/api", enterpriseRoutes);
 app.use("/api", savedRoutes);
 
 app.get("/", (req, res) => {

@@ -156,6 +156,16 @@ function Dashboard() {
             <span>🏠</span>
             Properties
           </button>
+
+          <button
+            type="button"
+            className="nav-item"
+            style={{ color: "#3b82f6", fontWeight: "600" }}
+            onClick={() => navigate("/enterprise")}
+          >
+            <span>🚀</span>
+            Enterprise Suite
+          </button>
         </nav>
 
         <div className="sidebar-bottom">

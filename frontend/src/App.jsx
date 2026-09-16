@@ -6,6 +6,7 @@ import Agents from "./pages/Agents";
 import Properties from "./pages/Properties";
 import Users from "./pages/Users";
 import SavedProperties from "./pages/SavedProperties";
+import EnterprisePortal from "./pages/Enterprise/EnterprisePortal";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -57,6 +58,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Agents />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/enterprise"
+        element={
+          <ProtectedRoute>
+            <EnterprisePortal />
           </ProtectedRoute>
         }
       />
