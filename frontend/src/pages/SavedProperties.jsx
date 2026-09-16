@@ -31,6 +31,43 @@ function SavedProperties() {
   const [addPropToColModal, setAddPropToColModal] = useState(null); // propertyId
   const [selectedColId, setSelectedColId] = useState("");
 
+  // Property Quick-View Modal
+  const [detailModalProperty, setDetailModalProperty] = useState(null);
+  const [detailModalLoading, setDetailModalLoading] = useState(false);
+
+  const handleOpenDetailModal = async (property, extra = {}) => {
+    setDetailModalProperty({ ...property, ...extra });
+
+    if (property?.id) {
+      try {
+        setDetailModalLoading(true);
+        const res = await api.get(`/properties/${property.id}`);
+        if (res.data?.success && res.data.property) {
+          setDetailModalProperty((prev) => {
+            if (prev?.id === property.id) {
+              const full = res.data.property;
+              return {
+                ...full,
+                ...extra,
+                image:
+                  full.primary_image ||
+                  full.image_url ||
+                  (full.images?.[0]?.image_url) ||
+                  property.image,
+                area_sqft: full.area || property.area_sqft,
+              };
+            }
+            return prev;
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch extended property details:", err);
+      } finally {
+        setDetailModalLoading(false);
+      }
+    }
+  };
+
   const fetchSavedData = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -361,9 +398,18 @@ function SavedProperties() {
                       </div>
 
                       <div className="saved-card-actions">
-                        <Link to={`/properties/${p.id}`} className="saved-view-btn">
+                        <button
+                          type="button"
+                          className="saved-view-btn"
+                          onClick={() =>
+                            handleOpenDetailModal(p, {
+                              personalNotes: item.personalNotes,
+                              tags: item.tags,
+                            })
+                          }
+                        >
                           View Property Details
-                        </Link>
+                        </button>
                         <button
                           type="button"
                           className="saved-col-btn"
@@ -440,9 +486,13 @@ function SavedProperties() {
                         <h3 className="saved-card-title">{it.property.title}</h3>
                         <div className="saved-card-loc">📍 {it.property.city}</div>
                         <div className="saved-card-actions">
-                          <Link to={`/properties/${it.property.id}`} className="saved-view-btn">
+                          <button
+                            type="button"
+                            className="saved-view-btn"
+                            onClick={() => handleOpenDetailModal(it.property)}
+                          >
                             View Property
-                          </Link>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -645,6 +695,206 @@ function SavedProperties() {
                   </button>
                 </form>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QUICK-VIEW PROPERTY DETAILS MODAL */}
+      {detailModalProperty && (
+        <div className="ops-modal-overlay" onClick={() => setDetailModalProperty(null)}>
+          <div
+            className="ops-modal-card saved-detail-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="ops-modal-header">
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "18px" }}>🏠</span>
+                <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 700 }}>
+                  Property Overview
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="ops-close-btn"
+                onClick={() => setDetailModalProperty(null)}
+                title="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="ops-modal-body saved-detail-modal-body">
+              {/* Image banner */}
+              <div className="saved-detail-hero">
+                <img
+                  src={
+                    detailModalProperty.image ||
+                    detailModalProperty.primary_image ||
+                    detailModalProperty.image_url ||
+                    detailModalProperty.images?.[0]?.image_url ||
+                    "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800"
+                  }
+                  alt={detailModalProperty.title || "Property"}
+                  className="saved-detail-img"
+                />
+                <div className="saved-detail-badges">
+                  {detailModalProperty.property_type && (
+                    <span className="saved-card-badge">{detailModalProperty.property_type}</span>
+                  )}
+                  {detailModalProperty.listing_type && (
+                    <span
+                      className="saved-card-badge"
+                      style={{
+                        background: detailModalProperty.listing_type === "Sale" ? "#10b981" : "#8b5cf6",
+                        color: "#fff",
+                      }}
+                    >
+                      For {detailModalProperty.listing_type}
+                    </span>
+                  )}
+                  {detailModalProperty.status && (
+                    <span
+                      className="saved-card-badge"
+                      style={{
+                        background: detailModalProperty.status === "Available" ? "#22c55e" : "#64748b",
+                        color: "#fff",
+                      }}
+                    >
+                      {detailModalProperty.status}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Price & Title */}
+              <div className="saved-detail-header-block">
+                <div className="saved-detail-price">
+                  ₹{Number(detailModalProperty.price || 0).toLocaleString("en-IN")}
+                  {detailModalProperty.listing_type === "Rent" && (
+                    <span style={{ fontSize: "14px", fontWeight: 500, color: "#64748b" }}>/month</span>
+                  )}
+                </div>
+                <h2 className="saved-detail-title">{detailModalProperty.title}</h2>
+                <div className="saved-detail-loc">
+                  📍 {detailModalProperty.address ? `${detailModalProperty.address}, ` : ""}
+                  {detailModalProperty.city || "Prime Area"}
+                  {detailModalProperty.state ? `, ${detailModalProperty.state}` : ""}
+                  {detailModalProperty.country ? `, ${detailModalProperty.country}` : ""}
+                </div>
+              </div>
+
+              {/* Key Specs */}
+              <div className="saved-detail-specs-grid">
+                <div className="saved-detail-spec-item">
+                  <span className="saved-detail-spec-icon">🛏️</span>
+                  <div>
+                    <span className="saved-detail-spec-label">Bedrooms</span>
+                    <span className="saved-detail-spec-val">{detailModalProperty.bedrooms ?? "-"}</span>
+                  </div>
+                </div>
+                <div className="saved-detail-spec-item">
+                  <span className="saved-detail-spec-icon">🚿</span>
+                  <div>
+                    <span className="saved-detail-spec-label">Bathrooms</span>
+                    <span className="saved-detail-spec-val">{detailModalProperty.bathrooms ?? "-"}</span>
+                  </div>
+                </div>
+                <div className="saved-detail-spec-item">
+                  <span className="saved-detail-spec-icon">📐</span>
+                  <div>
+                    <span className="saved-detail-spec-label">Area</span>
+                    <span className="saved-detail-spec-val">
+                      {detailModalProperty.area_sqft || detailModalProperty.area
+                        ? `${detailModalProperty.area_sqft || detailModalProperty.area} sq.ft`
+                        : "-"}
+                    </span>
+                  </div>
+                </div>
+                <div className="saved-detail-spec-item">
+                  <span className="saved-detail-spec-icon">🏢</span>
+                  <div>
+                    <span className="saved-detail-spec-label">Type</span>
+                    <span className="saved-detail-spec-val">{detailModalProperty.property_type || "-"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="saved-detail-section">
+                <h4 className="saved-detail-section-title">Description</h4>
+                <p className="saved-detail-description">
+                  {detailModalProperty.description || "No description provided for this listing."}
+                </p>
+              </div>
+
+              {/* Agent info if available */}
+              {detailModalProperty.agent_name && (
+                <div className="saved-detail-section">
+                  <h4 className="saved-detail-section-title">Listing Agent</h4>
+                  <div className="saved-detail-agent-card">
+                    <div className="saved-detail-agent-avatar">👤</div>
+                    <div className="saved-detail-agent-info">
+                      <div className="saved-detail-agent-name">{detailModalProperty.agent_name}</div>
+                      {detailModalProperty.agency_name && (
+                        <div className="saved-detail-agency-name">{detailModalProperty.agency_name}</div>
+                      )}
+                      <div className="saved-detail-agent-contacts">
+                        {detailModalProperty.agent_phone && <span>📞 {detailModalProperty.agent_phone}</span>}
+                        {detailModalProperty.agent_email && <span>✉️ {detailModalProperty.agent_email}</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Saved Notes & Tags (if available) */}
+              {(detailModalProperty.personalNotes ||
+                (detailModalProperty.tags && detailModalProperty.tags.length > 0)) && (
+                <div className="saved-detail-section">
+                  <h4 className="saved-detail-section-title">📝 My Saved Workspace Notes</h4>
+                  {detailModalProperty.personalNotes && (
+                    <p className="saved-detail-notes-text">{detailModalProperty.personalNotes}</p>
+                  )}
+                  {detailModalProperty.tags && detailModalProperty.tags.length > 0 && (
+                    <div className="saved-tags-wrap" style={{ marginTop: "8px" }}>
+                      {detailModalProperty.tags.map((t, idx) => (
+                        <span key={idx} className="saved-tag-pill">#{t}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {detailModalLoading && (
+                <div style={{ textAlign: "center", fontSize: "12px", color: "#64748b", marginTop: "12px" }}>
+                  Refreshing full listing details...
+                </div>
+              )}
+            </div>
+
+            <div className="ops-modal-footer" style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "14px 20px", borderTop: "1px solid #e2e8f0" }}>
+              <button
+                type="button"
+                className="saved-col-btn"
+                onClick={() => {
+                  const pid = detailModalProperty.id;
+                  setDetailModalProperty(null);
+                  setAddPropToColModal(pid);
+                  if (collections.length === 0) {
+                    api.get("/collections").then((r) => setCollections(r.data?.collections || []));
+                  }
+                }}
+              >
+                + Add to Collection
+              </button>
+              <button
+                type="button"
+                className="ops-btn-primary"
+                onClick={() => setDetailModalProperty(null)}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
