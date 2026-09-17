@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import api from "../../../api/axios";
 
 export default function MarketingModule() {
-  const [marketingTab, setMarketingTab] = useState("campaigns"); // 'campaigns' | 'landing_pages'
+  const [marketingTab, setMarketingTab] = useState("campaigns"); // 'campaigns' | 'landing_pages' | 'automations'
   const [campaigns, setCampaigns] = useState([]);
   const [landingPages, setLandingPages] = useState([]);
+  const [automations, setAutomations] = useState([]);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -28,15 +29,27 @@ export default function MarketingModule() {
     custom_content: ""
   });
 
+  // Create Automation Modal
+  const [showAutoModal, setShowAutoModal] = useState(false);
+  const [newAuto, setNewAuto] = useState({
+    campaign_id: "",
+    trigger_event: "Lead_Created",
+    channel: "WhatsApp",
+    template_subject: "",
+    template_body: "",
+    delay_minutes: "0"
+  });
+
   const fetchMarketingData = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      const [cRes, lpRes, propRes] = await Promise.allSettled([
+      const [cRes, lpRes, propRes, autoRes] = await Promise.allSettled([
         api.get("/marketing/campaigns"),
         api.get("/marketing/landing-pages"),
-        api.get("/properties")
+        api.get("/properties"),
+        api.get("/marketing/automations")
       ]);
 
       if (cRes.status === "fulfilled" && cRes.value.data?.success) {
@@ -47,6 +60,9 @@ export default function MarketingModule() {
       }
       if (propRes.status === "fulfilled" && propRes.value.data?.success) {
         setProperties(propRes.value.data.properties || []);
+      }
+      if (autoRes.status === "fulfilled" && autoRes.value.data?.success) {
+        setAutomations(autoRes.value.data.automations || []);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load marketing data.");
@@ -100,6 +116,59 @@ export default function MarketingModule() {
     }
   };
 
+  const handleCreateAutomation = async (e) => {
+    e.preventDefault();
+    try {
+      if (!newAuto.template_subject.trim()) {
+        setError("Automation template subject is required.");
+        return;
+      }
+      const payload = {
+        ...newAuto,
+        campaign_id: newAuto.campaign_id ? Number(newAuto.campaign_id) : null,
+        delay_minutes: Number(newAuto.delay_minutes || 0)
+      };
+      const res = await api.post("/marketing/automations", payload);
+      if (res.data?.success) {
+        setSuccessMsg("Lead nurturing automation rule created successfully!");
+        setShowAutoModal(false);
+        setNewAuto({ campaign_id: "", trigger_event: "Lead_Created", channel: "WhatsApp", template_subject: "", template_body: "", delay_minutes: "0" });
+        fetchMarketingData();
+        setTimeout(() => setSuccessMsg(""), 3000);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to create automation rule.");
+    }
+  };
+
+  const handleToggleAutomation = async (id) => {
+    try {
+      const res = await api.put(`/marketing/automations/${id}/toggle`);
+      if (res.data?.success) {
+        setAutomations((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, is_active: !a.is_active } : a))
+        );
+        setSuccessMsg("Automation rule status toggled.");
+        setTimeout(() => setSuccessMsg(""), 2500);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to toggle automation status.");
+    }
+  };
+
+  const handleDeleteAutomation = async (id) => {
+    try {
+      const res = await api.delete(`/marketing/automations/${id}`);
+      if (res.data?.success) {
+        setAutomations((prev) => prev.filter((a) => a.id !== id));
+        setSuccessMsg("Automation rule deleted.");
+        setTimeout(() => setSuccessMsg(""), 2500);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete automation rule.");
+    }
+  };
+
   return (
     <div className="enterprise-module-container">
       <div className="module-header-row">
@@ -108,6 +177,9 @@ export default function MarketingModule() {
           <p className="subtitle">Omni-channel marketing campaigns, cost-per-lead tracking, ROI analytics & dynamic single-property landing page generator.</p>
         </div>
         <div className="module-header-actions">
+          <button type="button" className="btn-secondary" onClick={() => setShowAutoModal(true)}>
+            + New Automation Rule
+          </button>
           <button type="button" className="btn-secondary" onClick={() => setShowLpModal(true)}>
             + Create Landing Page
           </button>
@@ -134,6 +206,13 @@ export default function MarketingModule() {
           onClick={() => setMarketingTab("landing_pages")}
         >
           🌐 Dynamic Landing Pages ({landingPages.length})
+        </button>
+        <button
+          type="button"
+          className={`ent-subtab ${marketingTab === "automations" ? "active" : ""}`}
+          onClick={() => setMarketingTab("automations")}
+        >
+          🤖 Lead Nurturing Automations ({automations.length})
         </button>
       </div>
 
@@ -211,8 +290,86 @@ export default function MarketingModule() {
                   </div>
                 ))}
                 {landingPages.length === 0 && (
-                  <div className="empty-state-box">No dynamic landing pages published yet.</div>
+                  <div className="empty-state">No dynamic landing pages published yet.</div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: LEAD NURTURING AUTOMATIONS */}
+          {marketingTab === "automations" && (
+            <div className="tab-content-area">
+              <div className="ent-table-container">
+                <table className="ent-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Template Subject & Body</th>
+                      <th>Trigger Event</th>
+                      <th>Channel</th>
+                      <th>Delay</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {automations.map((auto) => (
+                      <tr key={auto.id}>
+                        <td>#{auto.id}</td>
+                        <td>
+                          <strong>{auto.template_subject}</strong>
+                          {auto.template_body && (
+                            <div className="sub-text">{auto.template_body}</div>
+                          )}
+                          {auto.campaign_name && (
+                            <span className="badge-pill" style={{ marginTop: "4px", display: "inline-block" }}>
+                              Campaign: {auto.campaign_name}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <span className="badge-pill">{auto.trigger_event}</span>
+                        </td>
+                        <td>
+                          <span className="badge-status status-active">{auto.channel}</span>
+                        </td>
+                        <td>
+                          {auto.delay_minutes > 0 ? `${auto.delay_minutes} min` : "Immediate"}
+                        </td>
+                        <td>
+                          <span className={`badge-status ${auto.is_active ? "status-active" : "status-overdue"}`}>
+                            {auto.is_active ? "Active" : "Paused"}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="action-button-group">
+                            <button
+                              type="button"
+                              className="btn-sm btn-secondary-sm"
+                              onClick={() => handleToggleAutomation(auto.id)}
+                            >
+                              {auto.is_active ? "Pause" : "Resume"}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-sm btn-outline-danger"
+                              onClick={() => handleDeleteAutomation(auto.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {automations.length === 0 && (
+                      <tr>
+                        <td colSpan="7" className="empty-row">
+                          No lead nurturing automation rules defined yet. Click "+ New Automation Rule" to automate client follow-ups.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -326,6 +483,92 @@ export default function MarketingModule() {
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowLpModal(false)}>Cancel</button>
                 <button type="submit" className="btn-primary">Generate & Publish Slug</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Create Automation Rule */}
+      {showAutoModal && (
+        <div className="ent-modal-backdrop" onClick={() => setShowAutoModal(false)}>
+          <div className="ent-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>🤖 Create Lead Nurturing Automation</h3>
+              <button type="button" className="drawer-close" onClick={() => setShowAutoModal(false)}>✕</button>
+            </div>
+            <form onSubmit={handleCreateAutomation} className="modal-body-form">
+              <div>
+                <label>Automation Headline / Subject *</label>
+                <input
+                  type="text"
+                  required
+                  value={newAuto.template_subject}
+                  onChange={(e) => setNewAuto({ ...newAuto, template_subject: e.target.value })}
+                  placeholder="e.g. Welcome & Brochure Delivery"
+                />
+              </div>
+              <div className="form-grid-2">
+                <div>
+                  <label>Trigger Event *</label>
+                  <select
+                    value={newAuto.trigger_event}
+                    onChange={(e) => setNewAuto({ ...newAuto, trigger_event: e.target.value })}
+                  >
+                    <option value="Lead_Created">New Lead Ingested</option>
+                    <option value="Tour_Requested">Property Tour Scheduled</option>
+                    <option value="Offer_Submitted">Offer / Token Submitted</option>
+                    <option value="Milestone_Updated">Milestone Status Advanced</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Delivery Channel *</label>
+                  <select
+                    value={newAuto.channel}
+                    onChange={(e) => setNewAuto({ ...newAuto, channel: e.target.value })}
+                  >
+                    <option value="WhatsApp">WhatsApp Message</option>
+                    <option value="Email">Automated Email</option>
+                    <option value="SMS">Direct SMS Alert</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Execution Delay (Minutes)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={newAuto.delay_minutes}
+                    onChange={(e) => setNewAuto({ ...newAuto, delay_minutes: e.target.value })}
+                    placeholder="0 = Instant"
+                  />
+                </div>
+                <div>
+                  <label>Linked Marketing Campaign</label>
+                  <select
+                    value={newAuto.campaign_id}
+                    onChange={(e) => setNewAuto({ ...newAuto, campaign_id: e.target.value })}
+                  >
+                    <option value="">-- Standalone / General (No Campaign) --</option>
+                    {campaigns.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        #{c.id} - {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label>Message Content / Template Body</label>
+                <textarea
+                  rows="3"
+                  value={newAuto.template_body}
+                  onChange={(e) => setNewAuto({ ...newAuto, template_body: e.target.value })}
+                  placeholder="Hi {{lead_name}}, thank you for inquiring about {{property_title}}. Our advisor will reach out shortly..."
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary" onClick={() => setShowAutoModal(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Create Automation Rule</button>
               </div>
             </form>
           </div>

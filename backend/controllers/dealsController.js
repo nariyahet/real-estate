@@ -100,7 +100,8 @@ const createDeal = async (req, res) => {
       agreed_price,
       token_amount,
       target_close_date,
-      notes
+      notes,
+      stage
     } = req.body;
 
     if (!property_id || !buyer_name || !agreed_price) {
@@ -113,12 +114,13 @@ const createDeal = async (req, res) => {
     }
 
     const finalAgentId = agent_id ? Number(agent_id) : prop[0].agent_id;
+    const initialStage = stage || 'Prospect';
 
     const [result] = await pool.execute(
       `INSERT INTO deals (
         property_id, lead_id, buyer_name, buyer_email, buyer_phone,
         agent_id, deal_title, stage, agreed_price, token_amount, target_close_date, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Prospect', ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         Number(property_id),
         lead_id ? Number(lead_id) : null,
@@ -127,6 +129,7 @@ const createDeal = async (req, res) => {
         buyer_phone || null,
         finalAgentId,
         deal_title || `Deal for ${prop[0].title}`,
+        initialStage,
         Number(agreed_price),
         Number(token_amount) || 0.00,
         target_close_date || null,
@@ -135,6 +138,10 @@ const createDeal = async (req, res) => {
     );
 
     const dealId = result.insertId;
+
+    if (initialStage === 'Token_Received') {
+      await pool.execute(`UPDATE properties SET status = 'Reserved', updated_at = NOW() WHERE id = ?`, [Number(property_id)]);
+    }
 
     // Create standard payment milestones
     const price = Number(agreed_price);
@@ -193,86 +200,99 @@ const updateDealStage = async (req, res) => {
 
     const prevStage = deal.stage;
 
-    await pool.execute(
-      `UPDATE deals 
-       SET stage = ?, notes = COALESCE(?, notes), 
-           actual_close_date = CASE WHEN ? = 'Closed' THEN NOW() ELSE actual_close_date END,
-           updated_at = NOW() 
-       WHERE id = ?`,
-      [finalStage, notes || null, finalStage, Number(id)]
-    );
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
 
-    // CROSS-MODULE INTEGRATION 1: Token Received -> Reserve Property
-    if (finalStage === 'Token_Received') {
-      await pool.execute(`UPDATE properties SET status = 'Available' WHERE id = ?`, [deal.property_id]);
-      try {
-        await recordLifecycleTransition(deal.property_id, {
-          from_state: 'Available',
-          to_state: 'Reserved',
-          notes: `Deal #${deal.id} token deposit of ₹${deal.token_amount} received from ${deal.buyer_name}`,
-          changed_by: req.user.id
-        });
-      } catch (e) {
-        // ignore transition error if already reserved
-      }
-    }
+      await connection.execute(
+        `UPDATE deals 
+         SET stage = ?, notes = COALESCE(?, notes), 
+             actual_close_date = CASE WHEN ? = 'Closed' THEN NOW() ELSE actual_close_date END,
+             updated_at = NOW() 
+         WHERE id = ?`,
+        [finalStage, notes || null, finalStage, Number(id)]
+      );
 
-    // CROSS-MODULE INTEGRATION 2: Deal Closed -> Sold Property & Commission Ledger
-    if (finalStage === 'Closed') {
-      // 1. Update Property Status to Sold
-      await pool.execute(`UPDATE properties SET status = 'Sold', updated_at = NOW() WHERE id = ?`, [deal.property_id]);
-
-      // 2. Record Lifecycle Transition to Sold
-      try {
-        await recordLifecycleTransition(deal.property_id, {
-          from_state: 'Reserved',
-          to_state: 'Sold',
-          notes: `Deal #${deal.id} successfully closed for ₹${deal.agreed_price}`,
-          changed_by: req.user.id
-        });
-      } catch (e) {
+      // CROSS-MODULE INTEGRATION 1: Token Received -> Reserve Property
+      if (finalStage === 'Token_Received') {
+        await connection.execute(`UPDATE properties SET status = 'Reserved', updated_at = NOW() WHERE id = ?`, [deal.property_id]);
         try {
-          await recordLifecycleTransition(deal.property_id, {
-            from_state: 'Available',
-            to_state: 'Sold',
-            notes: `Deal #${deal.id} closed for ₹${deal.agreed_price}`,
-            changed_by: req.user.id
-          });
-        } catch (e2) {}
+          await connection.execute(
+            `INSERT INTO property_lifecycle_transitions (property_id, from_state, to_state, notes, changed_by) VALUES (?, ?, ?, ?, ?)`,
+            [deal.property_id, 'Available', 'Reserved', `Deal #${deal.id} token deposit of ₹${deal.token_amount} received from ${deal.buyer_name}`, req.user?.id || 1]
+          );
+        } catch (e) {
+          // ignore transition error if already reserved
+        }
       }
 
-      // 3. Auto-generate Commission for Agent
-      if (deal.agent_id) {
-        const commRate = 2.0;
-        const totalComm = (Number(deal.agreed_price) * commRate) / 100;
-        const agentShare = totalComm * 0.70;
-        const brokerShare = totalComm * 0.30;
-
-        await pool.execute(
-          `INSERT INTO agent_commissions (
-            agent_id, property_id, deal_id, deal_amount, commission_rate,
-            commission_amount, brokerage_share, agent_share, status, notes
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Approved', 'Auto-accrued upon Deal closure')`,
-          [deal.agent_id, deal.property_id, deal.id, deal.agreed_price, commRate, totalComm, brokerShare, agentShare]
-        );
+      // CROSS-MODULE INTEGRATION 2: Deal Cancelled -> Revert Reserved Property to Available
+      if (finalStage === 'Cancelled') {
+        const [currProps] = await connection.execute(`SELECT status FROM properties WHERE id = ?`, [deal.property_id]);
+        if (currProps[0]?.status === 'Reserved') {
+          await connection.execute(`UPDATE properties SET status = 'Available', updated_at = NOW() WHERE id = ?`, [deal.property_id]);
+          try {
+            await connection.execute(
+              `INSERT INTO property_lifecycle_transitions (property_id, from_state, to_state, notes, changed_by) VALUES (?, ?, ?, ?, ?)`,
+              [deal.property_id, 'Reserved', 'Available', `Deal #${deal.id} cancelled. Property released back to Available status.`, req.user?.id || 1]
+            );
+          } catch (e) {}
+        }
       }
 
-      // 4. Update Lead to 'Won' if associated
-      if (deal.lead_id) {
-        await pool.execute(`UPDATE crm_leads SET status = 'Won', updated_at = NOW() WHERE id = ?`, [deal.lead_id]);
+      // CROSS-MODULE INTEGRATION 3: Deal Closed -> Sold Property & Commission Ledger
+      if (finalStage === 'Closed') {
+        // 1. Update Property Status to Sold
+        await connection.execute(`UPDATE properties SET status = 'Sold', updated_at = NOW() WHERE id = ?`, [deal.property_id]);
+
+        // 2. Record Lifecycle Transition to Sold
+        try {
+          await connection.execute(
+            `INSERT INTO property_lifecycle_transitions (property_id, from_state, to_state, notes, changed_by) VALUES (?, ?, ?, ?, ?)`,
+            [deal.property_id, 'Reserved', 'Sold', `Deal #${deal.id} successfully closed for ₹${deal.agreed_price}`, req.user?.id || 1]
+          );
+        } catch (e) {}
+
+        // 3. Auto-generate Commission for Agent
+        if (deal.agent_id) {
+          const commRate = 2.0;
+          const totalComm = (Number(deal.agreed_price) * commRate) / 100;
+          const agentShare = totalComm * 0.70;
+          const brokerShare = totalComm * 0.30;
+
+          await connection.execute(
+            `INSERT INTO agent_commissions (
+              agent_id, property_id, deal_id, deal_amount, commission_rate,
+              commission_amount, brokerage_share, agent_share, status, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Approved', 'Auto-accrued upon Deal closure')`,
+            [deal.agent_id, deal.property_id, deal.id, deal.agreed_price, commRate, totalComm, brokerShare, agentShare]
+          );
+        }
+
+        // 4. Update Lead to 'Won' if associated
+        if (deal.lead_id) {
+          await connection.execute(`UPDATE crm_leads SET status = 'Won', updated_at = NOW() WHERE id = ?`, [deal.lead_id]);
+        }
+
+        // 5. Log in Audit Trail
+        await logAudit({
+          propertyId: deal.property_id,
+          userId: req.user.id,
+          userName: req.user.name,
+          userRole: req.user.role,
+          action: 'DEAL_CLOSED',
+          entity: 'DEAL',
+          entityId: deal.id,
+          details: { agreedPrice: deal.agreed_price, buyer: deal.buyer_name }
+        });
       }
 
-      // 5. Log in Audit Trail
-      await logAudit({
-        propertyId: deal.property_id,
-        userId: req.user.id,
-        userName: req.user.name,
-        userRole: req.user.role,
-        action: 'DEAL_CLOSED',
-        entity: 'DEAL',
-        entityId: deal.id,
-        details: { agreedPrice: deal.agreed_price, buyer: deal.buyer_name }
-      });
+      await connection.commit();
+    } catch (txErr) {
+      await connection.rollback();
+      throw txErr;
+    } finally {
+      connection.release();
     }
 
     return res.status(200).json({
@@ -345,7 +365,17 @@ const getDealMilestones = async (req, res) => {
 const updateMilestone = async (req, res) => {
   try {
     const { milestoneId } = req.params;
-    const { status, payment_reference, notes } = req.body;
+    const { payment_reference, notes } = req.body;
+    let status = req.body.payment_status || req.body.status;
+
+    if (!status) {
+      return res.status(400).json({ success: false, message: 'Status or payment_status is required.' });
+    }
+
+    if (status === 'Completed') status = 'Paid';
+    if (!['Pending', 'Due', 'Paid', 'Overdue'].includes(status)) {
+      status = 'Paid';
+    }
 
     await pool.execute(
       `UPDATE deal_milestones 

@@ -90,6 +90,31 @@ const createAutomation = async (req, res) => {
   }
 };
 
+const toggleAutomation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.execute(
+      `UPDATE marketing_automations SET is_active = NOT is_active WHERE id = ?`,
+      [Number(id)]
+    );
+    return res.status(200).json({ success: true, message: 'Automation status toggled.' });
+  } catch (error) {
+    console.error('Toggle Automation Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to toggle automation status.' });
+  }
+};
+
+const deleteAutomation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.execute(`DELETE FROM marketing_automations WHERE id = ?`, [Number(id)]);
+    return res.status(200).json({ success: true, message: 'Automation deleted.' });
+  } catch (error) {
+    console.error('Delete Automation Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete automation.' });
+  }
+};
+
 // 3. Dynamic Property Landing Pages
 const getLandingPages = async (req, res) => {
   try {
@@ -131,6 +156,8 @@ module.exports = {
   createCampaign,
   getAutomations,
   createAutomation,
+  toggleAutomation,
+  deleteAutomation,
   getLandingPages,
   createLandingPage
 };

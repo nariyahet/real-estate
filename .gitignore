@@ -15,3 +15,6 @@ yarn-error.log*
 favorites-staged-backup.patch
 feature-changes-backup.patch
 ersLenovoDesktopREAL-ESTATE*
+
+backend/uploads/
+scratch/

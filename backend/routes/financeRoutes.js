@@ -7,6 +7,7 @@ const {
   createJournalEntry,
   getInvoices,
   createInvoice,
+  updateInvoiceStatus,
   getExpenses,
   recordExpense,
   getPnLReport
@@ -19,6 +20,7 @@ router.get('/ledger', getLedgerEntries);
 router.post('/ledger/entry', createJournalEntry);
 router.get('/invoices', getInvoices);
 router.post('/invoices', createInvoice);
+router.put('/invoices/:id/status', updateInvoiceStatus);
 router.get('/expenses', getExpenses);
 router.post('/expenses', recordExpense);
 router.get('/reports/pnl', getPnLReport);

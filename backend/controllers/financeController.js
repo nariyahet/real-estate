@@ -176,34 +176,57 @@ const getExpenses = async (req, res) => {
 const recordExpense = async (req, res) => {
   try {
     const { category, title, amount, expense_date, payment_method, paid_to, notes } = req.body;
-    if (!title || !amount) {
-      return res.status(400).json({ success: false, message: 'Expense title and amount are required.' });
+    if (!title || !amount || Number(amount) <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid expense title and positive amount are required.' });
     }
 
     const [result] = await pool.execute(
       `INSERT INTO finance_expenses (category, title, amount, expense_date, payment_method, paid_to, notes, created_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [category || 'Operations', title, Number(amount), expense_date || new Date(), payment_method || 'Bank Transfer', paid_to || null, notes || null, req.user.id]
+      [category || 'Operations', title, Number(amount), expense_date || new Date(), payment_method || 'Bank Transfer', paid_to || null, notes || null, req.user?.id || 1]
     );
 
-    return res.status(201).json({ success: true, message: 'Expense logged.', expenseId: result.insertId });
+    return res.status(201).json({ success: true, message: 'Expense logged successfully.', expenseId: result.insertId });
   } catch (error) {
     console.error('Record Expense Error:', error);
     return res.status(500).json({ success: false, message: 'Failed to log expense.' });
   }
 };
 
-// 5. Profit & Loss Statement (Real-Time Calculation)
+const updateInvoiceStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: `Invalid status. Must be: ${validStatuses.join(', ')}` });
+    }
+
+    await pool.execute(
+      `UPDATE finance_invoices 
+       SET status = ?, 
+           paid_at = CASE WHEN ? = 'Paid' THEN NOW() ELSE paid_at END,
+           updated_at = NOW()
+       WHERE id = ?`,
+      [status, status, Number(id)]
+    );
+
+    return res.status(200).json({ success: true, message: `Invoice status updated to ${status}.` });
+  } catch (error) {
+    console.error('Update Invoice Status Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update invoice status.' });
+  }
+};
+
+// 5. Profit & Loss Statement (Real-Time Safe Aggregation - ZERO JOIN MULTIPLICATION)
 const getPnLReport = async (req, res) => {
   try {
-    // Total Revenue from Closed Deals & Invoices
+    // Total Revenue computed from independent scalar subqueries to avoid Cartesian product inflation
     const [[revData]] = await pool.execute(`
       SELECT 
-        COALESCE(SUM(c.brokerage_share), 0) as brokerage_revenue,
-        COALESCE(SUM(i.total_amount), 0) as invoice_revenue
-      FROM agent_commissions c
-      LEFT JOIN finance_invoices i ON i.status = 'Paid'
-      WHERE c.status IN ('Approved', 'Paid')
+        (SELECT COALESCE(SUM(brokerage_share), 0) FROM agent_commissions WHERE status IN ('Approved', 'Paid')) as brokerage_revenue,
+        (SELECT COALESCE(SUM(total_amount), 0) FROM finance_invoices WHERE status = 'Paid') as invoice_revenue
     `);
 
     // Total Operating Expenses
@@ -231,6 +254,7 @@ const getPnLReport = async (req, res) => {
     return res.status(200).json({
       success: true,
       pnl: {
+        totalRevenue: grossRevenue,
         grossRevenue,
         brokerageRevenue: Number(revData.brokerage_revenue),
         invoiceRevenue: Number(revData.invoice_revenue),
@@ -254,6 +278,7 @@ module.exports = {
   createJournalEntry,
   getInvoices,
   createInvoice,
+  updateInvoiceStatus,
   getExpenses,
   recordExpense,
   getPnLReport

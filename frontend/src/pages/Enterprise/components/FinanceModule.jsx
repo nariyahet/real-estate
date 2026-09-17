@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import api from "../../../api/axios";
 
 export default function FinanceModule() {
-  const [financeTab, setFinanceTab] = useState("pnl"); // 'pnl' | 'accounts' | 'invoices' | 'ledger'
+  const [financeTab, setFinanceTab] = useState("pnl"); // 'pnl' | 'accounts' | 'invoices' | 'ledger' | 'expenses'
   const [pnlData, setPnlData] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [ledgerEntries, setLedgerEntries] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -19,6 +20,18 @@ export default function FinanceModule() {
     amount: "",
     tax_amount: "",
     due_date: "",
+    notes: ""
+  });
+
+  // Create Expense Modal
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [newExpense, setNewExpense] = useState({
+    title: "",
+    category: "Operations",
+    amount: "",
+    payment_method: "Bank Transfer",
+    paid_to: "",
+    expense_date: new Date().toISOString().split("T")[0],
     notes: ""
   });
 
@@ -37,11 +50,12 @@ export default function FinanceModule() {
       setLoading(true);
       setError("");
 
-      const [pnlRes, accRes, invRes, ledRes] = await Promise.allSettled([
+      const [pnlRes, accRes, invRes, ledRes, expRes] = await Promise.allSettled([
         api.get("/finance/reports/pnl"),
         api.get("/finance/accounts"),
         api.get("/finance/invoices"),
         api.get("/finance/ledger"),
+        api.get("/finance/expenses"),
       ]);
 
       if (pnlRes.status === "fulfilled" && pnlRes.value.data?.success) {
@@ -55,6 +69,9 @@ export default function FinanceModule() {
       }
       if (ledRes.status === "fulfilled" && ledRes.value.data?.success) {
         setLedgerEntries(ledRes.value.data.entries || []);
+      }
+      if (expRes.status === "fulfilled" && expRes.value.data?.success) {
+        setExpenses(expRes.value.data.expenses || []);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load finance data.");
@@ -124,6 +141,42 @@ export default function FinanceModule() {
     }
   };
 
+  const handleRecordExpense = async (e) => {
+    e.preventDefault();
+    try {
+      const amt = Number(newExpense.amount);
+      if (amt <= 0) {
+        setError("Expense amount must be greater than zero.");
+        return;
+      }
+      if (!newExpense.title.trim()) {
+        setError("Expense title is required.");
+        return;
+      }
+      const res = await api.post("/finance/expenses", {
+        ...newExpense,
+        amount: amt
+      });
+      if (res.data?.success) {
+        setSuccessMsg(`Expense recorded: "${newExpense.title}" (₹${amt.toLocaleString("en-IN")})`);
+        setShowExpenseModal(false);
+        setNewExpense({
+          title: "",
+          category: "Operations",
+          amount: "",
+          payment_method: "Bank Transfer",
+          paid_to: "",
+          expense_date: new Date().toISOString().split("T")[0],
+          notes: ""
+        });
+        fetchFinanceData();
+        setTimeout(() => setSuccessMsg(""), 3000);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to log expense.");
+    }
+  };
+
   const handleInvoiceStatusUpdate = async (invoiceId, status) => {
     try {
       const res = await api.put(`/finance/invoices/${invoiceId}/status`, { status });
@@ -146,6 +199,9 @@ export default function FinanceModule() {
           <p className="subtitle">Real-time double-entry general ledger, standard chart of accounts, milestone invoices & deterministic P&L statements.</p>
         </div>
         <div className="module-header-actions">
+          <button type="button" className="btn-secondary" onClick={() => setShowExpenseModal(true)}>
+            + Record Operating Expense
+          </button>
           <button type="button" className="btn-secondary" onClick={() => setShowJournalModal(true)}>
             + Post Journal Entry
           </button>
@@ -186,6 +242,13 @@ export default function FinanceModule() {
           onClick={() => setFinanceTab("ledger")}
         >
           ⚖️ General Ledger ({ledgerEntries.length})
+        </button>
+        <button
+          type="button"
+          className={`ent-subtab ${financeTab === "expenses" ? "active" : ""}`}
+          onClick={() => setFinanceTab("expenses")}
+        >
+          💸 Operating Expenses ({expenses.length})
         </button>
       </div>
 
@@ -382,7 +445,57 @@ export default function FinanceModule() {
                     ))}
                     {ledgerEntries.length === 0 && (
                       <tr>
-                        <td colSpan="6" className="empty-row">No double-entry journal records posted yet.</td>
+                        <td colSpan="6" className="empty-row">No general ledger journal entries found.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: OPERATING EXPENSES */}
+          {financeTab === "expenses" && (
+            <div className="tab-content-area">
+              <div className="ent-table-container">
+                <table className="ent-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Expense Title</th>
+                      <th>Category</th>
+                      <th>Payee / Vendor</th>
+                      <th>Payment Method</th>
+                      <th>Amount</th>
+                      <th>Expense Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {expenses.map((exp) => (
+                      <tr key={exp.id}>
+                        <td>#{exp.id}</td>
+                        <td>
+                          <strong>{exp.title}</strong>
+                          {exp.notes && <div className="sub-text">{exp.notes}</div>}
+                        </td>
+                        <td>
+                          <span className="badge-pill">{exp.category}</span>
+                        </td>
+                        <td>{exp.paid_to || "Direct / Vendor"}</td>
+                        <td>{exp.payment_method || "Bank Transfer"}</td>
+                        <td>
+                          <strong style={{ color: "#ef4444" }}>
+                            - ₹{Number(exp.amount || 0).toLocaleString("en-IN")}
+                          </strong>
+                        </td>
+                        <td>{new Date(exp.expense_date).toLocaleDateString("en-IN")}</td>
+                      </tr>
+                    ))}
+                    {expenses.length === 0 && (
+                      <tr>
+                        <td colSpan="7" className="empty-row">
+                          No operating expenses recorded yet. Click "+ Record Operating Expense" to log costs.
+                        </td>
                       </tr>
                     )}
                   </tbody>
@@ -526,6 +639,102 @@ export default function FinanceModule() {
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowInvoiceModal(false)}>Cancel</button>
                 <button type="submit" className="btn-primary">Generate Official Invoice</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Record Operating Expense */}
+      {showExpenseModal && (
+        <div className="ent-modal-backdrop" onClick={() => setShowExpenseModal(false)}>
+          <div className="ent-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>💸 Record Operating Expense</h3>
+              <button type="button" className="drawer-close" onClick={() => setShowExpenseModal(false)}>✕</button>
+            </div>
+            <form onSubmit={handleRecordExpense} className="modal-body-form">
+              <div className="form-grid-2">
+                <div>
+                  <label>Expense Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newExpense.title}
+                    onChange={(e) => setNewExpense({ ...newExpense, title: e.target.value })}
+                    placeholder="e.g. Architectural Photography - Tower A"
+                  />
+                </div>
+                <div>
+                  <label>Expense Category *</label>
+                  <select
+                    value={newExpense.category}
+                    onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
+                  >
+                    <option value="Marketing">Marketing & Advertising</option>
+                    <option value="Operations">Office & Operations</option>
+                    <option value="Legal">Legal & Compliance</option>
+                    <option value="Software">Software & Infrastructure</option>
+                    <option value="Travel">Travel & Site Visits</option>
+                    <option value="Utilities">Utilities & Facility</option>
+                    <option value="Other">Other Expenses</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Amount (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={newExpense.amount}
+                    onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+                    placeholder="e.g. 25000"
+                  />
+                </div>
+                <div>
+                  <label>Expense Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={newExpense.expense_date}
+                    onChange={(e) => setNewExpense({ ...newExpense, expense_date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label>Paid To / Vendor</label>
+                  <input
+                    type="text"
+                    value={newExpense.paid_to}
+                    onChange={(e) => setNewExpense({ ...newExpense, paid_to: e.target.value })}
+                    placeholder="e.g. Pixels Studio Pvt Ltd"
+                  />
+                </div>
+                <div>
+                  <label>Payment Method</label>
+                  <select
+                    value={newExpense.payment_method}
+                    onChange={(e) => setNewExpense({ ...newExpense, payment_method: e.target.value })}
+                  >
+                    <option value="Bank Transfer">Bank Transfer (NEFT/RTGS)</option>
+                    <option value="UPI">UPI / Digital</option>
+                    <option value="Corporate Card">Corporate Credit Card</option>
+                    <option value="Cheque">Cheque</option>
+                    <option value="Cash">Cash</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label>Notes / Memo</label>
+                <input
+                  type="text"
+                  value={newExpense.notes}
+                  onChange={(e) => setNewExpense({ ...newExpense, notes: e.target.value })}
+                  placeholder="Optional internal reference or invoice memo"
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary" onClick={() => setShowExpenseModal(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Save Expense Record</button>
               </div>
             </form>
           </div>

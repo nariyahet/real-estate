@@ -118,8 +118,8 @@ export default function AIMapsModule() {
     <div className="enterprise-module-container">
       <div className="module-header-row">
         <div>
-          <h2>🧠 AI Intelligence, Predictive Matching & Geo-Maps</h2>
-          <p className="subtitle">Natural Language semantic query engine, AI buyer-property compatibility scorer, proximity index & interactive geospatial explorer.</p>
+          <h2>🧠 AI Intelligence, Predictive Matching & Geospatial Explorer</h2>
+          <p className="subtitle">Rule-Based Natural Language semantic query engine, AI buyer-property compatibility scorer, proximity index & geospatial location foundation.</p>
         </div>
       </div>
 
@@ -131,7 +131,7 @@ export default function AIMapsModule() {
           className={`ent-subtab ${activeTab === "nl_search" ? "active" : ""}`}
           onClick={() => setActiveTab("nl_search")}
         >
-          🔍 Natural Language Search
+          🔍 Rule-Based Natural Language Search
         </button>
         <button
           type="button"
@@ -145,7 +145,7 @@ export default function AIMapsModule() {
           className={`ent-subtab ${activeTab === "geo_map" ? "active" : ""}`}
           onClick={() => setActiveTab("geo_map")}
         >
-          🗺️ Geospatial Map & Proximity Index
+          🗺️ Geospatial Location Foundation & Proximity Index
         </button>
       </div>
 
@@ -153,8 +153,8 @@ export default function AIMapsModule() {
       {activeTab === "nl_search" && (
         <div className="tab-content-area">
           <div className="ent-card">
-            <h3>🤖 Conversational Real Estate Query Engine</h3>
-            <p className="sub-text">Type queries naturally in everyday language. The AI parser extracts bedrooms, budgets, property types, and target locations automatically.</p>
+            <h3>🔍 Rule-Based Natural Language Semantic Search</h3>
+            <p className="sub-text">Type queries naturally in everyday language. The semantic parser extracts bedrooms, budgets, property types, and target locations using deterministic pattern matching.</p>
             <form onSubmit={handleNlSearch} className="nl-search-bar">
               <input
                 type="text"
@@ -163,7 +163,7 @@ export default function AIMapsModule() {
                 placeholder="e.g. 3 BHK luxury apartment in Surat under 80 Lakhs"
               />
               <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? "Parsing..." : "AI Search ⚡"}
+                {loading ? "Parsing..." : "Parse & Search ⚡"}
               </button>
             </form>
           </div>

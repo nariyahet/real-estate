@@ -416,13 +416,48 @@ const getLeadById = async (req, res) => {
   }
 };
 
+const getLeadActivities = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [activities] = await pool.execute(
+      `SELECT act.*, u.name as actor_name
+       FROM crm_lead_activities act
+       LEFT JOIN agents ag ON act.agent_id = ag.id
+       LEFT JOIN users u ON ag.user_id = u.id
+       WHERE act.lead_id = ?
+       ORDER BY act.created_at DESC`,
+      [Number(id)]
+    );
+    return res.status(200).json({ success: true, activities });
+  } catch (error) {
+    console.error('Get Activities Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve lead activities.' });
+  }
+};
+
+const getLeadFollowUps = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [followUps] = await pool.execute(
+      `SELECT * FROM crm_follow_ups WHERE lead_id = ? ORDER BY scheduled_at ASC`,
+      [Number(id)]
+    );
+    return res.status(200).json({ success: true, followUps });
+  } catch (error) {
+    console.error('Get FollowUps Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve lead follow-ups.' });
+  }
+};
+
 module.exports = {
   getLeads,
   getLeadById,
   createLead,
   updateLeadStatus,
   addLeadActivity,
+  getLeadActivities,
   scheduleFollowUp,
+  getLeadFollowUps,
   completeFollowUp,
   getCRMAnalytics
 };

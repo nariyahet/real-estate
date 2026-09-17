@@ -50,13 +50,34 @@ const getExecutiveDashboard = async (req, res) => {
       ORDER BY totalValue DESC
     `);
 
-    // Quarterly Sales Trend (Deterministic simulation based on current actuals)
+    // Real-Time Average Days on Market from properties and closed deals
+    const [[domData]] = await pool.execute(`
+      SELECT 
+        ROUND(AVG(DATEDIFF(COALESCE(d.actual_close_date, p.updated_at), p.created_at)), 0) as avg_days
+      FROM properties p
+      LEFT JOIN deals d ON p.id = d.property_id AND d.stage = 'Closed'
+      WHERE p.status = 'Sold'
+    `);
+    const avgDaysOnMarket = domData?.avg_days ? Number(domData.avg_days) : 28;
+
+    // Quarterly Sales Trend (Database-derived actuals with explicit projection labeling)
+    const [quarterlyActuals] = await pool.execute(`
+      SELECT 
+        CONCAT('Q', QUARTER(created_at), ' ', YEAR(created_at)) as quarter,
+        COUNT(*) as deals,
+        COALESCE(SUM(agreed_price), 0) as volume
+      FROM deals
+      WHERE stage = 'Closed'
+      GROUP BY CONCAT('Q', QUARTER(created_at), ' ', YEAR(created_at)), YEAR(created_at), QUARTER(created_at)
+      ORDER BY YEAR(created_at) ASC, QUARTER(created_at) ASC
+    `);
+
     const currentQuarterVolume = Number(dealCount.closed_volume) || 24000000;
-    const quarterlyTrend = [
+    const quarterlyTrend = quarterlyActuals.length >= 3 ? quarterlyActuals : [
       { quarter: 'Q1 2026', volume: Math.round(currentQuarterVolume * 0.75), deals: 4 },
       { quarter: 'Q2 2026', volume: Math.round(currentQuarterVolume * 0.90), deals: 6 },
-      { quarter: 'Q3 2026', volume: currentQuarterVolume, deals: 8 },
-      { quarter: 'Q4 2026 (Forecast)', volume: Math.round(currentQuarterVolume * 1.25), deals: 11 }
+      { quarter: 'Q3 2026', volume: currentQuarterVolume, deals: Math.max(1, Number(dealCount.total_deals) || 8) },
+      { quarter: 'Q4 2026 (Estimated Forecast)', volume: Math.round(currentQuarterVolume * 1.25), deals: 11 }
     ];
 
     return res.status(200).json({
@@ -73,7 +94,7 @@ const getExecutiveDashboard = async (req, res) => {
         openDealsCount: Number(dealCount.open_deals_count),
         closedDealVolume: Number(dealCount.closed_volume),
         totalBrokerageRevenue: Number(commCount.total_brokerage_income),
-        avgDaysOnMarket: 28
+        avgDaysOnMarket
       },
       cityBreakdown,
       projections: {
@@ -127,6 +148,16 @@ const getLegalAgreements = async (req, res) => {
   } catch (error) {
     console.error('Legal Agreements Error:', error);
     return res.status(500).json({ success: false, message: 'Failed to fetch legal agreements.' });
+  }
+};
+
+const getLegalTemplates = async (req, res) => {
+  try {
+    const [templates] = await pool.execute(`SELECT * FROM legal_templates WHERE is_active = TRUE ORDER BY id ASC`);
+    return res.status(200).json({ success: true, templates });
+  } catch (error) {
+    console.error('Legal Templates Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch legal templates.' });
   }
 };
 
@@ -199,9 +230,23 @@ const signAgreement = async (req, res) => {
 // ─── PHASE 14: ENTERPRISE INTEGRATIONS & API KEYS ────────────────────
 const getApiKeys = async (req, res) => {
   try {
-    const [keys] = await pool.execute(`SELECT id, key_label, api_key, is_active, last_used_at, created_at FROM api_keys WHERE user_id = ?`, [req.user.id]);
+    const [keys] = await pool.execute(
+      `SELECT id, key_label, permissions_scope, is_active, last_used_at, created_at FROM api_keys WHERE user_id = ? ORDER BY created_at DESC`,
+      [req.user.id]
+    );
     const [webhooks] = await pool.execute(`SELECT * FROM webhook_subscriptions ORDER BY created_at DESC`);
-    return res.status(200).json({ success: true, apiKeys: keys, webhooks });
+
+    const safeKeys = keys.map(k => ({
+      id: k.id,
+      key_label: k.key_label,
+      api_key_prefix: `ee_live_${String(k.id).padStart(4, '0')}`,
+      scope: Array.isArray(k.permissions_scope) ? k.permissions_scope.join(', ') : 'read, write',
+      is_active: Boolean(k.is_active),
+      last_used_at: k.last_used_at,
+      created_at: k.created_at
+    }));
+
+    return res.status(200).json({ success: true, apiKeys: safeKeys, keys: safeKeys, webhooks });
   } catch (error) {
     console.error('API Keys Error:', error);
     return res.status(500).json({ success: false, message: 'Failed to load API keys.' });
@@ -212,22 +257,37 @@ const generateApiKey = async (req, res) => {
   try {
     const { key_label } = req.body;
     const rawKey = 'ee_live_' + crypto.randomBytes(24).toString('hex');
+    const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
 
     const [result] = await pool.execute(
-      `INSERT INTO api_keys (user_id, key_label, api_key, permissions_scope)
-       VALUES (?, ?, ?, '["read:properties", "read:leads", "write:inquiries"]')`,
-      [req.user.id, key_label || 'Default API Token', rawKey]
+      `INSERT INTO api_keys (user_id, key_label, api_key, permissions_scope, is_active)
+       VALUES (?, ?, ?, '["read:properties", "read:leads", "write:inquiries"]', TRUE)`,
+      [req.user.id, key_label || 'Default API Token', keyHash]
     );
 
     return res.status(201).json({
       success: true,
-      message: 'API Key generated successfully.',
+      message: 'API Key generated successfully. Please copy it now as it will not be shown again.',
       keyId: result.insertId,
       apiKey: rawKey
     });
   } catch (error) {
     console.error('Generate API Key Error:', error);
     return res.status(500).json({ success: false, message: 'Failed to generate API Key.' });
+  }
+};
+
+const revokeApiKey = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.execute(
+      `UPDATE api_keys SET is_active = FALSE WHERE id = ? AND (user_id = ? OR ? = 'admin')`,
+      [Number(id), req.user.id, req.user.role || 'user']
+    );
+    return res.status(200).json({ success: true, message: 'API key successfully revoked.' });
+  } catch (error) {
+    console.error('Revoke API Key Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to revoke API key.' });
   }
 };
 
@@ -254,7 +314,18 @@ const createWebhookSubscription = async (req, res) => {
 // ─── PHASE 15: ENTERPRISE PLATFORM FOUNDATION ───────────────────────
 const getOrganizationProfile = async (req, res) => {
   try {
-    const [orgs] = await pool.execute(`SELECT * FROM organizations WHERE id = 1 LIMIT 1`);
+    let orgId = 1;
+    if (req.user?.id) {
+      const [memberships] = await pool.execute(
+        `SELECT organization_id FROM org_memberships WHERE user_id = ? LIMIT 1`,
+        [req.user.id]
+      );
+      if (memberships[0]?.organization_id) {
+        orgId = memberships[0].organization_id;
+      }
+    }
+
+    const [orgs] = await pool.execute(`SELECT * FROM organizations WHERE id = ? LIMIT 1`, [orgId]);
     const [branches] = await pool.execute(`SELECT * FROM branches WHERE is_active = TRUE`);
 
     return res.status(200).json({
@@ -272,6 +343,17 @@ const updateOrganizationProfile = async (req, res) => {
   try {
     const { name, primary_phone, primary_email, currency, fiscal_year_start, settings } = req.body;
 
+    let orgId = 1;
+    if (req.user?.id) {
+      const [memberships] = await pool.execute(
+        `SELECT organization_id FROM org_memberships WHERE user_id = ? LIMIT 1`,
+        [req.user.id]
+      );
+      if (memberships[0]?.organization_id) {
+        orgId = memberships[0].organization_id;
+      }
+    }
+
     await pool.execute(
       `UPDATE organizations 
        SET name = COALESCE(?, name),
@@ -280,8 +362,8 @@ const updateOrganizationProfile = async (req, res) => {
            currency = COALESCE(?, currency),
            fiscal_year_start = COALESCE(?, fiscal_year_start),
            settings = COALESCE(?, settings)
-       WHERE id = 1`,
-      [name || null, primary_phone || null, primary_email || null, currency || null, fiscal_year_start || null, settings ? JSON.stringify(settings) : null]
+       WHERE id = ?`,
+      [name || null, primary_phone || null, primary_email || null, currency || null, fiscal_year_start || null, settings ? JSON.stringify(settings) : null, orgId]
     );
 
     return res.status(200).json({ success: true, message: 'Organization profile updated.' });
@@ -296,10 +378,12 @@ module.exports = {
   getRolesAndPermissions,
   getSecurityLogs,
   getLegalAgreements,
+  getLegalTemplates,
   generateAgreement,
   signAgreement,
   getApiKeys,
   generateApiKey,
+  revokeApiKey,
   createWebhookSubscription,
   getOrganizationProfile,
   updateOrganizationProfile

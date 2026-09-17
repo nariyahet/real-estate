@@ -9,15 +9,27 @@ export default function BrokerModule() {
   const [quotas, setQuotas] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [territories, setTerritories] = useState([]);
+  const [payouts, setPayouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
   // Sub-tabs in Broker Module
-  const [brokerTab, setBrokerTab] = useState("overview"); // 'overview' | 'commissions' | 'quotas' | 'leaderboard' | 'territories'
+  const [brokerTab, setBrokerTab] = useState("overview"); // 'overview' | 'commissions' | 'quotas' | 'leaderboard' | 'territories' | 'payouts'
 
   // New Commission Payout update
   const [processingCommissionId, setProcessingCommissionId] = useState(null);
+
+  // Agent Payout Modal
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [newPayout, setNewPayout] = useState({
+    agent_id: "",
+    amount: "",
+    payment_method: "Bank Transfer",
+    transaction_ref: "",
+    notes: "",
+    payout_date: new Date().toISOString().split("T")[0]
+  });
 
   const fetchAgentsList = useCallback(async () => {
     try {
@@ -39,12 +51,13 @@ export default function BrokerModule() {
       setLoading(true);
       setError("");
 
-      const [perfRes, commRes, quotaRes, leadRes, terrRes] = await Promise.allSettled([
+      const [perfRes, commRes, quotaRes, leadRes, terrRes, payRes] = await Promise.allSettled([
         api.get(`/broker/performance?agentId=${selectedAgentId}`),
         api.get(`/broker/commissions?agentId=${selectedAgentId}`),
         api.get("/broker/quotas"),
         api.get("/broker/leaderboard"),
         api.get("/broker/territories"),
+        api.get("/broker/payouts"),
       ]);
 
       if (perfRes.status === "fulfilled" && perfRes.value.data?.success) {
@@ -61,6 +74,9 @@ export default function BrokerModule() {
       }
       if (terrRes.status === "fulfilled" && terrRes.value.data?.success) {
         setTerritories(terrRes.value.data.territories || []);
+      }
+      if (payRes.status === "fulfilled" && payRes.value.data?.success) {
+        setPayouts(payRes.value.data.payouts || []);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load broker data.");
@@ -95,6 +111,47 @@ export default function BrokerModule() {
     }
   };
 
+  const handleRecordPayout = async (e) => {
+    e.preventDefault();
+    try {
+      const amt = Number(newPayout.amount);
+      if (amt <= 0) {
+        setError("Payout amount must be greater than zero.");
+        return;
+      }
+      const targetAgentId = newPayout.agent_id || selectedAgentId;
+      if (!targetAgentId) {
+        setError("Please select an agent to receive the payout.");
+        return;
+      }
+      const payload = {
+        agent_id: Number(targetAgentId),
+        amount: amt,
+        payment_method: newPayout.payment_method,
+        transaction_ref: newPayout.transaction_ref || `PAY-${Date.now()}`,
+        payout_date: newPayout.payout_date || new Date().toISOString().split("T")[0],
+        notes: newPayout.notes
+      };
+      const res = await api.post("/broker/payouts", payload);
+      if (res.data?.success) {
+        setSuccessMsg(`Payout of ₹${amt.toLocaleString("en-IN")} disbursed successfully! (Ref: ${res.data.transactionRef})`);
+        setShowPayoutModal(false);
+        setNewPayout({
+          agent_id: selectedAgentId || "",
+          amount: "",
+          payment_method: "Bank Transfer",
+          transaction_ref: "",
+          notes: "",
+          payout_date: new Date().toISOString().split("T")[0]
+        });
+        fetchBrokerData();
+        setTimeout(() => setSuccessMsg(""), 3500);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to record agent payout.");
+    }
+  };
+
   return (
     <div className="enterprise-module-container">
       <div className="module-header-row">
@@ -103,6 +160,9 @@ export default function BrokerModule() {
           <p className="subtitle">Individual KPIs, multi-agent leaderboard, commission splits, quota fulfillment & territory assignments.</p>
         </div>
         <div className="module-header-actions">
+          <button type="button" className="btn-primary" onClick={() => setShowPayoutModal(true)}>
+            + Disburse Agent Payout
+          </button>
           <label className="agent-select-label">Agent Focus:</label>
           <select
             className="agent-select-dropdown"
@@ -135,6 +195,13 @@ export default function BrokerModule() {
           onClick={() => setBrokerTab("commissions")}
         >
           💰 Commission Ledger ({commissions.length})
+        </button>
+        <button
+          type="button"
+          className={`ent-subtab ${brokerTab === "payouts" ? "active" : ""}`}
+          onClick={() => setBrokerTab("payouts")}
+        >
+          💳 Agent Payouts ({payouts.length})
         </button>
         <button
           type="button"
@@ -369,7 +436,145 @@ export default function BrokerModule() {
               </div>
             </div>
           )}
+
+          {/* TAB 6: AGENT PAYOUTS */}
+          {brokerTab === "payouts" && (
+            <div className="tab-content-area">
+              <div className="ent-table-container">
+                <table className="ent-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Agent Name</th>
+                      <th>Disbursed Amount</th>
+                      <th>Payment Method</th>
+                      <th>Transaction Ref</th>
+                      <th>Payout Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payouts.map((p) => (
+                      <tr key={p.id}>
+                        <td>#{p.id}</td>
+                        <td>
+                          <strong>{p.agent_name || `Agent #${p.agent_id}`}</strong>
+                          <div className="sub-text">{p.agency_name || p.agent_email || "Estate Elite Agent"}</div>
+                        </td>
+                        <td>
+                          <strong style={{ color: "#10b981" }}>
+                            ₹{Number(p.amount || 0).toLocaleString("en-IN")}
+                          </strong>
+                        </td>
+                        <td>
+                          <span className="badge-pill">{p.payment_method || "Bank Transfer"}</span>
+                        </td>
+                        <td><code>{p.transaction_ref || "-"}</code></td>
+                        <td>{new Date(p.payout_date).toLocaleDateString("en-IN")}</td>
+                        <td>
+                          <span className="badge-status status-active">
+                            {p.status || "Processed"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {payouts.length === 0 && (
+                      <tr>
+                        <td colSpan="7" className="empty-row">
+                          No agent payout disbursements recorded yet. Click "+ Disburse Agent Payout" to issue funds.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </>
+      )}
+
+      {/* Modal: Disburse Agent Payout */}
+      {showPayoutModal && (
+        <div className="ent-modal-backdrop" onClick={() => setShowPayoutModal(false)}>
+          <div className="ent-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>💳 Disburse Agent Commission Payout</h3>
+              <button type="button" className="drawer-close" onClick={() => setShowPayoutModal(false)}>✕</button>
+            </div>
+            <form onSubmit={handleRecordPayout} className="modal-body-form">
+              <div className="form-grid-2">
+                <div>
+                  <label>Recipient Agent *</label>
+                  <select
+                    required
+                    value={newPayout.agent_id || selectedAgentId}
+                    onChange={(e) => setNewPayout({ ...newPayout, agent_id: Number(e.target.value) })}
+                  >
+                    <option value="">-- Select Agent --</option>
+                    {agents.map((ag) => (
+                      <option key={ag.id} value={ag.id}>
+                        {ag.name} ({ag.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label>Disbursement Amount (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={newPayout.amount}
+                    onChange={(e) => setNewPayout({ ...newPayout, amount: e.target.value })}
+                    placeholder="e.g. 75000"
+                  />
+                </div>
+                <div>
+                  <label>Payment Method *</label>
+                  <select
+                    value={newPayout.payment_method}
+                    onChange={(e) => setNewPayout({ ...newPayout, payment_method: e.target.value })}
+                  >
+                    <option value="Bank Transfer">NEFT / RTGS Bank Transfer</option>
+                    <option value="UPI">UPI Direct</option>
+                    <option value="Cheque">Corporate Cheque</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Payout Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={newPayout.payout_date}
+                    onChange={(e) => setNewPayout({ ...newPayout, payout_date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label>Transaction Reference #</label>
+                  <input
+                    type="text"
+                    value={newPayout.transaction_ref}
+                    onChange={(e) => setNewPayout({ ...newPayout, transaction_ref: e.target.value })}
+                    placeholder="Bank UTR or Cheque Number"
+                  />
+                </div>
+                <div>
+                  <label>Internal Audit Memo</label>
+                  <input
+                    type="text"
+                    value={newPayout.notes}
+                    onChange={(e) => setNewPayout({ ...newPayout, notes: e.target.value })}
+                    placeholder="Commission settlement for Deal #..."
+                  />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary" onClick={() => setShowPayoutModal(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Disburse Payout</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

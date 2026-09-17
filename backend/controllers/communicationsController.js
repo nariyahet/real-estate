@@ -183,6 +183,30 @@ const bookAppointment = async (req, res) => {
   }
 };
 
+const updateAppointmentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, notes } = req.body;
+
+    const validStatuses = ['Scheduled', 'Completed', 'Cancelled', 'Rescheduled'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: `Invalid status. Must be: ${validStatuses.join(', ')}` });
+    }
+
+    await pool.execute(
+      `UPDATE appointments 
+       SET status = ?, notes = COALESCE(?, notes), updated_at = NOW() 
+       WHERE id = ?`,
+      [status, notes || null, Number(id)]
+    );
+
+    return res.status(200).json({ success: true, message: `Appointment updated to ${status}.` });
+  } catch (error) {
+    console.error('Update Appointment Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update appointment.' });
+  }
+};
+
 module.exports = {
   getThreads,
   createThread,
@@ -191,5 +215,6 @@ module.exports = {
   getNotifications,
   markNotificationRead,
   getAppointments,
-  bookAppointment
+  bookAppointment,
+  updateAppointmentStatus
 };

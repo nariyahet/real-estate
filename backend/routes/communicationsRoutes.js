@@ -9,7 +9,8 @@ const {
   getNotifications,
   markNotificationRead,
   getAppointments,
-  bookAppointment
+  bookAppointment,
+  updateAppointmentStatus
 } = require('../controllers/communicationsController');
 
 router.use(protect);
@@ -24,5 +25,6 @@ router.put('/notifications/:id/read', markNotificationRead);
 
 router.get('/appointments', getAppointments);
 router.post('/appointments', bookAppointment);
+router.put('/appointments/:id/status', updateAppointmentStatus);
 
 module.exports = router;

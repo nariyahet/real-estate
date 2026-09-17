@@ -25,20 +25,49 @@ const getAgentPerformance = async (req, res) => {
         u.name as agent_name,
         u.email as agent_email,
         u.phone as agent_phone,
-        COUNT(DISTINCT p.id) as total_listings,
-        COUNT(DISTINCT l.id) as assigned_leads,
-        COUNT(DISTINCT d.id) as closed_deals,
-        COALESCE(SUM(d.agreed_price), 0) as total_sales_volume,
-        COALESCE(SUM(c.agent_share), 0) as total_commission_earned,
-        COALESCE(SUM(CASE WHEN c.status = 'Approved' THEN c.agent_share ELSE 0 END), 0) as commission_payable
+        COALESCE(p_sub.total_listings, 0) as total_listings,
+        COALESCE(p_sub.total_listings, 0) as totalListings,
+        COALESCE(p_sub.total_listings, 0) as activeListings,
+        COALESCE(l_sub.assigned_leads, 0) as assigned_leads,
+        COALESCE(l_sub.assigned_leads, 0) as assignedLeads,
+        COALESCE(d_sub.closed_deals, 0) as closed_deals,
+        COALESCE(d_sub.closed_deals, 0) as closedDeals,
+        COALESCE(d_sub.closed_deals, 0) as dealsClosed,
+        COALESCE(d_sub.total_sales_volume, 0) as total_sales_volume,
+        COALESCE(d_sub.total_sales_volume, 0) as totalSalesVolume,
+        COALESCE(c_sub.total_commission_earned, 0) as total_commission_earned,
+        COALESCE(c_sub.total_commission_earned, 0) as totalCommissionEarned,
+        COALESCE(c_sub.commission_payable, 0) as commission_payable,
+        COALESCE(c_sub.commission_payable, 0) as commissionPayable
       FROM agents a
       JOIN users u ON a.user_id = u.id
-      LEFT JOIN properties p ON a.id = p.agent_id
-      LEFT JOIN crm_leads l ON a.id = l.assigned_agent_id
-      LEFT JOIN deals d ON a.id = d.agent_id AND d.stage = 'Closed'
-      LEFT JOIN agent_commissions c ON a.id = c.agent_id AND c.status != 'Cancelled'
+      LEFT JOIN (
+        SELECT agent_id, COUNT(*) as total_listings
+        FROM properties
+        GROUP BY agent_id
+      ) p_sub ON a.id = p_sub.agent_id
+      LEFT JOIN (
+        SELECT assigned_agent_id, COUNT(*) as assigned_leads
+        FROM crm_leads
+        GROUP BY assigned_agent_id
+      ) l_sub ON a.id = l_sub.assigned_agent_id
+      LEFT JOIN (
+        SELECT agent_id, COUNT(*) as closed_deals, SUM(agreed_price) as total_sales_volume
+        FROM deals
+        WHERE stage = 'Closed'
+        GROUP BY agent_id
+      ) d_sub ON a.id = d_sub.agent_id
+      LEFT JOIN (
+        SELECT 
+          agent_id, 
+          SUM(agent_share) as total_commission_earned,
+          SUM(CASE WHEN status = 'Approved' THEN agent_share ELSE 0 END) as commission_payable
+        FROM agent_commissions
+        WHERE status != 'Cancelled'
+        GROUP BY agent_id
+      ) c_sub ON a.id = c_sub.agent_id
       ${whereAgent}
-      GROUP BY a.id, a.agency_name, u.name, u.email, u.phone
+      ORDER BY a.id ASC
     `);
 
     return res.status(200).json({
@@ -196,7 +225,7 @@ const setAgentQuota = async (req, res) => {
   }
 };
 
-// 4. Agent Leaderboard
+// 4. Agent Leaderboard (Zero JOIN multiplication via derived tables)
 const getAgentLeaderboard = async (req, res) => {
   try {
     const [leaderboard] = await pool.execute(`
@@ -205,14 +234,23 @@ const getAgentLeaderboard = async (req, res) => {
         a.agency_name,
         u.name,
         u.profile_image,
-        COUNT(DISTINCT d.id) as deals_closed,
-        COALESCE(SUM(d.agreed_price), 0) as total_volume,
-        COALESCE(SUM(c.agent_share), 0) as total_earnings
+        COALESCE(d_sub.deals_closed, 0) as deals_closed,
+        COALESCE(d_sub.total_volume, 0) as total_volume,
+        COALESCE(c_sub.total_earnings, 0) as total_earnings
       FROM agents a
       JOIN users u ON a.user_id = u.id
-      LEFT JOIN deals d ON a.id = d.agent_id AND d.stage = 'Closed'
-      LEFT JOIN agent_commissions c ON a.id = c.agent_id AND c.status = 'Paid'
-      GROUP BY a.id, a.agency_name, u.name, u.profile_image
+      LEFT JOIN (
+        SELECT agent_id, COUNT(*) as deals_closed, SUM(agreed_price) as total_volume
+        FROM deals
+        WHERE stage = 'Closed'
+        GROUP BY agent_id
+      ) d_sub ON a.id = d_sub.agent_id
+      LEFT JOIN (
+        SELECT agent_id, SUM(agent_share) as total_earnings
+        FROM agent_commissions
+        WHERE status = 'Paid'
+        GROUP BY agent_id
+      ) c_sub ON a.id = c_sub.agent_id
       ORDER BY total_volume DESC, deals_closed DESC
       LIMIT 10
     `);
@@ -256,6 +294,67 @@ const assignTerritory = async (req, res) => {
   }
 };
 
+// 6. Agent Payout Tracking & Processing
+const getAgentPayouts = async (req, res) => {
+  try {
+    const { agentId } = req.query;
+    let where = ['1=1'];
+    let params = [];
+
+    if (req.user?.role === 'agent') {
+      const [a] = await pool.execute(`SELECT id FROM agents WHERE user_id = ?`, [req.user.id]);
+      if (a[0]) {
+        where.push('p.agent_id = ?');
+        params.push(a[0].id);
+      }
+    } else if (agentId) {
+      where.push('p.agent_id = ?');
+      params.push(Number(agentId));
+    }
+
+    const [payouts] = await pool.execute(
+      `SELECT p.*, a.agency_name, u.name as agent_name, u.email as agent_email
+       FROM agent_payouts p
+       JOIN agents a ON p.agent_id = a.id
+       JOIN users u ON a.user_id = u.id
+       WHERE ${where.join(' AND ')}
+       ORDER BY p.payout_date DESC, p.id DESC`,
+      params
+    );
+
+    return res.status(200).json({ success: true, payouts });
+  } catch (error) {
+    console.error('Get Payouts Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to load agent payouts.' });
+  }
+};
+
+const recordAgentPayout = async (req, res) => {
+  try {
+    const { agent_id, amount, payment_method, transaction_ref, payout_date, notes } = req.body;
+    if (!agent_id || !amount || Number(amount) <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid Agent ID and positive payout amount are required.' });
+    }
+
+    const ref = transaction_ref || `PAY-${Date.now()}`;
+    const [result] = await pool.execute(
+      `INSERT INTO agent_payouts (agent_id, amount, payment_method, transaction_ref, payout_date, status, notes)
+       VALUES (?, ?, ?, ?, ?, 'Processed', ?)`,
+      [Number(agent_id), Number(amount), payment_method || 'Bank Transfer', ref, payout_date || new Date(), notes || null]
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: 'Agent payout processed and recorded successfully.',
+      payoutId: result.insertId,
+      transactionRef: ref
+    });
+  } catch (error) {
+    console.error('Record Payout Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to record agent payout.' });
+  }
+};
+
 module.exports = {
   getAgentPerformance,
   getCommissions,
@@ -265,5 +364,7 @@ module.exports = {
   setAgentQuota,
   getAgentLeaderboard,
   getTerritories,
-  assignTerritory
+  assignTerritory,
+  getAgentPayouts,
+  recordAgentPayout
 };
