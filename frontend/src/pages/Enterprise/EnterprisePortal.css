@@ -831,6 +831,7 @@
 .drawer-body {
   padding: 1.25rem;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -1033,6 +1034,8 @@
   border-radius: 8px;
   padding: 0.65rem 0.85rem;
   max-width: 75%;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .msg-header {
@@ -1285,22 +1288,54 @@
 
 .proximity-scores-box {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem;
   background: #f8fafc;
   border: 1px solid var(--ent-border);
   border-radius: 8px;
   margin: 1rem 0;
 }
 
-.proximity-meter {
+.proximity-scores-box h5 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ent-text-primary);
+}
+
+.proximity-meter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.proximity-meter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--ent-text-secondary);
+}
+
+.proximity-meter-header strong {
+  color: #059669;
+  font-weight: 700;
+}
+
+.proximity-meter-bar {
   height: 8px;
   width: 100%;
   background: #e2e8f0;
   border-radius: 4px;
   overflow: hidden;
-  margin-top: 0.5rem;
+}
+
+.proximity-meter-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 4px;
+  transition: width 0.3s ease;
 }
 
 .amenity-list {
@@ -1688,25 +1723,49 @@
 }
 
 .timeline-badge {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: #eff6ff;
   color: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 1rem;
   flex-shrink: 0;
   border: 2px solid #bfdbfe;
+  overflow: hidden;
 }
 
 .timeline-content {
   flex: 1;
+  min-width: 0;
   background: #f8fafc;
   border: 1px solid var(--ent-border);
   border-radius: 8px;
   padding: 0.85rem;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.timeline-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.timeline-type-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  white-space: nowrap;
 }
 
 .timeline-meta {

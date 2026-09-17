@@ -1,6 +1,23 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../../../api/axios";
 
+const formatPinPrice = (price) => {
+  const num = Number(price);
+  if (!num || isNaN(num)) return "₹0";
+  if (num >= 10000000) {
+    const cr = num / 10000000;
+    return `₹${cr % 1 === 0 ? cr.toFixed(0) : cr.toFixed(1)}Cr`;
+  }
+  if (num >= 100000) {
+    const l = num / 100000;
+    return `₹${l % 1 === 0 ? l.toFixed(0) : l.toFixed(1)}L`;
+  }
+  if (num >= 1000) {
+    return `₹${(num / 1000).toFixed(0)}K`;
+  }
+  return `₹${num.toLocaleString("en-IN")}`;
+};
+
 export default function AIMapsModule() {
   const [activeTab, setActiveTab] = useState("nl_search"); // 'nl_search' | 'buyer_match' | 'geo_map'
   const [properties, setProperties] = useState([]);
@@ -326,7 +343,7 @@ export default function AIMapsModule() {
                       onClick={() => handleSelectMapProperty(p)}
                     >
                       <span className="pin-icon">📍</span>
-                      <span className="pin-label">₹{Number(p.price / 100000).toFixed(0)}L</span>
+                      <span className="pin-label">{formatPinPrice(p.price)}</span>
                     </div>
                   );
                 })}
@@ -345,9 +362,17 @@ export default function AIMapsModule() {
 
                   <div className="proximity-scores-box">
                     <h5>🏫 Neighborhood Proximity & Livability</h5>
-                    <div className="proximity-meter">
-                      <span>Proximity Livability Index:</span>
-                      <strong>{amenitiesData?.proximityScore || 88} / 100</strong>
+                    <div className="proximity-meter-container">
+                      <div className="proximity-meter-header">
+                        <span>Proximity Livability Index:</span>
+                        <strong>{amenitiesData?.proximityScore || 88} / 100</strong>
+                      </div>
+                      <div className="proximity-meter-bar">
+                        <div
+                          className="proximity-meter-fill"
+                          style={{ width: `${Math.min(100, amenitiesData?.proximityScore || 88)}%` }}
+                        />
+                      </div>
                     </div>
 
                     <div className="amenity-list">

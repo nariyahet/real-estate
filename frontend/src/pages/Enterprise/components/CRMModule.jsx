@@ -1,6 +1,30 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../../../api/axios";
 
+const getActivityIcon = (type) => {
+  switch (type) {
+    case "Status_Change":
+      return "🔄";
+    case "Call":
+      return "📞";
+    case "Email":
+      return "✉️";
+    case "Meeting":
+      return "🤝";
+    case "Task":
+      return "✅";
+    case "Note":
+      return "📝";
+    default:
+      return "📋";
+  }
+};
+
+const formatActivityType = (type) => {
+  if (!type) return "";
+  return String(type).replace(/_/g, " ");
+};
+
 export default function CRMModule() {
   const [leads, setLeads] = useState([]);
   const [analytics, setAnalytics] = useState(null);
@@ -417,10 +441,15 @@ export default function CRMModule() {
                 <div className="timeline-list">
                   {activities.map((act) => (
                     <div key={act.id} className="timeline-item">
-                      <span className="timeline-badge">{act.activity_type}</span>
+                      <span className="timeline-badge" title={formatActivityType(act.activity_type)}>
+                        {getActivityIcon(act.activity_type)}
+                      </span>
                       <div className="timeline-content">
-                        <strong>{act.summary}</strong>
-                        <p>{act.details}</p>
+                        <div className="timeline-header-row">
+                          <strong>{act.summary}</strong>
+                          <span className="timeline-type-tag">{formatActivityType(act.activity_type)}</span>
+                        </div>
+                        {act.details && <p>{act.details}</p>}
                         <span className="timeline-meta">{new Date(act.created_at).toLocaleString("en-IN")}</span>
                       </div>
                     </div>
