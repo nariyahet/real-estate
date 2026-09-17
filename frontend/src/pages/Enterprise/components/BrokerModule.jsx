@@ -33,12 +33,15 @@ export default function BrokerModule() {
 
   const fetchAgentsList = useCallback(async () => {
     try {
-      const res = await api.get("/agents");
+      const res = await api.get("/agents").catch(() => api.get("/admin/agents"));
       if (res.data?.success) {
-        const list = res.data.agents || [];
+        const list = (res.data.agents || []).map((ag) => ({
+          ...ag,
+          id: ag.id || ag.agent_id,
+        }));
         setAgents(list);
         if (list.length > 0 && !selectedAgentId) {
-          setSelectedAgentId(list[0].id);
+          setSelectedAgentId(list[0].id || list[0].agent_id);
         }
       }
     } catch {

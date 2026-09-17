@@ -186,6 +186,7 @@ const createLead = async (req, res) => {
       message: 'Lead created successfully.',
       leadId,
       score,
+      leadScore: score,
       assignedAgentId: finalAgentId
     });
   } catch (error) {

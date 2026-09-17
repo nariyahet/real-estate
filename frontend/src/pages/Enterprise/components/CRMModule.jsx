@@ -83,7 +83,8 @@ export default function CRMModule() {
       };
       const res = await api.post("/crm/leads", payload);
       if (res.data?.success) {
-        setSuccessMsg(`Lead #${res.data.leadId} created with Score: ${res.data.leadScore}/100!`);
+        const displayScore = res.data.leadScore !== undefined ? res.data.leadScore : res.data.score;
+        setSuccessMsg(`Lead #${res.data.leadId} created with Score: ${displayScore || 50}/100!`);
         setShowCreateModal(false);
         setNewLead({
           name: "",

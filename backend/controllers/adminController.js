@@ -88,6 +88,7 @@ const getAllAgents = async (req, res) => {
   try {
     const [agents] = await pool.execute(`
       SELECT
+        a.id,
         a.id AS agent_id,
         a.user_id,
         u.name,

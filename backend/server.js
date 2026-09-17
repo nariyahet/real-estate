@@ -56,8 +56,12 @@ const communicationsRoutes = require("./routes/communicationsRoutes");
 const aiMapsRoutes = require("./routes/aiMapsRoutes");
 const enterpriseRoutes = require("./routes/enterpriseRoutes");
 
+const { getAllAgents } = require("./controllers/adminController");
+const { protect } = require("./middleware/authMiddleware");
+
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.get("/api/agents", protect, getAllAgents);
 app.use("/api/properties", operationsRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/documents", documentRoutes);
