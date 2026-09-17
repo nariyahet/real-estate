@@ -518,8 +518,12 @@ function Properties() {
                         {property.primary_image || property.image_url ? (
                           <img
                             src={property.primary_image || property.image_url}
-                            alt=""
+                            alt={property.title || "Property"}
                             className="property-row-thumb"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800";
+                            }}
                           />
                         ) : (
                           <div className="property-row-thumb-placeholder">🏠</div>

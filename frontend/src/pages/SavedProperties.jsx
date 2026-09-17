@@ -311,6 +311,10 @@ function SavedProperties() {
                         src={p.image || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800"}
                         alt={p.title}
                         className="saved-card-img"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800";
+                        }}
                       />
                       <span className="saved-card-badge">{p.property_type}</span>
                       <button
@@ -478,6 +482,10 @@ function SavedProperties() {
                           src={it.property.image || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800"}
                           alt={it.property.title}
                           className="saved-card-img"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800";
+                          }}
                         />
                         <span className="saved-card-badge">{it.property.property_type}</span>
                       </div>
@@ -737,6 +745,10 @@ function SavedProperties() {
                   }
                   alt={detailModalProperty.title || "Property"}
                   className="saved-detail-img"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800";
+                  }}
                 />
                 <div className="saved-detail-badges">
                   {detailModalProperty.property_type && (
