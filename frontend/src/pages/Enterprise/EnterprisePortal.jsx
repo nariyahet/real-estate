@@ -29,6 +29,13 @@ export default function EnterprisePortal() {
   const isAdmin = user?.role === "admin";
 
   useEffect(() => {
+    const u = getUser();
+    if (!u || u.role === "user") {
+      navigate("/properties", { replace: true });
+    }
+  }, [navigate]);
+
+  useEffect(() => {
     const tabParam = searchParams.get("tab");
     if (tabParam && tabParam !== activeTab) {
       setActiveTab(tabParam);
