@@ -269,7 +269,7 @@ export default function DealsModule() {
         <div className="ent-modal-backdrop" onClick={() => setSelectedDeal(null)}>
           <div className="ent-drawer ent-drawer-large" onClick={(e) => e.stopPropagation()}>
             <div className="drawer-header">
-              <div>
+              <div className="drawer-header-info">
                 <h3>{selectedDeal.deal_title || `Deal #${selectedDeal.id}`}</h3>
                 <p className="drawer-sub">
                   Property #{selectedDeal.property_id} • Buyer: {selectedDeal.buyer_name} • Agreed: ₹{Number(selectedDeal.agreed_price || 0).toLocaleString("en-IN")}

@@ -386,7 +386,7 @@ export default function CRMModule() {
         <div className="ent-modal-backdrop" onClick={() => setSelectedLead(null)}>
           <div className="ent-drawer" onClick={(e) => e.stopPropagation()}>
             <div className="drawer-header">
-              <div>
+              <div className="drawer-header-info">
                 <h3>{selectedLead.name}</h3>
                 <p className="drawer-sub">#{selectedLead.id} • {selectedLead.email} • {selectedLead.phone}</p>
               </div>
