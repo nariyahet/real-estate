@@ -119,6 +119,10 @@ const getBuyerPropertyMatch = async (req, res) => {
   try {
     const { leadId, propertyId } = req.query;
 
+    if (!leadId || !propertyId) {
+      return res.status(400).json({ success: false, message: 'leadId and propertyId query parameters are required.' });
+    }
+
     const [leads] = await pool.execute(`SELECT * FROM crm_leads WHERE id = ?`, [Number(leadId)]);
     const [props] = await pool.execute(`SELECT * FROM properties WHERE id = ?`, [Number(propertyId)]);
 
