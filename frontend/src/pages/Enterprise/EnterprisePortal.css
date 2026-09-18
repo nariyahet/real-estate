@@ -511,9 +511,12 @@
   border-bottom: 1px solid var(--ent-border);
   padding-bottom: 0.5rem;
   overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .ent-subtab {
+  flex: 0 0 auto;
+  white-space: nowrap;
   background: transparent;
   border: none;
   padding: 6px 14px;
