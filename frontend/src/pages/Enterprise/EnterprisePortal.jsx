@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import CRMModule from "./components/CRMModule";
 import BrokerModule from "./components/BrokerModule";
@@ -42,9 +42,50 @@ export default function EnterprisePortal() {
     }
   }, [searchParams, activeTab]);
 
+  const navTabsRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkNavScroll = useCallback(() => {
+    if (navTabsRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = navTabsRef.current;
+      setCanScrollLeft(scrollLeft > 4);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkNavScroll();
+    window.addEventListener("resize", checkNavScroll);
+    return () => window.removeEventListener("resize", checkNavScroll);
+  }, [checkNavScroll]);
+
+  // Ensure active tab is visible when changed without breaking left edge for first tab
+  useEffect(() => {
+    if (navTabsRef.current) {
+      if (activeTab === "crm") {
+        navTabsRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        const activeBtn = navTabsRef.current.querySelector(`.ent-tab-button.active`);
+        if (activeBtn) {
+          activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+        }
+      }
+      setTimeout(checkNavScroll, 250);
+    }
+  }, [activeTab, checkNavScroll]);
+
   const handleTabChange = (tabKey) => {
     setActiveTab(tabKey);
     setSearchParams({ tab: tabKey });
+  };
+
+  const scrollNav = (direction) => {
+    if (navTabsRef.current) {
+      const scrollAmount = direction === "left" ? -280 : 280;
+      navTabsRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+      setTimeout(checkNavScroll, 300);
+    }
   };
 
   const handleLogout = () => {
@@ -106,8 +147,23 @@ export default function EnterprisePortal() {
       </header>
 
       {/* Main Suite Navigation Bar */}
-      <nav className="enterprise-nav-tabs">
-        <div className="nav-tabs-scrollable">
+      <nav className="enterprise-nav-tabs" aria-label="Enterprise Navigation">
+        {canScrollLeft && (
+          <button
+            type="button"
+            className="ent-nav-scroll-btn scroll-left"
+            onClick={() => scrollNav("left")}
+            aria-label="Scroll navigation left"
+            title="Scroll left"
+          >
+            ‹
+          </button>
+        )}
+        <div
+          className="nav-tabs-scrollable"
+          ref={navTabsRef}
+          onScroll={checkNavScroll}
+        >
           {navigationItems.map((item) => (
             <button
               key={item.key}
@@ -121,6 +177,17 @@ export default function EnterprisePortal() {
             </button>
           ))}
         </div>
+        {canScrollRight && (
+          <button
+            type="button"
+            className="ent-nav-scroll-btn scroll-right"
+            onClick={() => scrollNav("right")}
+            aria-label="Scroll navigation right"
+            title="Scroll right"
+          >
+            ›
+          </button>
+        )}
       </nav>
 
       {/* Active Enterprise Module Display */}
