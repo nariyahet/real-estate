@@ -257,12 +257,17 @@ export default function AIMapsModule() {
               Calculates multidimensional affinity score comparing buyer budget, bedroom count, location preference, and property amenities.
             </p>
             {matchError && <div className="ent-alert ent-alert-danger" style={{ marginTop: "1rem" }}>{matchError}</div>}
-            <form onSubmit={handleComputeMatch} className="form-grid-3" style={{ marginTop: "1rem" }}>
-              <div>
-                <label>Target CRM Lead / Buyer</label>
+            <form onSubmit={handleComputeMatch} className="match-form-grid" style={{ marginTop: "1.25rem" }}>
+              <div className="match-form-group">
+                <label htmlFor="target-crm-lead" className="match-form-label">
+                  Target CRM Lead / Buyer
+                </label>
                 <select
+                  id="target-crm-lead"
+                  className="match-select"
                   value={selectedLeadId}
                   onChange={(e) => setSelectedLeadId(e.target.value)}
+                  disabled={matchLoading || matchLeads.length === 0}
                 >
                   {matchLeads.map((l) => (
                     <option key={l.id} value={l.id}>
@@ -273,11 +278,16 @@ export default function AIMapsModule() {
                 </select>
               </div>
 
-              <div>
-                <label>Target Property</label>
+              <div className="match-form-group">
+                <label htmlFor="target-property" className="match-form-label">
+                  Target Property
+                </label>
                 <select
+                  id="target-property"
+                  className="match-select"
                   value={selectedPropertyId}
                   onChange={(e) => setSelectedPropertyId(e.target.value)}
+                  disabled={matchLoading || matchProperties.length === 0}
                 >
                   {matchProperties.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -288,11 +298,10 @@ export default function AIMapsModule() {
                 </select>
               </div>
 
-              <div style={{ display: "flex", alignItems: "flex-end" }}>
+              <div className="match-form-action">
                 <button
                   type="submit"
-                  className="btn-primary"
-                  style={{ width: "100%", height: "42px" }}
+                  className="btn-primary match-submit-btn"
                   disabled={matchLoading || !selectedLeadId || !selectedPropertyId}
                 >
                   {matchLoading ? "Calculating..." : "Compute Compatibility ⚡"}
