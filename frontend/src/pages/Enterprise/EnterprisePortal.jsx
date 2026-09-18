@@ -43,16 +43,76 @@ export default function EnterprisePortal() {
   }, [searchParams, activeTab]);
 
   const navTabsRef = useRef(null);
+  const isFirstRender = useRef(true);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
 
   const checkNavScroll = useCallback(() => {
     if (navTabsRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = navTabsRef.current;
-      setCanScrollLeft(scrollLeft > 4);
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+      const overflow = scrollWidth > clientWidth + 2;
+      setHasOverflow(overflow);
+      setCanScrollLeft(overflow && scrollLeft > 2);
+      setCanScrollRight(overflow && scrollLeft + clientWidth < scrollWidth - 2);
     }
   }, []);
+
+  const scrollToTab = useCallback((tabKey, isMount = false) => {
+    const container = navTabsRef.current;
+    if (!container) return;
+
+    if (tabKey === "crm") {
+      container.scrollTo({ left: 0, behavior: isMount ? "auto" : "smooth" });
+      setTimeout(checkNavScroll, 100);
+      return;
+    }
+
+    const allBtns = Array.from(container.querySelectorAll(".ent-tab-button"));
+    const targetBtn = container.querySelector(`[data-tab-key="${tabKey}"]`);
+    if (!targetBtn || allBtns.length === 0) return;
+
+    const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth);
+    if (maxScroll <= 0) {
+      container.scrollTo({ left: 0, behavior: "auto" });
+      setTimeout(checkNavScroll, 100);
+      return;
+    }
+
+    const tabStart = Math.max(0, targetBtn.offsetLeft - 4);
+    const tabEnd = targetBtn.offsetLeft + targetBtn.offsetWidth;
+    const currentLeft = container.scrollLeft;
+    const currentRight = currentLeft + container.clientWidth;
+
+    // If active tab is already fully visible inside visible window, do not scroll
+    if (tabStart >= currentLeft - 2 && tabEnd <= currentRight + 2) {
+      checkNavScroll();
+      return;
+    }
+
+    // If active tab fits within container at scrollLeft = 0, stay at 0
+    if (tabEnd <= container.clientWidth) {
+      container.scrollTo({ left: 0, behavior: isMount ? "auto" : "smooth" });
+      setTimeout(checkNavScroll, 100);
+      return;
+    }
+
+    // Target tab needs scrolling: align to a tab boundary so left edge is never clipped
+    let targetScroll = tabStart;
+    if (tabStart >= currentLeft) {
+      for (let i = 0; i < allBtns.length; i++) {
+        const candStart = Math.max(0, allBtns[i].offsetLeft - 4);
+        if (candStart + container.clientWidth >= tabEnd + 4 && candStart <= tabStart) {
+          targetScroll = candStart;
+          break;
+        }
+      }
+    }
+
+    const clamped = Math.max(0, Math.min(targetScroll, maxScroll));
+    container.scrollTo({ left: clamped, behavior: isMount ? "auto" : "smooth" });
+    setTimeout(checkNavScroll, 150);
+  }, [checkNavScroll]);
 
   useEffect(() => {
     checkNavScroll();
@@ -60,20 +120,22 @@ export default function EnterprisePortal() {
     return () => window.removeEventListener("resize", checkNavScroll);
   }, [checkNavScroll]);
 
-  // Ensure active tab is visible when changed without breaking left edge for first tab
   useEffect(() => {
-    if (navTabsRef.current) {
-      if (activeTab === "crm") {
-        navTabsRef.current.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        const activeBtn = navTabsRef.current.querySelector(`.ent-tab-button.active`);
-        if (activeBtn) {
-          activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    const timer = setTimeout(() => {
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+        if (activeTab === "crm") {
+          if (navTabsRef.current) navTabsRef.current.scrollLeft = 0;
+          checkNavScroll();
+        } else {
+          scrollToTab(activeTab, true);
         }
+      } else {
+        scrollToTab(activeTab, false);
       }
-      setTimeout(checkNavScroll, 250);
-    }
-  }, [activeTab, checkNavScroll]);
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [activeTab, scrollToTab, checkNavScroll]);
 
   const handleTabChange = (tabKey) => {
     setActiveTab(tabKey);
@@ -81,11 +143,39 @@ export default function EnterprisePortal() {
   };
 
   const scrollNav = (direction) => {
-    if (navTabsRef.current) {
-      const scrollAmount = direction === "left" ? -280 : 280;
-      navTabsRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-      setTimeout(checkNavScroll, 300);
+    const container = navTabsRef.current;
+    if (!container) return;
+    const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth);
+    const allBtns = Array.from(container.querySelectorAll(".ent-tab-button"));
+    if (allBtns.length === 0) return;
+
+    const currentLeft = container.scrollLeft;
+
+    if (direction === "right") {
+      let nextTab = null;
+      for (const btn of allBtns) {
+        const btnStart = Math.max(0, btn.offsetLeft - 4);
+        if (btnStart > currentLeft + 8) {
+          nextTab = btn;
+          break;
+        }
+      }
+      const target = nextTab ? Math.max(0, nextTab.offsetLeft - 4) : maxScroll;
+      container.scrollTo({ left: Math.min(target, maxScroll), behavior: "smooth" });
+    } else {
+      let prevTab = null;
+      for (let i = allBtns.length - 1; i >= 0; i--) {
+        const btn = allBtns[i];
+        const btnStart = Math.max(0, btn.offsetLeft - 4);
+        if (btnStart < currentLeft - 8) {
+          prevTab = btn;
+          break;
+        }
+      }
+      const target = prevTab ? Math.max(0, prevTab.offsetLeft - 4) : 0;
+      container.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
     }
+    setTimeout(checkNavScroll, 250);
   };
 
   const handleLogout = () => {
@@ -148,17 +238,16 @@ export default function EnterprisePortal() {
 
       {/* Main Suite Navigation Bar */}
       <nav className="enterprise-nav-tabs" aria-label="Enterprise Navigation">
-        {canScrollLeft && (
-          <button
-            type="button"
-            className="ent-nav-scroll-btn scroll-left"
-            onClick={() => scrollNav("left")}
-            aria-label="Scroll navigation left"
-            title="Scroll left"
-          >
-            ‹
-          </button>
-        )}
+        <button
+          type="button"
+          className={`ent-nav-scroll-btn scroll-left ${hasOverflow && canScrollLeft ? "visible" : "hidden"}`}
+          onClick={() => scrollNav("left")}
+          disabled={!hasOverflow || !canScrollLeft}
+          aria-label="Scroll navigation left"
+          title="Scroll left"
+        >
+          ‹
+        </button>
         <div
           className="nav-tabs-scrollable"
           ref={navTabsRef}
@@ -167,6 +256,7 @@ export default function EnterprisePortal() {
           {navigationItems.map((item) => (
             <button
               key={item.key}
+              data-tab-key={item.key}
               type="button"
               className={`ent-tab-button ${activeTab === item.key ? "active" : ""}`}
               onClick={() => handleTabChange(item.key)}
@@ -177,17 +267,16 @@ export default function EnterprisePortal() {
             </button>
           ))}
         </div>
-        {canScrollRight && (
-          <button
-            type="button"
-            className="ent-nav-scroll-btn scroll-right"
-            onClick={() => scrollNav("right")}
-            aria-label="Scroll navigation right"
-            title="Scroll right"
-          >
-            ›
-          </button>
-        )}
+        <button
+          type="button"
+          className={`ent-nav-scroll-btn scroll-right ${hasOverflow && canScrollRight ? "visible" : "hidden"}`}
+          onClick={() => scrollNav("right")}
+          disabled={!hasOverflow || !canScrollRight}
+          aria-label="Scroll navigation right"
+          title="Scroll right"
+        >
+          ›
+        </button>
       </nav>
 
       {/* Active Enterprise Module Display */}
