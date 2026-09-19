@@ -230,7 +230,7 @@ export default function DealsModule() {
                     <div className="sub-text">{deal.buyer_phone}</div>
                   </td>
                   <td>
-                    <strong style={{ color: "#2563eb" }}>₹{Number(deal.agreed_price || 0).toLocaleString("en-IN")}</strong>
+                    <strong style={{ color: "#b89047" }}>₹{Number(deal.agreed_price || 0).toLocaleString("en-IN")}</strong>
                     {deal.token_amount && (
                       <div className="sub-text">Token: ₹{Number(deal.token_amount).toLocaleString("en-IN")}</div>
                     )}

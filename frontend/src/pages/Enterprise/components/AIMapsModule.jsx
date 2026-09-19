@@ -231,7 +231,7 @@ export default function AIMapsModule() {
                         <td><strong>{p.title}</strong></td>
                         <td>{p.city}, {p.state}</td>
                         <td>{p.bedrooms} BHK • {p.area} sqft</td>
-                        <td><strong style={{ color: "#2563eb" }}>₹{Number(p.price).toLocaleString("en-IN")}</strong></td>
+                        <td><strong style={{ color: "#b89047" }}>₹{Number(p.price).toLocaleString("en-IN")}</strong></td>
                         <td><span className="badge-pill">{p.status}</span></td>
                       </tr>
                     ))}
@@ -330,7 +330,7 @@ export default function AIMapsModule() {
                   <strong style={{ fontSize: "0.85rem", color: "var(--ent-text-secondary)" }}>Key Alignment Signals:</strong>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.5rem" }}>
                     {matchResult.reasons.map((reason, idx) => (
-                      <span key={idx} className="badge-pill" style={{ background: "#eff6ff", color: "#1d4ed8" }}>
+                      <span key={idx} className="badge-pill" style={{ background: "#ede9fe", color: "#4338ca", border: "1px solid #c7d2fe" }}>
                         ✓ {reason}
                       </span>
                     ))}

@@ -87,7 +87,7 @@ export default function AnalyticsSecurityModule() {
               <div className="ent-kpi-grid">
                 <div className="ent-kpi-card">
                   <span className="ent-kpi-title">Total Portfolio Valuation</span>
-                  <span className="ent-kpi-val" style={{ color: "#2563eb" }}>
+                  <span className="ent-kpi-val" style={{ color: "#b89047" }}>
                     ₹{Number(executiveBI.metrics?.portfolioValue || 0).toLocaleString("en-IN")}
                   </span>
                   <span className="ent-kpi-sub">Across {executiveBI.metrics?.totalProperties || 0} assets</span>

@@ -21,7 +21,7 @@ function SavedProperties() {
   const [showCreateCol, setShowCreateCol] = useState(false);
   const [colName, setColName] = useState("");
   const [colDesc, setColDesc] = useState("");
-  const [colColor, setColColor] = useState("#3b82f6");
+  const [colColor, setColColor] = useState("#4f46e5");
   const [selectedCol, setSelectedCol] = useState(null);
 
   // Tab 3: Saved Searches
@@ -348,7 +348,7 @@ function SavedProperties() {
                           {!isEditing ? (
                             <button
                               type="button"
-                              style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontSize: "11px", fontWeight: 700 }}
+                              style={{ background: "none", border: "none", color: "#4f46e5", cursor: "pointer", fontSize: "11px", fontWeight: 700 }}
                               onClick={() => {
                                 setEditingNotesId(p.id);
                                 setNotesInput(item.personalNotes || "");
@@ -447,7 +447,7 @@ function SavedProperties() {
                 <div>
                   <button
                     type="button"
-                    style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontSize: "13px", fontWeight: 700, marginBottom: "6px" }}
+                    style={{ background: "none", border: "none", color: "#4f46e5", cursor: "pointer", fontSize: "13px", fontWeight: 700, marginBottom: "6px" }}
                     onClick={() => setSelectedCol(null)}
                   >
                     ← Back to All Collections
@@ -578,14 +578,14 @@ function SavedProperties() {
                     <div
                       key={col.id}
                       className="collection-card"
-                      style={{ borderTopColor: col.color || "#3b82f6" }}
+                      style={{ borderTopColor: col.color || "#4f46e5" }}
                       onClick={() => handleViewCollection(col.id)}
                     >
                       <h4 className="collection-card-title">{col.name}</h4>
                       <p className="collection-card-desc">{col.description || "Curated collection"}</p>
                       <div className="collection-card-footer">
                         <span>📁 {col.itemCount} properties</span>
-                        <span style={{ color: "#2563eb", fontWeight: 700 }}>Open →</span>
+                        <span style={{ color: "#4f46e5", fontWeight: 700 }}>Open →</span>
                       </div>
                     </div>
                   ))}

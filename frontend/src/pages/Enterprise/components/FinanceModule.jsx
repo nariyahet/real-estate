@@ -381,7 +381,7 @@ export default function FinanceModule() {
                         </td>
                         <td>₹{Number(inv.amount).toLocaleString("en-IN")}</td>
                         <td>₹{Number(inv.tax_amount || 0).toLocaleString("en-IN")}</td>
-                        <td><strong style={{ color: "#2563eb" }}>₹{Number(inv.total_amount).toLocaleString("en-IN")}</strong></td>
+                        <td><strong style={{ color: "#b89047" }}>₹{Number(inv.total_amount).toLocaleString("en-IN")}</strong></td>
                         <td>{new Date(inv.due_date).toLocaleDateString("en-IN")}</td>
                         <td>
                           <span className={`badge-status status-${(inv.status || 'Draft').toLowerCase()}`}>

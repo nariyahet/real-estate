@@ -339,8 +339,8 @@
 
 .vault-input:focus,
 .vault-select:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: #0b1329;
+  box-shadow: 0 0 0 3px rgba(11, 19, 41, 0.12);
 }
 
 /* Dropzone */
@@ -357,8 +357,8 @@
 
 .vault-dropzone:hover,
 .vault-dropzone.dragover {
-  border-color: #3b82f6;
-  background: #eff6ff;
+  border-color: #4f46e5;
+  background: #faf5ff;
 }
 
 .vault-dropzone.has-file {
@@ -543,7 +543,8 @@
 }
 
 .vault-search-input:focus {
-  border-color: #3b82f6;
+  border-color: #0b1329;
+  box-shadow: 0 0 0 3px rgba(11, 19, 41, 0.1);
   width: 220px;
 }
 
@@ -650,9 +651,9 @@
 }
 
 .doc-badge-primary {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: #ede9fe;
+  color: #4338ca;
+  border: 1px solid #ddd6fe;
 }
 
 .doc-badge-success {
@@ -737,14 +738,15 @@
 }
 
 .vault-btn-download {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: #f8fafc;
+  color: #0b1329;
+  border: 1px solid #cbd5e1;
 }
 
 .vault-btn-download:hover:not(:disabled) {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #0b1329;
+  color: #ffffff;
+  border-color: #0b1329;
 }
 
 .vault-btn-delete {
@@ -825,7 +827,7 @@
   width: 32px;
   height: 32px;
   border: 3px solid #e2e8f0;
-  border-top-color: #3b82f6;
+  border-top-color: #0b1329;
   border-radius: 50%;
   animation: vaultSpin 0.8s linear infinite;
   margin: 0 auto 12px auto;
@@ -834,8 +836,8 @@
 .vault-btn-spinner {
   width: 12px;
   height: 12px;
-  border: 2px solid rgba(29, 78, 216, 0.3);
-  border-top-color: #1d4ed8;
+  border: 2px solid rgba(11, 19, 41, 0.3);
+  border-top-color: #0b1329;
   border-radius: 50%;
   animation: vaultSpin 0.6s linear infinite;
 }
@@ -1077,7 +1079,8 @@
 }
 
 .vault-date-input:focus {
-  border-color: #3b82f6;
+  border-color: #0b1329;
+  box-shadow: 0 0 0 3px rgba(11, 19, 41, 0.1);
 }
 
 .vault-cell-date-info {

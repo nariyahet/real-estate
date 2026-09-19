@@ -159,8 +159,8 @@ function Dashboard() {
 
           <button
             type="button"
-            className="nav-item"
-            style={{ color: "#3b82f6", fontWeight: "600" }}
+            className="nav-item enterprise-nav-item"
+            style={{ color: "#a5b4fc", fontWeight: "700" }}
             onClick={() => navigate("/enterprise")}
           >
             <span>🚀</span>
