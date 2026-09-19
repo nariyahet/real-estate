@@ -1,3 +1,84 @@
+:root {
+  /* Primary Luxury Brand Palette */
+  --brand-navy-darkest: #050b17;
+  --brand-navy-dark: #070d1e;
+  --brand-navy: #0b1329;
+  --brand-navy-light: #162244;
+  --brand-navy-surface: #1e293b;
+  --brand-navy-border: #243456;
+
+  /* Royal & Elegant Purple */
+  --brand-purple: #4f46e5;
+  --brand-purple-vivid: #6366f1;
+  --brand-purple-accent: #7c3aed;
+  --brand-purple-dark: #3730a3;
+  --brand-purple-soft: #f5f3ff;
+  --brand-purple-subtle: #ede9fe;
+  --brand-purple-border: #ddd6fe;
+  --brand-purple-glow: rgba(99, 102, 241, 0.18);
+
+  /* Champagne & Warm Gold */
+  --brand-gold: #c5a880;
+  --brand-gold-warm: #b89047;
+  --brand-gold-deep: #96702e;
+  --brand-gold-light: #dfb76c;
+  --brand-gold-soft: #fcf9f2;
+  --brand-gold-subtle: #f7f1e3;
+  --brand-gold-border: rgba(197, 168, 128, 0.35);
+  --brand-gold-glow: rgba(197, 168, 128, 0.22);
+
+  /* Surfaces */
+  --surface-page: #f4f6fb;
+  --surface-card: #ffffff;
+  --surface-card-subtle: #fafbfd;
+  --surface-hover: #f1f4f9;
+  --surface-active: #e8edf5;
+  --surface-muted: #f8fafc;
+
+  /* Typography Colors */
+  --text-primary: #0b1329;
+  --text-secondary: #475569;
+  --text-muted: #8492a6;
+  --text-inverse: #ffffff;
+  --text-gold: #b89047;
+  --text-purple: #4f46e5;
+
+  /* Borders & Radius & Shadows */
+  --border-subtle: #e2e8f0;
+  --border-card: #e8edf5;
+  --border-focus: #6366f1;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --shadow-sm: 0 1px 3px rgba(11, 19, 41, 0.04), 0 1px 2px rgba(11, 19, 41, 0.03);
+  --shadow-md: 0 4px 14px -1px rgba(11, 19, 41, 0.07), 0 2px 6px -1px rgba(11, 19, 41, 0.04);
+  --shadow-lg: 0 12px 30px -4px rgba(11, 19, 41, 0.1), 0 4px 10px -2px rgba(11, 19, 41, 0.05);
+  --shadow-gold: 0 4px 16px rgba(197, 168, 128, 0.2);
+  --shadow-purple: 0 4px 16px rgba(99, 102, 241, 0.2);
+
+  /* Functional Semantic Status Colors */
+  --color-success: #10b981;
+  --color-success-dark: #059669;
+  --color-success-soft: #ecfdf5;
+  --color-success-border: #a7f3d0;
+
+  --color-warning: #f59e0b;
+  --color-warning-dark: #d97706;
+  --color-warning-soft: #fffbeb;
+  --color-warning-border: #fde68a;
+
+  --color-danger: #ef4444;
+  --color-danger-dark: #dc2626;
+  --color-danger-soft: #fef2f2;
+  --color-danger-border: #fecaca;
+
+  --color-info: #3b82f6;
+  --color-info-dark: #2563eb;
+  --color-info-soft: #eff6ff;
+  --color-info-border: #bfdbfe;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -14,15 +95,15 @@ html, body {
 body {
   margin: 0;
   font-family:
+    "Plus Jakarta Sans",
     Inter,
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
     Roboto,
-    Arial,
     sans-serif;
-  background: #f5f7fb;
-  color: #1f2937;
+  background: var(--surface-page);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

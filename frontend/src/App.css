@@ -38,7 +38,7 @@ button {
 .sidebar {
   width: 250px;
   min-height: 100vh;
-  background: #111827;
+  background: linear-gradient(180deg, #070d1e 0%, #0b1329 100%);
   color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -48,6 +48,7 @@ button {
   top: 0;
   bottom: 0;
   z-index: 100;
+  border-right: 1px solid rgba(197, 168, 128, 0.15);
 }
 
 .brand {
@@ -64,7 +65,9 @@ button {
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: #2563eb;
+  background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 50%, #7c3aed 100%);
+  border: 1px solid rgba(197, 168, 128, 0.45);
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.35);
   font-size: 21px;
   flex-shrink: 0;
 }
@@ -77,7 +80,7 @@ button {
 }
 
 .brand span {
-  color: #9ca3af;
+  color: #94a3b8;
   font-size: 12px;
 }
 
@@ -92,7 +95,7 @@ button {
   width: 100%;
   border: 0;
   background: transparent;
-  color: #aeb7c7;
+  color: #94a3b8;
   padding: 13px 14px;
   border-radius: 10px;
   display: flex;
@@ -103,16 +106,19 @@ button {
     background 0.2s ease,
     color 0.2s ease,
     transform 0.2s ease;
+  font-weight: 500;
 }
 
 .nav-item:hover {
-  background: #1f2937;
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
 }
 
 .nav-item.active {
-  background: #2563eb;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #7c3aed 100%);
   color: #ffffff;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  font-weight: 700;
 }
 
 .nav-item span {
@@ -126,8 +132,8 @@ button {
 }
 
 .logout-btn:hover {
-  background: #7f1d1d;
-  color: #ffffff;
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
 }
 
 .main-content {
@@ -139,7 +145,7 @@ button {
 .topbar {
   min-height: 86px;
   background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e2e8f0;
   padding: 18px 34px;
   display: flex;
   align-items: center;
@@ -148,17 +154,18 @@ button {
 
 .page-label {
   margin: 0 0 4px;
-  color: #2563eb;
+  color: #b89047;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 1.5px;
+  text-transform: uppercase;
 }
 
 .topbar h1 {
   margin: 0;
-  color: #172033;
+  color: #0b1329;
   font-size: 25px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .admin-profile {
@@ -171,7 +178,8 @@ button {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: #2563eb;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border: 1px solid rgba(197, 168, 128, 0.45);
   color: #ffffff;
   display: grid;
   place-items: center;
@@ -185,11 +193,11 @@ button {
 
 .admin-profile strong {
   font-size: 14px;
-  color: #172033;
+  color: #0b1329;
 }
 
 .admin-profile span {
-  color: #6b7280;
+  color: #64748b;
   font-size: 12px;
   margin-top: 2px;
 }
@@ -222,8 +230,9 @@ button {
 }
 
 .welcome-card {
-  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  background: linear-gradient(135deg, #070d1e 0%, #0b1329 45%, #1e1b4b 75%, #312e81 100%);
   color: #ffffff;
+  border: 1px solid rgba(197, 168, 128, 0.25);
   border-radius: 18px;
   padding: 28px 30px;
   min-height: 160px;
@@ -232,12 +241,15 @@ button {
   justify-content: space-between;
   margin-bottom: 26px;
   overflow: hidden;
+  box-shadow: 0 12px 30px rgba(7, 13, 30, 0.18);
 }
 
 .welcome-card span {
-  opacity: 0.8;
-  font-size: 13px;
-  font-weight: 600;
+  color: #dfb76c;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .welcome-card h2 {
@@ -249,13 +261,13 @@ button {
 
 .welcome-card p {
   margin: 0;
-  color: #ffffff;
-  opacity: 0.82;
+  color: #e2e8f0;
+  opacity: 0.9;
 }
 
 .welcome-icon {
   font-size: 78px;
-  opacity: 0.2;
+  opacity: 0.25;
   margin-right: 30px;
 }
 
@@ -343,12 +355,14 @@ button {
   padding: 9px 15px;
   border-radius: 9px;
   transition: 0.2s;
+  cursor: pointer;
+  font-weight: 600;
 }
 
 .refresh-btn:hover {
   background: #f8fafc;
-  border-color: #2563eb;
-  color: #2563eb;
+  border-color: #4f46e5;
+  color: #4f46e5;
 }
 
 .property-status-grid {
@@ -371,22 +385,24 @@ button {
 }
 
 .status-card span {
-  color: #6b7280;
+  color: #64748b;
   font-size: 13px;
+  font-weight: 600;
 }
 
 .status-card strong {
   margin-top: 9px;
-  color: #172033;
+  color: #0b1329;
   font-size: 25px;
+  font-weight: 800;
 }
 
 .available {
-  border-top: 3px solid #16a34a;
+  border-top: 3px solid #10b981;
 }
 
 .sold {
-  border-top: 3px solid #dc2626;
+  border-top: 3px solid #ef4444;
 }
 
 .rented {
@@ -394,13 +410,13 @@ button {
 }
 
 .inactive {
-  border-top: 3px solid #6b7280;
+  border-top: 3px solid #64748b;
 }
 
 .data-card {
   width: 100%;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 15px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03);
@@ -424,18 +440,20 @@ thead {
 th {
   padding: 15px 18px;
   text-align: left;
-  color: #475569;
-  font-size: 12px;
+  color: #334155;
+  font-size: 11px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   white-space: nowrap;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 td {
   padding: 15px 18px;
-  color: #334155;
+  color: #1e293b;
   font-size: 13px;
-  border-bottom: 1px solid #eef0f4;
+  border-bottom: 1px solid #eef2f8;
   white-space: nowrap;
 }
 

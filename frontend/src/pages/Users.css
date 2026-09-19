@@ -26,22 +26,23 @@
 .users-label {
   display: block;
   margin-bottom: 6px;
-  color: #2563eb;
+  color: #b89047;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .users-header h1 {
   margin: 0 0 6px;
-  color: #172033;
+  color: #0b1329;
   font-size: 30px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .users-header p {
   margin: 0;
-  color: #6b7280;
+  color: #64748b;
   font-size: 14px;
 }
 
@@ -67,8 +68,8 @@
 
 .users-refresh-btn:hover:not(:disabled) {
   background: #f8fafc;
-  color: #0f172a;
-  border-color: #94a3b8;
+  color: #4f46e5;
+  border-color: #4f46e5;
   transform: translateY(-1px);
 }
 
@@ -82,9 +83,9 @@
   width: 100%;
   overflow: hidden;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 25px rgba(11, 19, 41, 0.04);
 }
 
 .users-table-wrapper {
@@ -105,12 +106,12 @@
 .users-table th {
   padding: 16px 18px;
   text-align: left;
-  color: #64748b;
+  color: #334155;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border-bottom: 1px solid #e5e7eb;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
 }
 
@@ -127,7 +128,7 @@
 }
 
 .users-table tbody tr:hover {
-  background: #f8fbff;
+  background: #fbfbfe;
 }
 
 .users-table tbody tr:last-child td {

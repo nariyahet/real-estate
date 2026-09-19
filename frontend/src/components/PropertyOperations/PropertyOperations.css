@@ -75,20 +75,21 @@
 }
 
 .ops-badge-secure {
-  background: #eff6ff;
-  color: #2563eb;
+  background: rgba(197, 168, 128, 0.15);
+  color: #dfb76c;
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 6px;
-  border: 1px solid #bfdbfe;
+  border: 1px solid rgba(197, 168, 128, 0.35);
+  text-transform: uppercase;
 }
 
 .ops-modal-title {
   margin: 0 0 4px 0;
   font-size: 18px;
   font-weight: 800;
-  color: #0f172a;
+  color: #0b1329;
 }
 
 .ops-modal-subtitle {
@@ -153,12 +154,12 @@
 }
 
 .ops-tab-btn:hover {
-  color: #1e293b;
+  color: #0b1329;
 }
 
 .ops-tab-btn.active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
   background: #ffffff;
 }
 
@@ -293,13 +294,14 @@
 }
 
 .ops-input:focus, .ops-select:focus, .ops-textarea:focus {
-  border-color: #3b82f6;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
 .ops-btn-primary {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #7c3aed 100%);
   color: #ffffff;
-  border: none;
+  border: 1px solid rgba(124, 58, 237, 0.3);
   border-radius: 8px;
   padding: 9px 18px;
   font-size: 13px;
@@ -308,12 +310,14 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
   transition: all 0.2s ease;
 }
 
 .ops-btn-primary:hover:not(:disabled) {
-  opacity: 0.95;
+  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 50%, #6d28d9 100%);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
 }
 
 .ops-btn-primary:disabled {

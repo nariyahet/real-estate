@@ -17,39 +17,42 @@
 .dashboard-label {
   display: block;
   margin-bottom: 6px;
-  color: #2563eb;
+  color: #b89047;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .dashboard-header h1 {
   margin: 0 0 6px;
-  color: #172033;
+  color: #0b1329;
   font-size: 30px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .dashboard-header p {
   margin: 0;
-  color: #6b7280;
+  color: #64748b;
   font-size: 14px;
 }
 
 .dashboard-refresh {
-  border: none;
+  border: 1px solid rgba(124, 58, 237, 0.3);
   border-radius: 10px;
   padding: 11px 20px;
-  background: #2563eb;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   color: #ffffff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
   transition: 0.2s ease;
 }
 
 .dashboard-refresh:hover {
-  background: #1d4ed8;
+  background: linear-gradient(135deg, #4338ca, #6d28d9);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
   transform: translateY(-1px);
 }
 
@@ -61,27 +64,30 @@
   margin-bottom: 24px;
   padding: 28px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  background: linear-gradient(135deg, #070d1e 0%, #0b1329 45%, #1e1b4b 75%, #312e81 100%);
   color: #ffffff;
-  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.2);
+  border: 1px solid rgba(197, 168, 128, 0.25);
+  box-shadow: 0 12px 30px rgba(7, 13, 30, 0.18);
 }
 
 .dashboard-welcome > div:first-child span {
   font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  opacity: 0.8;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #dfb76c;
+  text-transform: uppercase;
 }
 
 .dashboard-welcome h2 {
   margin: 8px 0;
   font-size: 24px;
+  font-weight: 700;
 }
 
 .dashboard-welcome p {
   margin: 0;
   max-width: 600px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.88);
   font-size: 14px;
 }
 
@@ -93,7 +99,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(197, 168, 128, 0.3);
   font-size: 34px;
 }
 
@@ -110,9 +117,15 @@
   gap: 15px;
   padding: 22px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 8px 25px rgba(11, 19, 41, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(11, 19, 41, 0.08);
 }
 
 .stat-card > div:last-child {
@@ -128,7 +141,7 @@
 }
 
 .stat-card strong {
-  color: #172033;
+  color: #0b1329;
   font-size: 26px;
   font-weight: 800;
 }
@@ -146,19 +159,23 @@
 
 .users-icon {
   background: #eff6ff;
+  color: #2563eb;
 }
 
 .agents-icon {
   background: #f5f3ff;
+  color: #7c3aed;
 }
 
 .properties-icon {
-  background: #fff7ed;
+  background: #fcf9f2;
+  color: #b89047;
+  border: 1px solid rgba(197, 168, 128, 0.3);
 }
 
 .available-icon {
-  background: #f0fdf4;
-  color: #15803d;
+  background: #ecfdf5;
+  color: #059669;
   font-size: 24px;
   font-weight: 800;
 }
@@ -166,9 +183,9 @@
 .overview-card {
   padding: 26px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 18px;
-  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 8px 25px rgba(11, 19, 41, 0.04);
 }
 
 .overview-header {
@@ -176,16 +193,18 @@
 }
 
 .overview-header span {
-  color: #2563eb;
+  color: #b89047;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .overview-header h2 {
   margin: 5px 0 0;
-  color: #172033;
+  color: #0b1329;
   font-size: 21px;
+  font-weight: 800;
 }
 
 .status-grid {
@@ -214,9 +233,9 @@
 }
 
 .status-card.available {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
-  color: #15803d;
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
 }
 
 .status-card.sold {
@@ -226,9 +245,9 @@
 }
 
 .status-card.rented {
-  border-color: #bfdbfe;
-  background: #eff6ff;
-  color: #1d4ed8;
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #b45309;
 }
 
 .status-card.inactive {
@@ -285,8 +304,8 @@
 .dashboard-loader {
   width: 32px;
   height: 32px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #2563eb;
+  border: 3px solid #e2e8f0;
+  border-top-color: #4f46e5;
   border-radius: 50%;
   animation: dashboard-spin 0.8s linear infinite;
 }

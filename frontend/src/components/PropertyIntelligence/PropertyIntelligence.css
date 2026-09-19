@@ -82,8 +82,9 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: #2563eb;
-  background: #eff6ff;
+  color: #dfb76c;
+  background: rgba(197, 168, 128, 0.15);
+  border: 1px solid rgba(197, 168, 128, 0.35);
   padding: 4px 10px;
   border-radius: 6px;
   text-transform: uppercase;
@@ -112,7 +113,7 @@
   margin: 0;
   font-size: 22px;
   font-weight: 800;
-  color: #0f172a;
+  color: #0b1329;
   line-height: 1.25;
 }
 
@@ -134,16 +135,16 @@
 
 .intel-header-price-box {
   text-align: right;
-  background: #f8fafc;
+  background: #fcf9f2;
   padding: 8px 16px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(197, 168, 128, 0.35);
 }
 
 .intel-header-price-label {
   font-size: 11px;
   font-weight: 700;
-  color: #64748b;
+  color: #785a21;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -151,7 +152,7 @@
 .intel-header-price-value {
   font-size: 20px;
   font-weight: 800;
-  color: #0f172a;
+  color: #b89047;
 }
 
 .intel-close-btn {
@@ -347,9 +348,9 @@
 }
 
 .intel-tab-btn.active {
-  background: #2563eb;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #7c3aed 100%);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 /* Tab Content */

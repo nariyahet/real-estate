@@ -16,7 +16,7 @@
 .saved-page-title {
   font-size: 28px;
   font-weight: 800;
-  color: #0f172a;
+  color: #0b1329;
   margin: 0 0 8px 0;
   letter-spacing: -0.5px;
 }
@@ -52,12 +52,12 @@
 }
 
 .saved-tab-button:hover {
-  color: #0f172a;
+  color: #0b1329;
 }
 
 .saved-tab-button.active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
 }
 
 .saved-badge-count {
@@ -70,8 +70,8 @@
 }
 
 .saved-tab-button.active .saved-badge-count {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: #ede9fe;
+  color: #4338ca;
 }
 
 /* Saved Properties Grid */
@@ -86,7 +86,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 4px 12px rgba(11, 19, 41, 0.04);
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -94,7 +94,7 @@
 
 .saved-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 10px 25px -5px rgba(11, 19, 41, 0.09);
 }
 
 .saved-card-img-wrap {
@@ -114,12 +114,13 @@
   position: absolute;
   top: 12px;
   left: 12px;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(11, 19, 41, 0.85);
   color: #ffffff;
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 700;
+  border: 1px solid rgba(197, 168, 128, 0.3);
 }
 
 .saved-card-remove-btn {
@@ -156,14 +157,14 @@
 .saved-card-price {
   font-size: 20px;
   font-weight: 800;
-  color: #0f172a;
+  color: #b89047;
   margin-bottom: 4px;
 }
 
 .saved-card-title {
   font-size: 15px;
   font-weight: 700;
-  color: #1e293b;
+  color: #0b1329;
   margin: 0 0 6px 0;
   line-height: 1.4;
 }
@@ -220,12 +221,13 @@
 }
 
 .saved-tag-pill {
-  background: #eff6ff;
-  color: #2563eb;
+  background: #f5f3ff;
+  color: #4338ca;
   font-size: 10px;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
+  border: 1px solid #c7d2fe;
 }
 
 .saved-card-actions {
@@ -236,9 +238,9 @@
 
 .saved-view-btn {
   flex: 1;
-  background: #2563eb;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #7c3aed 100%);
   color: #ffffff;
-  border: none;
+  border: 1px solid rgba(124, 58, 237, 0.3);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 13px;
@@ -246,11 +248,13 @@
   text-align: center;
   text-decoration: none;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
   transition: all 0.2s ease;
 }
 
 .saved-view-btn:hover {
-  background: #1d4ed8;
+  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 50%, #6d28d9 100%);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
 }
 
 .saved-col-btn {
