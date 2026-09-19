@@ -206,8 +206,7 @@ const updateInvoiceStatus = async (req, res) => {
     await pool.execute(
       `UPDATE finance_invoices 
        SET status = ?, 
-           paid_at = CASE WHEN ? = 'Paid' THEN NOW() ELSE paid_at END,
-           updated_at = NOW()
+           paid_at = CASE WHEN ? = 'Paid' THEN NOW() ELSE paid_at END
        WHERE id = ?`,
       [status, status, Number(id)]
     );

@@ -41,6 +41,21 @@ app.use(
 
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Real Estate API is running",
+  });
+});
+
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Backend server is healthy",
+    port: PORT,
+  });
+});
+
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
@@ -74,21 +89,6 @@ app.use("/api/communications", communicationsRoutes);
 app.use("/api", aiMapsRoutes);
 app.use("/api", enterpriseRoutes);
 app.use("/api", savedRoutes);
-
-app.get("/", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Real Estate API is running",
-  });
-});
-
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Backend server is healthy",
-    port: PORT,
-  });
-});
 
 app.use((req, res) => {
   res.status(404).json({
