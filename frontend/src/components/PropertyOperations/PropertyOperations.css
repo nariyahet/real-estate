@@ -158,8 +158,8 @@
 }
 
 .ops-tab-btn.active {
-  color: #4f46e5;
-  border-bottom-color: #4f46e5;
+  color: #2563EB;
+  border-bottom-color: #2563EB;
   background: #ffffff;
 }
 
@@ -294,14 +294,14 @@
 }
 
 .ops-input:focus, .ops-select:focus, .ops-textarea:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .ops-btn-primary {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #7c3aed 100%);
+  background: #2563EB;
   color: #ffffff;
-  border: 1px solid rgba(124, 58, 237, 0.3);
+  border: 1px solid #1D4ED8;
   border-radius: 8px;
   padding: 9px 18px;
   font-size: 13px;
@@ -310,14 +310,15 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
   transition: all 0.2s ease;
 }
 
 .ops-btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 50%, #6d28d9 100%);
+  background: #1D4ED8;
+  border-color: #1E40AF;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
 .ops-btn-primary:disabled {

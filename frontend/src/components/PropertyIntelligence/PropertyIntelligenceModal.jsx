@@ -1150,7 +1150,7 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
                       <div className="intel-control-item">
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
                           <span className="intel-control-label">Holding Period:</span>
-                          <strong style={{ fontSize: "12px", color: "#4f46e5" }}>
+                          <strong style={{ fontSize: "12px", color: "#2563EB" }}>
                             {holdingYears} {holdingYears === 1 ? "Year" : "Years"}
                           </strong>
                         </div>
@@ -1213,7 +1213,7 @@ function PropertyIntelligenceModal({ isOpen, property, onClose }) {
 
                       <div className="intel-stat-box">
                         <span className="intel-stat-box-label">Total Projected ROI</span>
-                        <span className="intel-stat-box-value" style={{ color: "#4f46e5" }}>
+                        <span className="intel-stat-box-value" style={{ color: "#2563EB" }}>
                           {formatPercent(currentRoi.roiPercentage, true)}
                         </span>
                         <span className="intel-stat-box-sub">

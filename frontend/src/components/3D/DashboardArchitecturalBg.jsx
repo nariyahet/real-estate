@@ -53,66 +53,77 @@ export default function DashboardArchitecturalBg({ height = 180 }) {
     // Architectural Building Group
     const buildingGroup = new THREE.Group();
 
-    // Tower Blocks with glass/solid materials
-    const glassMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8,
-      transparent: true,
-      opacity: 0.35,
-      roughness: 0.1,
-      metalness: 0.8,
+    // High-contrast, premium materials
+    const concreteMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc, // Crisp Soft White
+      roughness: 0.3,
+      metalness: 0.15,
     });
 
-    const concreteMat = new THREE.MeshStandardMaterial({
-      color: 0x0e2f56,
-      roughness: 0.6,
+    const darkAccentMat = new THREE.MeshStandardMaterial({
+      color: 0x0b2545, // Deep Navy architectural contrast
+      roughness: 0.5,
       metalness: 0.2,
     });
 
-    const goldAccentMat = new THREE.MeshStandardMaterial({
-      color: 0xd4a72c,
-      roughness: 0.3,
-      metalness: 0.8,
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8, // Sky Blue Glass
+      transparent: true,
+      opacity: 0.7,
+      roughness: 0.05,
+      metalness: 0.85,
     });
 
-    // Main Pavilion Volume
-    const mainBox = new THREE.Mesh(new THREE.BoxGeometry(4, 2.5, 3), concreteMat);
-    mainBox.position.set(0, 1.25, 0);
+    const goldAccentMat = new THREE.MeshStandardMaterial({
+      color: 0xd4a72c, // Rich Gold Accent
+      roughness: 0.2,
+      metalness: 0.9,
+    });
+
+    // Main Pavilion Volume (Crisp white modern facade)
+    const mainBox = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.6, 3.2), concreteMat);
+    mainBox.position.set(0, 1.3, 0);
     buildingGroup.add(mainBox);
 
-    // Glass cantilever floor
-    const glassFloor = new THREE.Mesh(new THREE.BoxGeometry(4.6, 1.2, 3.4), glassMat);
-    glassFloor.position.set(0.3, 2.8, 0.2);
+    // Glass cantilever floor (Sky Blue glass with interior warm glow)
+    const glassFloor = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.3, 3.6), glassMat);
+    glassFloor.position.set(0.4, 2.95, 0.3);
     buildingGroup.add(glassFloor);
 
     // Balcony rails / gold edge
-    const edgeBox = new THREE.Mesh(new THREE.BoxGeometry(4.7, 0.08, 3.5), goldAccentMat);
-    edgeBox.position.set(0.3, 3.45, 0.2);
+    const edgeBox = new THREE.Mesh(new THREE.BoxGeometry(4.9, 0.1, 3.7), goldAccentMat);
+    edgeBox.position.set(0.4, 3.65, 0.3);
     buildingGroup.add(edgeBox);
 
-    // Side annex
-    const annexBox = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.8, 2.5), concreteMat);
-    annexBox.position.set(-3.2, 0.9, 0);
+    // Side annex (Navy foundation block)
+    const annexBox = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.9, 2.6), darkAccentMat);
+    annexBox.position.set(-3.4, 0.95, 0);
     buildingGroup.add(annexBox);
 
-    // Wireframe edges on the structure
-    const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(4, 2.5, 3));
-    const lineMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.5 });
+    // Gold decorative roof cap
+    const roofCap = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.08, 2.7), goldAccentMat);
+    roofCap.position.set(-3.4, 1.95, 0);
+    buildingGroup.add(roofCap);
+
+    // Wireframe edges on main structure for architectural CAD blueprint effect
+    const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(4.2, 2.6, 3.2));
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 });
     const lineMesh = new THREE.LineSegments(edges, lineMat);
-    lineMesh.position.set(0, 1.25, 0);
+    lineMesh.position.set(0, 1.3, 0);
     buildingGroup.add(lineMesh);
 
     scene.add(buildingGroup);
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xe0f2fe, 1.2);
+    // Vivid Lighting setup
+    const ambientLight = new THREE.AmbientLight(0xe0f2fe, 1.8);
     scene.add(ambientLight);
 
-    const dirLight1 = new THREE.DirectionalLight(0x38bdf8, 2);
-    dirLight1.position.set(10, 15, 8);
+    const dirLight1 = new THREE.DirectionalLight(0x38bdf8, 3.0);
+    dirLight1.position.set(12, 16, 10);
     scene.add(dirLight1);
 
-    const dirLight2 = new THREE.DirectionalLight(0xd4a72c, 1.2);
-    dirLight2.position.set(-8, 6, -6);
+    const dirLight2 = new THREE.DirectionalLight(0xd4a72c, 2.2);
+    dirLight2.position.set(-10, 8, -6);
     scene.add(dirLight2);
 
     let animationId;
@@ -130,7 +141,7 @@ export default function DashboardArchitecturalBg({ height = 180 }) {
       animationId = requestAnimationFrame(animate);
       if (!isVisible) return;
 
-      buildingGroup.rotation.y += 0.003;
+      buildingGroup.rotation.y += 0.0035;
       gridHelper.rotation.y += 0.001;
       renderer.render(scene, camera);
     };
@@ -168,11 +179,11 @@ export default function DashboardArchitecturalBg({ height = 180 }) {
         top: 0,
         right: 0,
         bottom: 0,
-        width: "55%",
-        maxWidth: "520px",
+        width: "60%",
+        maxWidth: "600px",
         pointerEvents: "none",
         overflow: "hidden",
-        opacity: 0.85,
+        opacity: 1,
         zIndex: 1,
       }}
     />

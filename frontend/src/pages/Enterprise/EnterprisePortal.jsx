@@ -185,15 +185,15 @@ export default function EnterprisePortal() {
   };
 
   const navigationItems = [
-    { key: "crm", label: "CRM & Leads", icon: "📋", badge: "P3" },
-    { key: "broker", label: "Broker & Agents", icon: "👔", badge: "P4" },
-    { key: "deals", label: "Sales & Deals", icon: "🤝", badge: "P5" },
-    { key: "finance", label: "Finance & Ledger", icon: "💰", badge: "P6" },
-    { key: "marketing", label: "Marketing Hub", icon: "📢", badge: "P7" },
-    { key: "communications", label: "Chat & Tours", icon: "💬", badge: "P8" },
-    { key: "aimaps", label: "AI & Geo-Maps", icon: "🧠", badge: "P9-10" },
-    { key: "executive", label: "Executive BI & RBAC", icon: "📊", badge: "P11-12" },
-    { key: "governance", label: "Legal & Governance", icon: "⚖️", badge: "P13-15" }
+    { key: "crm", label: "CRM & Leads", icon: "📋" },
+    { key: "broker", label: "Broker & Agents", icon: "👔" },
+    { key: "deals", label: "Sales & Deals", icon: "🤝" },
+    { key: "finance", label: "Finance & Ledger", icon: "💰" },
+    { key: "marketing", label: "Marketing Hub", icon: "📢" },
+    { key: "communications", label: "Chat & Tours", icon: "💬" },
+    { key: "aimaps", label: "AI & Geo-Maps", icon: "🧠" },
+    { key: "executive", label: "Executive BI & RBAC", icon: "📊" },
+    { key: "governance", label: "Legal & Governance", icon: "⚖️" }
   ];
 
   return (
@@ -205,7 +205,7 @@ export default function EnterprisePortal() {
           <div>
             <div className="ent-brand-title">
               <h1>EstateElite Enterprise</h1>
-              <span className="ent-badge-suite">STAGE 1 SUITE</span>
+              <span className="ent-badge-suite">ENTERPRISE EDITION</span>
             </div>
             <p className="ent-brand-subtitle">Commercial-Grade Real Estate Management Platform</p>
           </div>
@@ -263,7 +263,6 @@ export default function EnterprisePortal() {
             >
               <span className="tab-icon">{item.icon}</span>
               <span className="tab-label">{item.label}</span>
-              <span className="tab-badge">{item.badge}</span>
             </button>
           ))}
         </div>
@@ -281,15 +280,17 @@ export default function EnterprisePortal() {
 
       {/* Active Enterprise Module Display */}
       <main className="enterprise-main-body">
-        {activeTab === "crm" && <CRMModule />}
-        {activeTab === "broker" && <BrokerModule />}
-        {activeTab === "deals" && <DealsModule />}
-        {activeTab === "finance" && <FinanceModule />}
-        {activeTab === "marketing" && <MarketingModule />}
-        {activeTab === "communications" && <CommunicationsModule />}
-        {activeTab === "aimaps" && <AIMapsModule />}
-        {activeTab === "executive" && <AnalyticsSecurityModule />}
-        {activeTab === "governance" && <LegalGovernanceModule />}
+        <div key={activeTab} className="enterprise-module-3d-wrapper">
+          {activeTab === "crm" && <CRMModule />}
+          {activeTab === "broker" && <BrokerModule />}
+          {activeTab === "deals" && <DealsModule />}
+          {activeTab === "finance" && <FinanceModule />}
+          {activeTab === "marketing" && <MarketingModule />}
+          {activeTab === "communications" && <CommunicationsModule />}
+          {activeTab === "aimaps" && <AIMapsModule />}
+          {activeTab === "executive" && <AnalyticsSecurityModule />}
+          {activeTab === "governance" && <LegalGovernanceModule />}
+        </div>
       </main>
     </div>
   );

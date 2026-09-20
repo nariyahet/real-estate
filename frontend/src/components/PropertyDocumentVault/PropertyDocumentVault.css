@@ -76,9 +76,9 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 50%, #7c3aed 100%);
-  border: 1px solid rgba(197, 168, 128, 0.45);
-  box-shadow: 0 0 16px rgba(124, 58, 237, 0.3);
+  background: linear-gradient(135deg, #071A33 0%, #0B2545 50%, #2563EB 100%);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 16px rgba(37, 99, 235, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -357,8 +357,8 @@
 
 .vault-dropzone:hover,
 .vault-dropzone.dragover {
-  border-color: #4f46e5;
-  background: #faf5ff;
+  border-color: #2563EB;
+  background: #F0F9FF;
 }
 
 .vault-dropzone.has-file {
@@ -467,9 +467,9 @@
 }
 
 .vault-submit-btn {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #7c3aed 100%);
+  background: #2563EB;
   color: #ffffff;
-  border: 1px solid rgba(124, 58, 237, 0.3);
+  border: 1px solid #1D4ED8;
   border-radius: 10px;
   padding: 10px 22px;
   font-size: 14px;
@@ -479,13 +479,14 @@
   gap: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 .vault-submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 50%, #6d28d9 100%);
+  background: #1D4ED8;
+  border-color: #1E40AF;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
 }
 
 .vault-submit-btn:disabled {
@@ -651,9 +652,9 @@
 }
 
 .doc-badge-primary {
-  background: #ede9fe;
-  color: #4338ca;
-  border: 1px solid #ddd6fe;
+  background: #E0F2FE;
+  color: #0369A1;
+  border: 1px solid rgba(56, 189, 248, 0.35);
 }
 
 .doc-badge-success {

@@ -105,8 +105,8 @@
 }
 
 .intel-badge-pill.rent {
-  background: #ede9fe;
-  color: #6d28d9;
+  background: #E0F2FE;
+  color: #0369A1;
 }
 
 .intel-header-title {
@@ -348,9 +348,9 @@
 }
 
 .intel-tab-btn.active {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #7c3aed 100%);
+  background: #2563EB;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 /* Tab Content */
@@ -402,8 +402,8 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #ede9fe;
-  color: #6366f1;
+  background: #E0F2FE;
+  color: #2563EB;
   display: grid;
   place-items: center;
   font-size: 18px;
@@ -845,8 +845,8 @@
 }
 
 .intel-number-input:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .intel-range-slider {
@@ -904,13 +904,13 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+  background: #2563EB;
 }
 
 .intel-forecast-period {
   font-size: 12px;
   font-weight: 800;
-  color: #4f46e5;
+  color: #2563EB;
   text-transform: uppercase;
 }
 
@@ -981,13 +981,13 @@
   min-width: 90px;
   height: 90px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #071A33 0%, #2563EB 100%);
   color: #ffffff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.28);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
   flex-shrink: 0;
 }
 
@@ -1017,7 +1017,7 @@
 }
 
 .intel-quality-hero-title strong {
-  color: #4f46e5;
+  color: #2563EB;
 }
 
 .intel-quality-hero-desc {
@@ -1141,8 +1141,8 @@
 }
 
 .intel-desc-select:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .intel-desc-btn-group {
@@ -1155,9 +1155,9 @@
 .intel-desc-btn-gen {
   padding: 9px 16px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: #2563EB;
   color: #ffffff;
-  border: none;
+  border: 1px solid #1D4ED8;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -1165,13 +1165,14 @@
   align-items: center;
   gap: 6px;
   transition: all 0.15s ease;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 }
 
 .intel-desc-btn-gen:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  background: #1D4ED8;
+  border-color: #1E40AF;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
 .intel-desc-btn-gen:disabled {
@@ -1245,8 +1246,8 @@
 }
 
 .intel-desc-tag.tone-tag {
-  background: #ede9fe;
-  color: #4338ca;
+  background: #E0F2FE;
+  color: #0369A1;
   text-transform: capitalize;
 }
 

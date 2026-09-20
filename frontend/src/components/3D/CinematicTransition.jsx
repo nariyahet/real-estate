@@ -12,6 +12,21 @@ export default function CinematicTransition({ onComplete }) {
   const mountRef = useRef(null);
   const [fadingOut, setFadingOut] = useState(false);
   const [useFallback, setUseFallback] = useState(false);
+  const fadingOutRef = useRef(false);
+  const completedRef = useRef(false);
+
+  const handleFinish = useRef(onComplete);
+  handleFinish.current = onComplete;
+
+  const triggerComplete = () => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    fadingOutRef.current = true;
+    setFadingOut(true);
+    setTimeout(() => {
+      if (handleFinish.current) handleFinish.current();
+    }, 200);
+  };
 
   useEffect(() => {
     // Check reduced motion
@@ -21,10 +36,7 @@ export default function CinematicTransition({ onComplete }) {
 
     if (prefersReducedMotion) {
       setUseFallback(true);
-      const timer = setTimeout(() => {
-        setFadingOut(true);
-        setTimeout(onComplete, 400);
-      }, 700);
+      const timer = setTimeout(triggerComplete, 500);
       return () => clearTimeout(timer);
     }
 
@@ -37,10 +49,10 @@ export default function CinematicTransition({ onComplete }) {
     // Scene, Camera, Renderer
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x071a33); // Deep Navy sky
-    scene.fog = new THREE.FogExp2(0x071a33, 0.035);
+    scene.fog = new THREE.FogExp2(0x071a33, 0.032);
 
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
-    camera.position.set(0, 3.5, 22);
+    camera.position.set(0, 3.5, 23);
 
     let renderer;
     try {
@@ -48,15 +60,12 @@ export default function CinematicTransition({ onComplete }) {
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.1;
+      renderer.toneMappingExposure = 1.15;
       mount.appendChild(renderer.domElement);
     } catch (err) {
       console.warn("WebGL initialization failed, using cinematic CSS fallback:", err);
       setUseFallback(true);
-      const fallbackTimer = setTimeout(() => {
-        setFadingOut(true);
-        setTimeout(onComplete, 400);
-      }, 900);
+      const fallbackTimer = setTimeout(triggerComplete, 800);
       return () => clearTimeout(fallbackTimer);
     }
 
@@ -99,9 +108,14 @@ export default function CinematicTransition({ onComplete }) {
     });
 
     // 1. Ground Plateau / Terrace
-    const terrace = new THREE.Mesh(new THREE.BoxGeometry(26, 0.6, 22), darkConcreteMat);
+    const terrace = new THREE.Mesh(new THREE.BoxGeometry(28, 0.6, 24), darkConcreteMat);
     terrace.position.set(0, -0.3, 0);
     villaGroup.add(terrace);
+
+    // Architectural Ground Grid
+    const gridHelper = new THREE.GridHelper(30, 20, 0x38bdf8, 0x0e2f56);
+    gridHelper.position.set(0, 0.02, 0);
+    villaGroup.add(gridHelper);
 
     // 2. Infinity Pool
     const pool = new THREE.Mesh(new THREE.BoxGeometry(14, 0.2, 7), waterMat);
@@ -148,25 +162,25 @@ export default function CinematicTransition({ onComplete }) {
     // ─────────────────────────────────────────────────────────────
     // LIGHTING: Royal/Sky Blue Atmosphere + Warm Gold Interior
     // ─────────────────────────────────────────────────────────────
-    const ambientLight = new THREE.AmbientLight(0x0e2f56, 1.4);
+    const ambientLight = new THREE.AmbientLight(0x0e2f56, 1.6);
     scene.add(ambientLight);
 
     // Sky-Blue Key Light
-    const skyLight = new THREE.DirectionalLight(0x38bdf8, 2.8);
+    const skyLight = new THREE.DirectionalLight(0x38bdf8, 3.0);
     skyLight.position.set(15, 20, 15);
     scene.add(skyLight);
 
     // Royal Blue Rim Light
-    const rimLight = new THREE.DirectionalLight(0x2563eb, 2.2);
+    const rimLight = new THREE.DirectionalLight(0x2563eb, 2.5);
     rimLight.position.set(-18, 12, -10);
     scene.add(rimLight);
 
     // Warm Gold Interior Light (Shining out from entrance)
-    const interiorPointLight = new THREE.PointLight(0xf4d58d, 3.5, 18);
+    const interiorPointLight = new THREE.PointLight(0xf4d58d, 4.0, 20);
     interiorPointLight.position.set(0, 2, 2.5);
     scene.add(interiorPointLight);
 
-    const goldAccentLight = new THREE.PointLight(0xd4a72c, 2.5, 12);
+    const goldAccentLight = new THREE.PointLight(0xd4a72c, 3.0, 14);
     goldAccentLight.position.set(2, 4.5, 3);
     scene.add(goldAccentLight);
 
@@ -175,7 +189,7 @@ export default function CinematicTransition({ onComplete }) {
     // ─────────────────────────────────────────────────────────────
     let animationFrameId;
     const startTime = performance.now();
-    const durationMs = 1900;
+    const durationMs = 1800; // 1.8 seconds
 
     const animate = (currentTime) => {
       const elapsed = currentTime - startTime;
@@ -187,22 +201,22 @@ export default function CinematicTransition({ onComplete }) {
         : -1 + (4 - 2 * progress) * progress;
 
       // Dolly forward toward the building
-      camera.position.z = 22 - ease * 12.5;
-      camera.position.y = 3.5 - ease * 1.2;
+      camera.position.z = 23 - ease * 13.5;
+      camera.position.y = 3.5 - ease * 1.3;
       camera.position.x = Math.sin(ease * Math.PI * 0.4) * 1.2;
       camera.lookAt(0, 2.2, 0);
 
       renderer.render(scene, camera);
 
-      if (progress >= 0.85 && !fadingOut) {
+      if (progress >= 0.85 && !fadingOutRef.current) {
+        fadingOutRef.current = true;
         setFadingOut(true);
       }
 
       if (progress < 1) {
         animationFrameId = requestAnimationFrame(animate);
       } else {
-        // Completed
-        setTimeout(onComplete, 120);
+        triggerComplete();
       }
     };
 
@@ -227,7 +241,7 @@ export default function CinematicTransition({ onComplete }) {
       }
       renderer?.dispose();
     };
-  }, [onComplete, fadingOut]);
+  }, []);
 
   return (
     <div
@@ -242,7 +256,7 @@ export default function CinematicTransition({ onComplete }) {
         alignItems: "center",
         justifyContent: "center",
         opacity: fadingOut ? 0 : 1,
-        transition: "opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1)",
+        transition: "opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
         pointerEvents: fadingOut ? "none" : "all",
       }}
     >
@@ -335,10 +349,7 @@ export default function CinematicTransition({ onComplete }) {
       {/* Skip button if user wants immediate access */}
       <button
         type="button"
-        onClick={() => {
-          setFadingOut(true);
-          setTimeout(onComplete, 100);
-        }}
+        onClick={triggerComplete}
         style={{
           position: "absolute",
           top: "28px",

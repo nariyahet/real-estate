@@ -38,21 +38,22 @@
 }
 
 .dashboard-refresh {
-  border: 1px solid rgba(124, 58, 237, 0.3);
+  border: 1px solid #1D4ED8;
   border-radius: 10px;
   padding: 11px 20px;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: #2563EB;
   color: #ffffff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
   transition: 0.2s ease;
 }
 
 .dashboard-refresh:hover {
-  background: linear-gradient(135deg, #4338ca, #6d28d9);
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  background: #1D4ED8;
+  border-color: #1E40AF;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
   transform: translateY(-1px);
 }
 
@@ -64,10 +65,10 @@
   margin-bottom: 24px;
   padding: 28px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #070d1e 0%, #0b1329 45%, #1e1b4b 75%, #312e81 100%);
+  background: linear-gradient(135deg, #071A33 0%, #0B2545 50%, #173059 100%);
   color: #ffffff;
-  border: 1px solid rgba(197, 168, 128, 0.25);
-  box-shadow: 0 12px 30px rgba(7, 13, 30, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  box-shadow: 0 12px 30px rgba(7, 26, 51, 0.25);
 }
 
 .dashboard-welcome > div:first-child span {
@@ -158,13 +159,14 @@
 }
 
 .users-icon {
-  background: #ede9fe;
-  color: #4f46e5;
+  background: #E0F2FE;
+  color: #2563EB;
 }
 
 .agents-icon {
-  background: #f5f3ff;
-  color: #7c3aed;
+  background: #F0F9FF;
+  color: #0284C7;
+  border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
 .properties-icon {
@@ -305,7 +307,7 @@
   width: 32px;
   height: 32px;
   border: 3px solid #e2e8f0;
-  border-top-color: #4f46e5;
+  border-top-color: #2563EB;
   border-radius: 50%;
   animation: dashboard-spin 0.8s linear infinite;
 }

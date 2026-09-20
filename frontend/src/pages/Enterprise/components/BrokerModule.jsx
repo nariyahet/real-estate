@@ -378,7 +378,7 @@ export default function BrokerModule() {
                         </div>
                       </div>
                       <div className="progress-bar-container">
-                        <div className="progress-bar-fill" style={{ width: `${pct}%`, background: pct >= 100 ? "#10b981" : "#4f46e5" }} />
+                        <div className="progress-bar-fill" style={{ width: `${pct}%`, background: pct >= 100 ? "#10b981" : "#2563EB" }} />
                       </div>
                       <div className="quota-footer">
                         <span>{pct}% Fulfilled</span>

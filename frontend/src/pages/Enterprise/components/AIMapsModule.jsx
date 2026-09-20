@@ -330,7 +330,7 @@ export default function AIMapsModule() {
                   <strong style={{ fontSize: "0.85rem", color: "var(--ent-text-secondary)" }}>Key Alignment Signals:</strong>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.5rem" }}>
                     {matchResult.reasons.map((reason, idx) => (
-                      <span key={idx} className="badge-pill" style={{ background: "#ede9fe", color: "#4338ca", border: "1px solid #c7d2fe" }}>
+                      <span key={idx} className="badge-pill" style={{ background: "#E0F2FE", color: "#2563EB", border: "1px solid #BAE6FD" }}>
                         ✓ {reason}
                       </span>
                     ))}

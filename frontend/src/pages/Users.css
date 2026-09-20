@@ -156,8 +156,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #ede9fe;
-  color: #4f46e5;
+  background: #E0F2FE;
+  color: #2563EB;
   font-size: 14px;
   font-weight: 800;
 }
@@ -190,14 +190,15 @@
 }
 
 .role-badge.agent {
-  background: #ede9fe;
-  color: #6d28d9;
+  background: #E0F2FE;
+  color: #0369A1;
+  border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
 .role-badge.admin {
-  background: #070d1e;
-  color: #dfb76c;
-  border: 1px solid rgba(197, 168, 128, 0.4);
+  background: #071A33;
+  color: #D4A72C;
+  border: 1px solid rgba(212, 167, 44, 0.4);
 }
 
 .role-select {
@@ -214,8 +215,8 @@
 }
 
 .role-select:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .role-select:disabled {
@@ -294,7 +295,7 @@
   width: 30px;
   height: 30px;
   border: 3px solid #e5e7eb;
-  border-top-color: #4f46e5;
+  border-top-color: #2563EB;
   border-radius: 50%;
   animation: users-spin 0.8s linear infinite;
 }
