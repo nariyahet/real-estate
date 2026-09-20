@@ -1,82 +1,120 @@
 :root {
-  /* Primary Luxury Brand Palette */
-  --brand-navy-darkest: #050b17;
-  --brand-navy-dark: #070d1e;
-  --brand-navy: #0b1329;
-  --brand-navy-light: #162244;
-  --brand-navy-surface: #1e293b;
-  --brand-navy-border: #243456;
+  /* ==========================================================================
+     FINAL COLOR SYSTEM (Strictly Architectural & Luxury SaaS)
+     ========================================================================== */
+  --color-primary: #2563EB;       /* Royal Blue */
+  --color-primary-hover: #1D4ED8;
+  --color-primary-glow: rgba(37, 99, 235, 0.25);
+  
+  --color-secondary: #38BDF8;     /* Sky Blue */
+  --color-secondary-hover: #0EA5E9;
+  --color-secondary-glow: rgba(56, 189, 248, 0.25);
+  
+  --color-light-blue: #E0F2FE;    /* Light Blue */
+  --color-light-blue-soft: #F0F9FF;
+  
+  --color-deep-navy: #071A33;     /* Deep Navy */
+  --color-midnight-blue: #0B2545; /* Midnight Blue */
+  --color-navy-surface: #0E2F56;
+  --color-navy-border: #1E3A8A;
+  
+  --color-white: #FFFFFF;         /* White */
+  --color-soft-white: #F8FAFC;    /* Soft White */
+  --color-soft-gray: #E2E8F0;     /* Soft Gray */
+  --color-slate: #64748B;         /* Slate */
+  --color-slate-light: #94A3B8;
+  --color-slate-dark: #334155;
+  
+  --color-premium-gold: #D4A72C;  /* Premium Gold (Subtle Luxury Accents) */
+  --color-soft-gold: #F4D58D;     /* Soft Gold */
+  --color-gold-glow: rgba(212, 167, 44, 0.22);
+  --color-gold-border: rgba(212, 167, 44, 0.35);
 
-  /* Royal & Elegant Purple */
-  --brand-purple: #4f46e5;
-  --brand-purple-vivid: #6366f1;
-  --brand-purple-accent: #7c3aed;
-  --brand-purple-dark: #3730a3;
-  --brand-purple-soft: #f5f3ff;
-  --brand-purple-subtle: #ede9fe;
-  --brand-purple-border: #ddd6fe;
-  --brand-purple-glow: rgba(99, 102, 241, 0.18);
+  /* Semantic Aliases */
+  --brand-navy-darkest: var(--color-deep-navy);
+  --brand-navy-dark: var(--color-deep-navy);
+  --brand-navy: var(--color-midnight-blue);
+  --brand-navy-light: #123058;
+  --brand-navy-surface: #143B6B;
+  --brand-navy-border: #1E40AF;
 
-  /* Champagne & Warm Gold */
-  --brand-gold: #c5a880;
-  --brand-gold-warm: #b89047;
-  --brand-gold-deep: #96702e;
-  --brand-gold-light: #dfb76c;
-  --brand-gold-soft: #fcf9f2;
-  --brand-gold-subtle: #f7f1e3;
-  --brand-gold-border: rgba(197, 168, 128, 0.35);
-  --brand-gold-glow: rgba(197, 168, 128, 0.22);
+  --brand-purple: var(--color-primary);
+  --brand-purple-vivid: var(--color-secondary);
+  --brand-purple-accent: var(--color-primary);
+  --brand-purple-dark: #1E40AF;
+  --brand-purple-soft: var(--color-light-blue-soft);
+  --brand-purple-subtle: var(--color-light-blue);
+  --brand-purple-border: #BFDBFE;
+  --brand-purple-glow: var(--color-primary-glow);
 
-  /* Surfaces */
-  --surface-page: #f4f6fb;
-  --surface-card: #ffffff;
-  --surface-card-subtle: #fafbfd;
-  --surface-hover: #f1f4f9;
-  --surface-active: #e8edf5;
-  --surface-muted: #f8fafc;
+  --brand-gold: var(--color-premium-gold);
+  --brand-gold-warm: #C69224;
+  --brand-gold-deep: #A37318;
+  --brand-gold-light: var(--color-soft-gold);
+  --brand-gold-soft: #FFFBEB;
+  --brand-gold-subtle: #FEF3C7;
+  --brand-gold-border: var(--color-gold-border);
+  --brand-gold-glow: var(--color-gold-glow);
+
+  /* Surfaces & Backgrounds */
+  --surface-page: #F8FAFC;
+  --surface-card: #FFFFFF;
+  --surface-card-subtle: #F1F5F9;
+  --surface-hover: #E2E8F0;
+  --surface-active: #CBD5E1;
+  --surface-muted: #F8FAFC;
+  --surface-overlay: rgba(7, 26, 51, 0.75);
 
   /* Typography Colors */
-  --text-primary: #0b1329;
+  --text-primary: #071A33;
   --text-secondary: #475569;
-  --text-muted: #8492a6;
-  --text-inverse: #ffffff;
-  --text-gold: #b89047;
-  --text-purple: #4f46e5;
+  --text-muted: #64748B;
+  --text-inverse: #FFFFFF;
+  --text-gold: var(--color-premium-gold);
+  --text-blue: var(--color-primary);
+  --text-sky: var(--color-secondary);
 
-  /* Borders & Radius & Shadows */
-  --border-subtle: #e2e8f0;
-  --border-card: #e8edf5;
-  --border-focus: #6366f1;
+  /* Borders & Shadows */
+  --border-subtle: #E2E8F0;
+  --border-card: #E2E8F0;
+  --border-focus: var(--color-primary);
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
-  --radius-xl: 18px;
-  --shadow-sm: 0 1px 3px rgba(11, 19, 41, 0.04), 0 1px 2px rgba(11, 19, 41, 0.03);
-  --shadow-md: 0 4px 14px -1px rgba(11, 19, 41, 0.07), 0 2px 6px -1px rgba(11, 19, 41, 0.04);
-  --shadow-lg: 0 12px 30px -4px rgba(11, 19, 41, 0.1), 0 4px 10px -2px rgba(11, 19, 41, 0.05);
-  --shadow-gold: 0 4px 16px rgba(197, 168, 128, 0.2);
-  --shadow-purple: 0 4px 16px rgba(99, 102, 241, 0.2);
+  --radius-xl: 20px;
+  --radius-2xl: 26px;
+  
+  --shadow-sm: 0 1px 3px rgba(7, 26, 51, 0.05), 0 1px 2px rgba(7, 26, 51, 0.03);
+  --shadow-md: 0 4px 14px -1px rgba(7, 26, 51, 0.08), 0 2px 6px -1px rgba(7, 26, 51, 0.04);
+  --shadow-lg: 0 12px 30px -4px rgba(7, 26, 51, 0.12), 0 4px 10px -2px rgba(7, 26, 51, 0.06);
+  --shadow-xl: 0 20px 40px -6px rgba(7, 26, 51, 0.16), 0 8px 16px -4px rgba(7, 26, 51, 0.08);
+  --shadow-gold: 0 6px 20px rgba(212, 167, 44, 0.22);
+  --shadow-blue: 0 6px 22px rgba(37, 99, 235, 0.24);
 
-  /* Functional Semantic Status Colors */
-  --color-success: #10b981;
+  /* Status Colors */
+  --color-success: #10B981;
   --color-success-dark: #059669;
-  --color-success-soft: #ecfdf5;
-  --color-success-border: #a7f3d0;
+  --color-success-soft: #ECFDF5;
+  --color-success-border: #A7F3D0;
 
-  --color-warning: #f59e0b;
-  --color-warning-dark: #d97706;
-  --color-warning-soft: #fffbeb;
-  --color-warning-border: #fde68a;
+  --color-warning: #F59E0B;
+  --color-warning-dark: #D97706;
+  --color-warning-soft: #FFFBEB;
+  --color-warning-border: #FDE68A;
 
-  --color-danger: #ef4444;
-  --color-danger-dark: #dc2626;
-  --color-danger-soft: #fef2f2;
-  --color-danger-border: #fecaca;
+  --color-danger: #EF4444;
+  --color-danger-dark: #DC2626;
+  --color-danger-soft: #FEF2F2;
+  --color-danger-border: #FECACA;
 
-  --color-info: #3b82f6;
-  --color-info-dark: #2563eb;
-  --color-info-soft: #eff6ff;
-  --color-info-border: #bfdbfe;
+  --color-info: var(--color-primary);
+  --color-info-dark: #1D4ED8;
+  --color-info-soft: var(--color-light-blue);
+  --color-info-border: #BAE6FD;
+
+  /* Fonts */
+  --font-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: "Outfit", "Plus Jakarta Sans", sans-serif;
 }
 
 * {
@@ -94,18 +132,16 @@ html, body {
 
 body {
   margin: 0;
-  font-family:
-    "Plus Jakarta Sans",
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  font-family: var(--font-body);
   background: var(--surface-page);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
 }
 
 button,
@@ -117,6 +153,8 @@ textarea {
 
 button {
   cursor: pointer;
+  border: none;
+  background: none;
 }
 
 a {
@@ -136,4 +174,18 @@ img {
 #root {
   min-height: 100vh;
   width: 100%;
+}
+
+/* ==========================================================================
+   ACCESSIBILITY & REDUCED MOTION SUPPORT
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

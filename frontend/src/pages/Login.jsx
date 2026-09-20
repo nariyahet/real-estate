@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import CinematicTransition from "../components/3D/CinematicTransition";
 import "./Login.css";
 
 function Login() {
@@ -10,6 +11,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showCinematic, setShowCinematic] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -53,10 +55,12 @@ function Login() {
         return;
       }
 
+      // Preserve existing token/session handling
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      navigate("/dashboard", { replace: true });
+      // Trigger Cinematic 3D Architectural Transition
+      setShowCinematic(true);
     } catch (err) {
       console.error("Login Error:", err);
 
@@ -77,20 +81,35 @@ function Login() {
 
   return (
     <div className="login-page">
+      {showCinematic && (
+        <CinematicTransition
+          onComplete={() => navigate("/dashboard", { replace: true })}
+        />
+      )}
+
+      {/* Ambient background architectural glow */}
+      <div className="login-ambient-bg" />
+
       <div className="login-card">
-        <h1>RealEstate</h1>
-        <p>Login to your account</p>
+        <div className="login-brand-header">
+          <div className="login-logo-badge">🏢</div>
+          <div>
+            <h1>RealEstate</h1>
+            <span className="login-brand-subtitle">Architectural SaaS Platform</span>
+          </div>
+        </div>
+
+        <p className="login-intro-text">Sign in to your real estate workspace</p>
 
         {error && <div className="error-box">{error}</div>}
 
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label htmlFor="email">Email</label>
-
+            <label htmlFor="email">Work Email</label>
             <input
               id="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder="e.g. admin@realestate.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -100,11 +119,10 @@ function Login() {
 
           <div className="form-group">
             <label htmlFor="password">Password</label>
-
             <input
               id="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="Enter your account password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
@@ -112,8 +130,8 @@ function Login() {
             />
           </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+          <button type="submit" className="login-submit-btn" disabled={loading}>
+            {loading ? "Authenticating..." : "Sign In to Workspace →"}
           </button>
 
           <div className="auth-switch">

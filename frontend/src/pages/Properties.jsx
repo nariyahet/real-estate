@@ -5,6 +5,8 @@ import DashboardBackLink from "../components/DashboardBackLink";
 import PropertyIntelligenceModal from "../components/PropertyIntelligence/PropertyIntelligenceModal";
 import PropertyDocumentVaultModal from "../components/PropertyDocumentVault/PropertyDocumentVaultModal";
 import PropertyOperationsModal from "../components/PropertyOperations/PropertyOperationsModal";
+import PropertyDetailsModal from "../components/PropertyDetailsModal";
+import Card3DTilt from "../components/3D/Card3DTilt";
 import "./Properties.css";
 
 function Properties() {
@@ -13,6 +15,13 @@ function Properties() {
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+
+  // View Mode: 'grid' (Architectural 3D Cards) or 'table' (Executive Table)
+  const [viewMode, setViewMode] = useState("grid");
+
+  // Comprehensive Property 3D Details Modal state
+  const [selectedDetailProperty, setSelectedDetailProperty] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   // Property Intelligence Modal state
   const [selectedIntelProperty, setSelectedIntelProperty] = useState(null);
@@ -69,6 +78,11 @@ function Properties() {
     if (!canAccessVault(property)) return;
     setSelectedOpsProperty(property);
     setIsOpsOpen(true);
+  };
+
+  const handleOpen3DDetails = (property) => {
+    setSelectedDetailProperty(property);
+    setIsDetailOpen(true);
   };
 
   const fetchSavedIds = useCallback(async () => {
@@ -284,14 +298,14 @@ function Properties() {
       {/* Header */}
       <div className="page-header">
         <div>
-          <span className="page-label">PROPERTY MANAGEMENT</span>
-          <h1>Properties</h1>
+          <span className="page-label">LUXURY REAL ESTATE STUDIO</span>
+          <h1>Property Portfolio</h1>
           <p>
             {isAdmin
-              ? "Manage all listed properties from one place."
+              ? "Manage all architectural properties, 3D studios, and operations from one executive hub."
               : isAgent
-              ? "Browse and manage property listings."
-              : "Browse available real estate properties."}
+              ? "Browse, manage, and present your 3D property listings."
+              : "Explore luxury residential and commercial architecture with interactive 3D."}
           </p>
         </div>
 
@@ -449,13 +463,37 @@ function Properties() {
             )}
           </div>
         </div>
+
+        {/* View Mode Switcher (Architectural Card Grid vs Executive Table) */}
+        <div className="view-mode-bar">
+          <div className="view-mode-pill-toggle">
+            <button
+              type="button"
+              className={`view-mode-btn ${viewMode === "grid" ? "active" : ""}`}
+              onClick={() => setViewMode("grid")}
+            >
+              🏛️ 3D Architectural Cards
+            </button>
+            <button
+              type="button"
+              className={`view-mode-btn ${viewMode === "table" ? "active" : ""}`}
+              onClick={() => setViewMode("table")}
+            >
+              📋 Executive Table View
+            </button>
+          </div>
+
+          <div className="results-count-badge">
+            {totalCount} Properties Found
+          </div>
+        </div>
       </div>
 
       {/* Loading indicator */}
       {loading && (
         <div className="loading-state">
           <div className="loader"></div>
-          <p>Loading properties...</p>
+          <p>Loading architectural properties...</p>
         </div>
       )}
 
@@ -471,226 +509,413 @@ function Properties() {
         </div>
       )}
 
-      {/* Properties Table */}
-      {!loading && properties.length > 0 && (
-        <>
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Save</th>
-                  <th>Property</th>
-                  <th>Type</th>
-                  <th>Listing</th>
-                  <th>Price</th>
-                  <th>Agent</th>
-                  <th>Intelligence & Operations</th>
-                  {(isAdmin || isAgent) && <th>Status</th>}
-                  {(isAdmin || isAgent) && <th>Action</th>}
-                </tr>
-              </thead>
+      {/* ─────────────────────────────────────────────────────────────
+          VIEW MODE 1: ARCHITECTURAL 3D CARD GRID VIEW
+          ───────────────────────────────────────────────────────────── */}
+      {!loading && properties.length > 0 && viewMode === "grid" && (
+        <div className="properties-card-grid">
+          {properties.map((property) => (
+            <Card3DTilt key={property.id} className="property-card-tilt-container">
+              <div className="property-luxury-card">
+                {/* Image Container with Zoom & Badges */}
+                <div className="prop-card-media-wrapper" onClick={() => handleOpen3DDetails(property)}>
+                  <img
+                    src={property.primary_image || property.image_url || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"}
+                    alt={property.title}
+                    className="prop-card-img"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800";
+                    }}
+                  />
 
-              <tbody>
-                {properties.map((property) => (
-                  <tr key={property.id}>
-                    <td>
-                      <span className="property-id">#{property.id}</span>
-                    </td>
+                  {/* Top Badges */}
+                  <div className="prop-card-top-badges">
+                    <span className="prop-card-badge type-badge">{property.property_type || "Apartment"}</span>
+                    <span className={`prop-card-badge listing-badge ${property.listing_type === "Sale" ? "sale" : "rent"}`}>
+                      {property.listing_type || "Sale"}
+                    </span>
+                  </div>
 
-                    <td>
-                      {user ? (
+                  {/* 3D Model Floating Indicator */}
+                  <div className="prop-card-3d-tag">
+                    <span>🏢</span> 3D Studio
+                  </div>
+
+                  {/* Save Heart Button */}
+                  <button
+                    type="button"
+                    className={`prop-card-save-btn ${savedIds.includes(property.id) ? "saved" : ""}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleSave(property.id);
+                    }}
+                    title="Save property"
+                  >
+                    {savedIds.includes(property.id) ? "❤️" : "🤍"}
+                  </button>
+                </div>
+
+                {/* Card Content Body */}
+                <div className="prop-card-body">
+                  <div className="prop-card-price">
+                    {formatPrice(property.price, property.listing_type)}
+                  </div>
+
+                  <h3 className="prop-card-title" onClick={() => handleOpen3DDetails(property)}>
+                    {property.title}
+                  </h3>
+
+                  <div className="prop-card-location">
+                    📍 {property.city ? `${property.city}, ` : ""}{property.state || "India"}
+                  </div>
+
+                  {/* Specs Row */}
+                  <div className="prop-card-specs-row">
+                    <span>🛏️ {property.bedrooms ?? "—"} BHK</span>
+                    <span>🚿 {property.bathrooms ?? "—"} Baths</span>
+                    <span>📐 {property.area || property.area_sqft || "—"} sq.ft</span>
+                  </div>
+
+                  {/* Agent Tag */}
+                  <div className="prop-card-agent-row">
+                    <span className="agent-label">Agent:</span>
+                    <span className="agent-val">{property.agent_name || "Prime Agent"}</span>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="prop-card-actions">
+                    <button
+                      type="button"
+                      className="prop-card-btn-3d"
+                      onClick={() => handleOpen3DDetails(property)}
+                    >
+                      <span>🏢</span> View 3D
+                    </button>
+
+                    <button
+                      type="button"
+                      className="prop-card-btn-intel"
+                      onClick={() => {
+                        setSelectedIntelProperty(property);
+                        setIsIntelOpen(true);
+                      }}
+                    >
+                      📊 Intel
+                    </button>
+
+                    {canAccessVault(property) && (
+                      <button
+                        type="button"
+                        className="prop-card-btn-vault"
+                        onClick={() => handleOpenVault(property)}
+                      >
+                        📁 Vault
+                      </button>
+                    )}
+
+                    {canAccessVault(property) && (
+                      <button
+                        type="button"
+                        className="prop-card-btn-ops"
+                        onClick={() => handleOpenOps(property)}
+                      >
+                        ⚙️ Ops
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Admin / Agent Status and Delete */}
+                  {(isAdmin || isAgent) && (
+                    <div className="prop-card-admin-row">
+                      {isAdmin || (isAgent && Number(property.agent_id) === Number(user?.agent_id)) ? (
+                        <select
+                          className={`status-select ${getStatusClass(property.status)}`}
+                          value={property.status || "Available"}
+                          disabled={updatingId === property.id}
+                          onChange={(e) => updatePropertyStatus(property.id, e.target.value)}
+                        >
+                          <option value="Available">Available</option>
+                          <option value="Sold">Sold</option>
+                          <option value="Rented">Rented</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      ) : (
+                        <span className={`status-badge-readonly ${getStatusClass(property.status)}`}>
+                          {property.status || "Available"}
+                        </span>
+                      )}
+
+                      {(isAdmin || (isAgent && Number(property.agent_id) === Number(user?.agent_id))) && (
                         <button
                           type="button"
-                          className={`save-btn ${savedIds.includes(property.id) ? "saved" : ""}`}
-                          onClick={() => handleToggleSave(property.id)}
-                          title={savedIds.includes(property.id) ? "Remove from saved" : "Save property"}
+                          className="delete-btn-card"
+                          disabled={deletingId === property.id}
+                          onClick={() => deleteProperty(property.id)}
                         >
-                          {savedIds.includes(property.id) ? "❤️" : "🤍"}
+                          {deletingId === property.id ? "..." : "Delete"}
                         </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card3DTilt>
+          ))}
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          VIEW MODE 2: EXECUTIVE TABLE VIEW (Preserves 100% Functionality)
+          ───────────────────────────────────────────────────────────── */}
+      {!loading && properties.length > 0 && viewMode === "table" && (
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Save</th>
+                <th>Property</th>
+                <th>Type</th>
+                <th>Listing</th>
+                <th>Price</th>
+                <th>Agent</th>
+                <th>Actions & 3D</th>
+                {(isAdmin || isAgent) && <th>Status</th>}
+                {(isAdmin || isAgent) && <th>Action</th>}
+              </tr>
+            </thead>
+
+            <tbody>
+              {properties.map((property) => (
+                <tr key={property.id}>
+                  <td>
+                    <span className="property-id">#{property.id}</span>
+                  </td>
+
+                  <td>
+                    {user ? (
+                      <button
+                        type="button"
+                        className={`save-btn ${savedIds.includes(property.id) ? "saved" : ""}`}
+                        onClick={() => handleToggleSave(property.id)}
+                        title={savedIds.includes(property.id) ? "Remove from saved" : "Save property"}
+                      >
+                        {savedIds.includes(property.id) ? "❤️" : "🤍"}
+                      </button>
+                    ) : (
+                      <span title="Sign in to save" style={{ opacity: 0.35, cursor: "not-allowed" }}>🤍</span>
+                    )}
+                  </td>
+
+                  <td>
+                    <div
+                      className="property-cell-wrapper"
+                      onClick={() => handleOpen3DDetails(property)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {property.primary_image || property.image_url ? (
+                        <img
+                          src={property.primary_image || property.image_url}
+                          alt={property.title || "Property"}
+                          className="property-row-thumb"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800";
+                          }}
+                        />
                       ) : (
-                        <span title="Sign in to save" style={{ opacity: 0.35, cursor: "not-allowed" }}>🤍</span>
+                        <div className="property-row-thumb-placeholder">🏠</div>
+                      )}
+
+                      <div className="property-info">
+                        <span className="property-title-text">
+                          {property.title || "Untitled Property"}
+                        </span>
+
+                        {property.city && (
+                          <span className="property-location">
+                            📍 {property.city}
+                            {property.state ? `, ${property.state}` : ""}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span className="property-type">
+                      {property.property_type || "-"}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span
+                      className={`listing-badge ${
+                        property.listing_type === "Sale" ? "sale" : "rent"
+                      }`}
+                    >
+                      {property.listing_type || "-"}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span className="property-price">
+                      {formatPrice(property.price, property.listing_type)}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span className="agent-name">
+                      {property.agent_name || "Not Assigned"}
+                    </span>
+                  </td>
+
+                  <td className="intel-cell">
+                    <div className="property-actions-pill-wrap">
+                      <button
+                        type="button"
+                        className="btn-3d-table"
+                        onClick={() => handleOpen3DDetails(property)}
+                        title="Open 3D Architectural Viewer"
+                      >
+                        🏢 3D
+                      </button>
+                      <button
+                        type="button"
+                        className="intel-btn"
+                        onClick={() => {
+                          setSelectedIntelProperty(property);
+                          setIsIntelOpen(true);
+                        }}
+                      >
+                        📊 Intel
+                      </button>
+                      {canAccessVault(property) && (
+                        <button
+                          type="button"
+                          className="vault-btn"
+                          title="Open Property Document Vault"
+                          onClick={() => handleOpenVault(property)}
+                        >
+                          📁 Vault
+                        </button>
+                      )}
+                      {canAccessVault(property) && (
+                        <button
+                          type="button"
+                          className="ops-btn"
+                          title="Open Property Operations Hub"
+                          onClick={() => handleOpenOps(property)}
+                        >
+                          ⚙️ Ops
+                        </button>
+                      )}
+                    </div>
+                  </td>
+
+                  {(isAdmin || isAgent) && (
+                    <td>
+                      {isAdmin || (isAgent && Number(property.agent_id) === Number(user?.agent_id)) ? (
+                        <select
+                          className={`status-select ${getStatusClass(
+                            property.status,
+                          )}`}
+                          value={property.status || "Available"}
+                          disabled={updatingId === property.id}
+                          onChange={(e) =>
+                            updatePropertyStatus(property.id, e.target.value)
+                          }
+                        >
+                          <option value="Available">Available</option>
+                          <option value="Sold">Sold</option>
+                          <option value="Rented">Rented</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      ) : (
+                        <span className={`status-badge-readonly ${getStatusClass(property.status)}`}>
+                          {property.status || "Available"}
+                        </span>
                       )}
                     </td>
+                  )}
 
-                    <td>
-                      <div className="property-cell-wrapper">
-                        {property.primary_image || property.image_url ? (
-                          <img
-                            src={property.primary_image || property.image_url}
-                            alt={property.title || "Property"}
-                            className="property-row-thumb"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800";
-                            }}
-                          />
+                  {(isAdmin || isAgent) && (
+                    <td className="actions-cell">
+                      <div className="row-action-buttons">
+                        {(isAdmin || (isAgent && Number(property.agent_id) === Number(user?.agent_id))) ? (
+                          <button
+                            type="button"
+                            className="delete-btn"
+                            disabled={deletingId === property.id}
+                            onClick={() => deleteProperty(property.id)}
+                          >
+                            {deletingId === property.id
+                              ? "Deleting..."
+                              : "Delete"}
+                          </button>
                         ) : (
-                          <div className="property-row-thumb-placeholder">🏠</div>
-                        )}
-
-                        <div className="property-info">
-                          <span className="property-title-text">
-                            {property.title || "Untitled Property"}
-                          </span>
-
-                          {property.city && (
-                            <span className="property-location">
-                              📍 {property.city}
-                              {property.state ? `, ${property.state}` : ""}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    <td>
-                      <span className="property-type">
-                        {property.property_type || "-"}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span
-                        className={`listing-badge ${
-                          property.listing_type === "Sale" ? "sale" : "rent"
-                        }`}
-                      >
-                        {property.listing_type || "-"}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="property-price">
-                        {formatPrice(property.price, property.listing_type)}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="agent-name">
-                        {property.agent_name || "Not Assigned"}
-                      </span>
-                    </td>
-
-                    <td className="intel-cell">
-                      <div className="property-actions-pill-wrap">
-                        <button
-                          type="button"
-                          className="intel-btn"
-                          onClick={() => {
-                            setSelectedIntelProperty(property);
-                            setIsIntelOpen(true);
-                          }}
-                        >
-                          📊 Intelligence
-                        </button>
-                        {canAccessVault(property) && (
-                          <button
-                            type="button"
-                            className="vault-btn"
-                            title="Open Property Document Vault"
-                            onClick={() => handleOpenVault(property)}
-                          >
-                            📁 Vault
-                          </button>
-                        )}
-                        {canAccessVault(property) && (
-                          <button
-                            type="button"
-                            className="ops-btn"
-                            title="Open Property Operations Hub"
-                            onClick={() => handleOpenOps(property)}
-                          >
-                            ⚙️ Operations
-                          </button>
+                          <span className="no-actions-dash">—</span>
                         )}
                       </div>
                     </td>
-
-                    {(isAdmin || isAgent) && (
-                      <td>
-                        {isAdmin || (isAgent && Number(property.agent_id) === Number(user?.agent_id)) ? (
-                          <select
-                            className={`status-select ${getStatusClass(
-                              property.status,
-                            )}`}
-                            value={property.status || "Available"}
-                            disabled={updatingId === property.id}
-                            onChange={(e) =>
-                              updatePropertyStatus(property.id, e.target.value)
-                            }
-                          >
-                            <option value="Available">Available</option>
-                            <option value="Sold">Sold</option>
-                            <option value="Rented">Rented</option>
-                            <option value="Inactive">Inactive</option>
-                          </select>
-                        ) : (
-                          <span className={`status-badge-readonly ${getStatusClass(property.status)}`}>
-                            {property.status || "Available"}
-                          </span>
-                        )}
-                      </td>
-                    )}
-
-                    {(isAdmin || isAgent) && (
-                      <td className="actions-cell">
-                        <div className="row-action-buttons">
-                          {(isAdmin || (isAgent && Number(property.agent_id) === Number(user?.agent_id))) ? (
-                            <button
-                              type="button"
-                              className="delete-btn"
-                              disabled={deletingId === property.id}
-                              onClick={() => deleteProperty(property.id)}
-                            >
-                              {deletingId === property.id
-                                ? "Deleting..."
-                                : "Delete"}
-                            </button>
-                          ) : (
-                            <span className="no-actions-dash">—</span>
-                          )}
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="pagination-bar">
-              <span className="pagination-info">
-                Showing page {page} of {totalPages} ({totalCount} properties)
-              </span>
-
-              <div className="pagination-buttons">
-                <button
-                  type="button"
-                  className="pagination-nav-btn"
-                  disabled={page <= 1 || loading}
-                  onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                >
-                  ← Previous
-                </button>
-
-                <span className="pagination-current-page">{page}</span>
-
-                <button
-                  type="button"
-                  className="pagination-nav-btn"
-                  disabled={page >= totalPages || loading}
-                  onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-                >
-                  Next →
-                </button>
-              </div>
-            </div>
-          )}
-        </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
+
+      {/* Pagination Controls */}
+      {!loading && properties.length > 0 && totalPages > 1 && (
+        <div className="pagination-bar">
+          <span className="pagination-info">
+            Showing page {page} of {totalPages} ({totalCount} properties)
+          </span>
+
+          <div className="pagination-buttons">
+            <button
+              type="button"
+              className="pagination-nav-btn"
+              disabled={page <= 1 || loading}
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            >
+              ← Previous
+            </button>
+
+            <span className="pagination-current-page">{page}</span>
+
+            <button
+              type="button"
+              className="pagination-nav-btn"
+              disabled={page >= totalPages || loading}
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Unified 3D Property Details Modal */}
+      <PropertyDetailsModal
+        isOpen={isDetailOpen}
+        property={selectedDetailProperty}
+        onClose={() => {
+          setIsDetailOpen(false);
+          setSelectedDetailProperty(null);
+        }}
+        canAccessVault={canAccessVault}
+        onOpenVault={handleOpenVault}
+        onOpenOps={handleOpenOps}
+        onOpenIntel={(p) => {
+          setSelectedIntelProperty(p);
+          setIsIntelOpen(true);
+        }}
+        onToggleSave={handleToggleSave}
+        isSaved={selectedDetailProperty ? savedIds.includes(selectedDetailProperty.id) : false}
+      />
 
       {/* Property Intelligence Modal */}
       <PropertyIntelligenceModal

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import Property3DViewer from "../components/3D/Property3DViewer";
 import "./SavedProperties.css";
 
 function SavedProperties() {
@@ -34,6 +35,7 @@ function SavedProperties() {
   // Property Quick-View Modal
   const [detailModalProperty, setDetailModalProperty] = useState(null);
   const [detailModalLoading, setDetailModalLoading] = useState(false);
+  const [modalShow3D, setModalShow3D] = useState(true);
 
   const handleOpenDetailModal = async (property, extra = {}) => {
     setDetailModalProperty({ ...property, ...extra });
@@ -733,51 +735,93 @@ function SavedProperties() {
             </div>
 
             <div className="ops-modal-body saved-detail-modal-body">
-              {/* Image banner */}
-              <div className="saved-detail-hero">
-                <img
-                  src={
-                    detailModalProperty.image ||
-                    detailModalProperty.primary_image ||
-                    detailModalProperty.image_url ||
-                    detailModalProperty.images?.[0]?.image_url ||
-                    "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800"
-                  }
-                  alt={detailModalProperty.title || "Property"}
-                  className="saved-detail-img"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800";
+              {/* Media Mode Tabs */}
+              <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+                <button
+                  type="button"
+                  onClick={() => setModalShow3D(true)}
+                  style={{
+                    padding: "7px 14px",
+                    borderRadius: "8px",
+                    border: modalShow3D ? "1px solid #2563EB" : "1px solid #CBD5E1",
+                    background: modalShow3D ? "#2563EB" : "#F8FAFC",
+                    color: modalShow3D ? "#FFFFFF" : "#071A33",
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    cursor: "pointer",
                   }}
-                />
-                <div className="saved-detail-badges">
-                  {detailModalProperty.property_type && (
-                    <span className="saved-card-badge">{detailModalProperty.property_type}</span>
-                  )}
-                  {detailModalProperty.listing_type && (
-                    <span
-                      className="saved-card-badge"
-                      style={{
-                        background: detailModalProperty.listing_type === "Sale" ? "#10b981" : "#8b5cf6",
-                        color: "#fff",
-                      }}
-                    >
-                      For {detailModalProperty.listing_type}
-                    </span>
-                  )}
-                  {detailModalProperty.status && (
-                    <span
-                      className="saved-card-badge"
-                      style={{
-                        background: detailModalProperty.status === "Available" ? "#22c55e" : "#64748b",
-                        color: "#fff",
-                      }}
-                    >
-                      {detailModalProperty.status}
-                    </span>
-                  )}
-                </div>
+                >
+                  🏢 3D Architectural Model
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalShow3D(false)}
+                  style={{
+                    padding: "7px 14px",
+                    borderRadius: "8px",
+                    border: !modalShow3D ? "1px solid #2563EB" : "1px solid #CBD5E1",
+                    background: !modalShow3D ? "#2563EB" : "#F8FAFC",
+                    color: !modalShow3D ? "#FFFFFF" : "#071A33",
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  📷 Photography
+                </button>
               </div>
+
+              {/* 3D or Image Hero */}
+              {modalShow3D ? (
+                <div style={{ marginBottom: "16px" }}>
+                  <Property3DViewer property={detailModalProperty} />
+                </div>
+              ) : (
+                <div className="saved-detail-hero">
+                  <img
+                    src={
+                      detailModalProperty.image ||
+                      detailModalProperty.primary_image ||
+                      detailModalProperty.image_url ||
+                      detailModalProperty.images?.[0]?.image_url ||
+                      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800"
+                    }
+                    alt={detailModalProperty.title || "Property"}
+                    className="saved-detail-img"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800";
+                    }}
+                  />
+                  <div className="saved-detail-badges">
+                    {detailModalProperty.property_type && (
+                      <span className="saved-card-badge">{detailModalProperty.property_type}</span>
+                    )}
+                    {detailModalProperty.listing_type && (
+                      <span
+                        className="saved-card-badge"
+                        style={{
+                          background: detailModalProperty.listing_type === "Sale" ? "#10b981" : "#8b5cf6",
+                          color: "#fff",
+                        }}
+                      >
+                        For {detailModalProperty.listing_type}
+                      </span>
+                    )}
+                    {detailModalProperty.status && (
+                      <span
+                        className="saved-card-badge"
+                        style={{
+                          background: detailModalProperty.status === "Available" ? "#22c55e" : "#64748b",
+                          color: "#fff",
+                        }}
+                      >
+                        {detailModalProperty.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Price & Title */}
               <div className="saved-detail-header-block">

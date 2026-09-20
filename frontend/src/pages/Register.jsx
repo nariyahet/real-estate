@@ -83,9 +83,17 @@ function Register() {
 
   return (
     <div className="login-page">
+      <div className="login-ambient-bg" />
+
       <div className="login-card">
-        <h1>RealEstate</h1>
-        <p>Create your account</p>
+        <div className="login-brand-header">
+          <div className="login-logo-badge">🏢</div>
+          <div>
+            <h1>RealEstate</h1>
+            <span className="login-brand-subtitle">Architectural SaaS Platform</span>
+          </div>
+        </div>
+        <p className="login-intro-text">Create your real estate workspace account</p>
 
         {error && <div className="error-box">{error}</div>}
 
