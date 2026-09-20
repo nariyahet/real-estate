@@ -140,15 +140,7 @@ button {
   box-shadow: 0 0 10px #38BDF8;
 }
 
-.nav-item.enterprise-nav-item {
-  color: #38BDF8 !important;
-  border: 1px dashed rgba(56, 189, 248, 0.3);
-}
 
-.nav-item.enterprise-nav-item:hover {
-  background: rgba(56, 189, 248, 0.1) !important;
-  border-color: #38BDF8;
-}
 
 .nav-item span {
   width: 22px;
@@ -176,11 +168,18 @@ button {
    MAIN CONTENT & TOPBAR
    ========================================================================== */
 .main-content {
-  width: calc(100% - 260px);
-  margin-left: 260px;
+  width: calc(100% - 280px);
+  margin-left: 280px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    width: 100%;
+    margin-left: 0;
+  }
 }
 
 .topbar {

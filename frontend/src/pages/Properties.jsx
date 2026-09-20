@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import api from "../api/axios";
 import DashboardBackLink from "../components/DashboardBackLink";
 import PropertyIntelligenceModal from "../components/PropertyIntelligence/PropertyIntelligenceModal";
@@ -10,6 +10,7 @@ import Card3DTilt from "../components/3D/Card3DTilt";
 import "./Properties.css";
 
 function Properties() {
+  const [searchParams] = useSearchParams();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -17,7 +18,8 @@ function Properties() {
   const [deletingId, setDeletingId] = useState(null);
 
   // View Mode: 'grid' (Architectural 3D Cards) or 'table' (Executive Table)
-  const [viewMode, setViewMode] = useState("grid");
+  const initialView = searchParams.get("view") === "table" ? "table" : "grid";
+  const [viewMode, setViewMode] = useState(initialView);
 
   // Comprehensive Property 3D Details Modal state
   const [selectedDetailProperty, setSelectedDetailProperty] = useState(null);
@@ -84,6 +86,25 @@ function Properties() {
     setSelectedDetailProperty(property);
     setIsDetailOpen(true);
   };
+
+  useEffect(() => {
+    const viewParam = searchParams.get("view");
+    const actionParam = searchParams.get("action");
+
+    if (viewParam === "table" || viewParam === "grid") {
+      setViewMode(viewParam);
+    }
+
+    if (properties.length > 0) {
+      if (actionParam === "vault" && !isVaultOpen) {
+        setSelectedVaultProperty(properties[0]);
+        setIsVaultOpen(true);
+      } else if (actionParam === "operations" && !isOpsOpen) {
+        setSelectedOpsProperty(properties[0]);
+        setIsOpsOpen(true);
+      }
+    }
+  }, [searchParams, properties, isVaultOpen, isOpsOpen]);
 
   const fetchSavedIds = useCallback(async () => {
     if (!user?.id) return;

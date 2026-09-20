@@ -1,8 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../../../api/axios";
 
 export default function AnalyticsSecurityModule() {
-  const [activeTab, setActiveTab] = useState("bi"); // 'bi' | 'rbac' | 'audit'
+  const [searchParams] = useSearchParams();
+  const subParam = searchParams.get("sub");
+  const [activeTab, setActiveTab] = useState(subParam || "bi"); // 'bi' | 'rbac' | 'audit'
+
+  useEffect(() => {
+    const sub = searchParams.get("sub");
+    if (sub && sub !== activeTab) {
+      setActiveTab(sub);
+    }
+  }, [searchParams, activeTab]);
   const [executiveBI, setExecutiveBI] = useState(null);
   const [roles, setRoles] = useState([]);
   const [branches, setBranches] = useState([]);

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../../../api/axios";
 
 const formatPinPrice = (price) => {
@@ -19,7 +20,17 @@ const formatPinPrice = (price) => {
 };
 
 export default function AIMapsModule() {
-  const [activeTab, setActiveTab] = useState("nl_search"); // 'nl_search' | 'buyer_match' | 'geo_map'
+  const [searchParams] = useSearchParams();
+  const subParam = searchParams.get("sub");
+  const [activeTab, setActiveTab] = useState(subParam || "nl_search");
+
+  useEffect(() => {
+    const sub = searchParams.get("sub");
+    if (sub && sub !== activeTab) {
+      setActiveTab(sub);
+    }
+  }, [searchParams, activeTab]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 

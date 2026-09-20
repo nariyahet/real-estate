@@ -9,6 +9,7 @@ import CommunicationsModule from "./components/CommunicationsModule";
 import AIMapsModule from "./components/AIMapsModule";
 import AnalyticsSecurityModule from "./components/AnalyticsSecurityModule";
 import LegalGovernanceModule from "./components/LegalGovernanceModule";
+import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
 import "./EnterprisePortal.css";
 
 export default function EnterprisePortal() {
@@ -197,101 +198,106 @@ export default function EnterprisePortal() {
   ];
 
   return (
-    <div className="enterprise-portal-root">
-      {/* Top Enterprise Header Bar */}
-      <header className="enterprise-header">
-        <div className="ent-brand-section">
-          <div className="ent-logo-icon">🏢</div>
-          <div>
-            <div className="ent-brand-title">
-              <h1>EstateElite Enterprise</h1>
-              <span className="ent-badge-suite">ENTERPRISE EDITION</span>
-            </div>
-            <p className="ent-brand-subtitle">Commercial-Grade Real Estate Management Platform</p>
-          </div>
-        </div>
+    <div className="enterprise-portal-layout">
+      {/* Enterprise Admin Studio Sidebar */}
+      <AdminSidebar />
 
-        <div className="ent-header-actions">
-          <Link to="/dashboard" className="ent-nav-link">
-            📊 Classic Dashboard
-          </Link>
-          <Link to="/properties" className="ent-nav-link">
-            🏠 Properties
-          </Link>
-          <Link to="/saved-properties" className="ent-nav-link">
-            ❤️ Saved
-          </Link>
-
-          <div className="ent-user-pill">
-            <div className="user-initial">{(user?.name || "U").charAt(0).toUpperCase()}</div>
-            <div className="user-info-text">
-              <span className="user-name">{user?.name || "Enterprise User"}</span>
-              <span className="user-role">{isAdmin ? "Administrator" : "Agent"}</span>
+      <div className="enterprise-portal-root">
+        {/* Top Enterprise Header Bar */}
+        <header className="enterprise-header">
+          <div className="ent-brand-section">
+            <div className="ent-logo-icon">🏢</div>
+            <div>
+              <div className="ent-brand-title">
+                <h1>EstateElite Enterprise</h1>
+                <span className="ent-badge-suite">ENTERPRISE EDITION</span>
+              </div>
+              <p className="ent-brand-subtitle">Commercial-Grade Real Estate Management Platform</p>
             </div>
           </div>
 
-          <button type="button" className="ent-logout-btn" onClick={handleLogout} title="Sign Out">
-            🚪 Logout
-          </button>
-        </div>
-      </header>
+          <div className="ent-header-actions">
+            <Link to="/dashboard" className="ent-nav-link">
+              📊 Classic Dashboard
+            </Link>
+            <Link to="/properties" className="ent-nav-link">
+              🏠 Properties
+            </Link>
+            <Link to="/saved-properties" className="ent-nav-link">
+              ❤️ Saved
+            </Link>
 
-      {/* Main Suite Navigation Bar */}
-      <nav className="enterprise-nav-tabs" aria-label="Enterprise Navigation">
-        <button
-          type="button"
-          className={`ent-nav-scroll-btn scroll-left ${hasOverflow && canScrollLeft ? "visible" : "hidden"}`}
-          onClick={() => scrollNav("left")}
-          disabled={!hasOverflow || !canScrollLeft}
-          aria-label="Scroll navigation left"
-          title="Scroll left"
-        >
-          ‹
-        </button>
-        <div
-          className="nav-tabs-scrollable"
-          ref={navTabsRef}
-          onScroll={checkNavScroll}
-        >
-          {navigationItems.map((item) => (
-            <button
-              key={item.key}
-              data-tab-key={item.key}
-              type="button"
-              className={`ent-tab-button ${activeTab === item.key ? "active" : ""}`}
-              onClick={() => handleTabChange(item.key)}
-            >
-              <span className="tab-icon">{item.icon}</span>
-              <span className="tab-label">{item.label}</span>
+            <div className="ent-user-pill">
+              <div className="user-initial">{(user?.name || "U").charAt(0).toUpperCase()}</div>
+              <div className="user-info-text">
+                <span className="user-name">{user?.name || "Enterprise User"}</span>
+                <span className="user-role">{isAdmin ? "Administrator" : "Agent"}</span>
+              </div>
+            </div>
+
+            <button type="button" className="ent-logout-btn" onClick={handleLogout} title="Sign Out">
+              🚪 Logout
             </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          className={`ent-nav-scroll-btn scroll-right ${hasOverflow && canScrollRight ? "visible" : "hidden"}`}
-          onClick={() => scrollNav("right")}
-          disabled={!hasOverflow || !canScrollRight}
-          aria-label="Scroll navigation right"
-          title="Scroll right"
-        >
-          ›
-        </button>
-      </nav>
+          </div>
+        </header>
 
-      {/* Active Enterprise Module Display */}
-      <main className="enterprise-main-body">
-        <div key={activeTab} className="enterprise-module-3d-wrapper">
-          {activeTab === "crm" && <CRMModule />}
-          {activeTab === "broker" && <BrokerModule />}
-          {activeTab === "deals" && <DealsModule />}
-          {activeTab === "finance" && <FinanceModule />}
-          {activeTab === "marketing" && <MarketingModule />}
-          {activeTab === "communications" && <CommunicationsModule />}
-          {activeTab === "aimaps" && <AIMapsModule />}
-          {activeTab === "executive" && <AnalyticsSecurityModule />}
-          {activeTab === "governance" && <LegalGovernanceModule />}
-        </div>
-      </main>
+        {/* Main Suite Navigation Bar */}
+        <nav className="enterprise-nav-tabs" aria-label="Enterprise Navigation">
+          <button
+            type="button"
+            className={`ent-nav-scroll-btn scroll-left ${hasOverflow && canScrollLeft ? "visible" : "hidden"}`}
+            onClick={() => scrollNav("left")}
+            disabled={!hasOverflow || !canScrollLeft}
+            aria-label="Scroll navigation left"
+            title="Scroll left"
+          >
+            ‹
+          </button>
+          <div
+            className="nav-tabs-scrollable"
+            ref={navTabsRef}
+            onScroll={checkNavScroll}
+          >
+            {navigationItems.map((item) => (
+              <button
+                key={item.key}
+                data-tab-key={item.key}
+                type="button"
+                className={`ent-tab-button ${activeTab === item.key ? "active" : ""}`}
+                onClick={() => handleTabChange(item.key)}
+              >
+                <span className="tab-icon">{item.icon}</span>
+                <span className="tab-label">{item.label}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={`ent-nav-scroll-btn scroll-right ${hasOverflow && canScrollRight ? "visible" : "hidden"}`}
+            onClick={() => scrollNav("right")}
+            disabled={!hasOverflow || !canScrollRight}
+            aria-label="Scroll navigation right"
+            title="Scroll right"
+          >
+            ›
+          </button>
+        </nav>
+
+        {/* Active Enterprise Module Display */}
+        <main className="enterprise-main-body">
+          <div key={activeTab} className="enterprise-module-3d-wrapper">
+            {activeTab === "crm" && <CRMModule />}
+            {activeTab === "broker" && <BrokerModule />}
+            {activeTab === "deals" && <DealsModule />}
+            {activeTab === "finance" && <FinanceModule />}
+            {activeTab === "marketing" && <MarketingModule />}
+            {activeTab === "communications" && <CommunicationsModule />}
+            {activeTab === "aimaps" && <AIMapsModule />}
+            {activeTab === "executive" && <AnalyticsSecurityModule />}
+            {activeTab === "governance" && <LegalGovernanceModule />}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

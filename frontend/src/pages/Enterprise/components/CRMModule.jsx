@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../../../api/axios";
 
 const getActivityIcon = (type) => {
@@ -26,6 +27,7 @@ const formatActivityType = (type) => {
 };
 
 export default function CRMModule() {
+  const [searchParams] = useSearchParams();
   const [leads, setLeads] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,7 +35,15 @@ export default function CRMModule() {
   const [successMsg, setSuccessMsg] = useState("");
 
   // Filters & View
-  const [viewMode, setViewMode] = useState("kanban"); // 'kanban' | 'table'
+  const initialView = searchParams.get("view") === "table" ? "table" : "kanban";
+  const [viewMode, setViewMode] = useState(initialView); // 'kanban' | 'table'
+
+  useEffect(() => {
+    const v = searchParams.get("view");
+    if (v === "table" || v === "kanban") {
+      setViewMode(v);
+    }
+  }, [searchParams]);
   const [stageFilter, setStageFilter] = useState("all");
   const [search, setSearch] = useState("");
 

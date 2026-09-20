@@ -28,7 +28,15 @@
   --ent-shadow-lg: var(--shadow-lg, 0 12px 30px -4px rgba(11, 19, 41, 0.1));
 }
 
-.enterprise-portal-root {
+.enterprise-portal-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--ent-bg);
+}
+
+.enterprise-portal-root,
+.enterprise-portal-layout .enterprise-portal-root {
   min-height: 100vh;
   background-color: var(--ent-bg);
   color: var(--ent-text-primary);
@@ -37,9 +45,19 @@
   flex-direction: column;
   overflow-x: hidden;
   max-width: 100%;
-  width: 100%;
+  width: calc(100% - 280px);
+  margin-left: 280px;
   box-sizing: border-box;
   min-width: 0;
+  flex: 1;
+}
+
+@media (max-width: 1024px) {
+  .enterprise-portal-root,
+  .enterprise-portal-layout .enterprise-portal-root {
+    width: 100%;
+    margin-left: 0;
+  }
 }
 
 /* Header */

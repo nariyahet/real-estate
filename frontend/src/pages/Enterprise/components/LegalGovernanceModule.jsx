@@ -1,8 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../../../api/axios";
 
 export default function LegalGovernanceModule() {
-  const [activeTab, setActiveTab] = useState("agreements"); // 'agreements' | 'apikeys' | 'organization'
+  const [searchParams] = useSearchParams();
+  const subParam = searchParams.get("sub");
+  const [activeTab, setActiveTab] = useState(subParam || "agreements"); // 'agreements' | 'apikeys' | 'organization'
+
+  useEffect(() => {
+    const sub = searchParams.get("sub");
+    if (sub && sub !== activeTab) {
+      setActiveTab(sub);
+    }
+  }, [searchParams, activeTab]);
   const [agreements, setAgreements] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [deals, setDeals] = useState([]);

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import DashboardArchitecturalBg from "../components/3D/DashboardArchitecturalBg";
 import Card3DTilt from "../components/3D/Card3DTilt";
+import AdminSidebar from "../components/AdminSidebar/AdminSidebar";
 import "../App.css";
 
 // Animated counter for stat values
@@ -146,79 +147,8 @@ function Dashboard() {
 
   return (
     <div className="admin-layout">
-      {/* Sidebar Navigation */}
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-icon">🏢</div>
-
-          <div>
-            <h2>RealEstate</h2>
-            <span>{isAdmin ? "Admin Studio" : "Agent Studio"}</span>
-          </div>
-        </div>
-
-        <nav className="sidebar-nav">
-          <button
-            type="button"
-            className="nav-item active"
-            onClick={() => navigate("/dashboard")}
-          >
-            <span>📊</span>
-            Dashboard
-          </button>
-
-          {isAdmin && (
-            <>
-              <button
-                type="button"
-                className="nav-item"
-                onClick={() => navigate("/users")}
-              >
-                <span>👥</span>
-                Users
-              </button>
-
-              <button
-                type="button"
-                className="nav-item"
-                onClick={() => navigate("/agents")}
-              >
-                <span>🤝</span>
-                Agents
-              </button>
-            </>
-          )}
-
-          <button
-            type="button"
-            className="nav-item"
-            onClick={() => navigate("/properties")}
-          >
-            <span>🏠</span>
-            Properties
-          </button>
-
-          <button
-            type="button"
-            className="nav-item enterprise-nav-item"
-            onClick={() => navigate("/enterprise")}
-          >
-            <span>🚀</span>
-            Enterprise Suite
-          </button>
-        </nav>
-
-        <div className="sidebar-bottom">
-          <button
-            type="button"
-            className="nav-item logout-btn"
-            onClick={handleLogout}
-          >
-            <span>🚪</span>
-            Logout
-          </button>
-        </div>
-      </aside>
+      {/* Enterprise Admin Studio Sidebar */}
+      <AdminSidebar />
 
       {/* Main Content Area */}
       <main className="main-content">
