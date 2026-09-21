@@ -2537,3 +2537,149 @@
   }
 }
 
+/* ==========================================================================
+   ENTERPRISE LEGAL ENTITY / ORGANIZATION PROFILE
+   ========================================================================== */
+
+.org-profile-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px -2px rgba(11, 37, 69, 0.06), 0 2px 6px -1px rgba(11, 37, 69, 0.04);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.org-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.org-profile-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
+  border: 1px solid #7DD3FC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.org-profile-header h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0B2545;
+}
+
+.org-profile-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 0.88rem;
+  color: #64748B;
+}
+
+.org-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.org-profile-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.org-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.org-form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  margin: 0;
+}
+
+.org-form-input {
+  width: 100%;
+  height: 46px;
+  padding: 0 1rem;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #0F172A;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.org-form-input:focus {
+  outline: none;
+  border-color: #2563EB;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.org-form-input[readonly] {
+  cursor: default;
+  background: #F8FAFC;
+}
+
+@media (max-width: 868px) {
+  .org-profile-card {
+    padding: 1.5rem;
+  }
+  .org-profile-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .org-profile-col {
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .org-profile-card {
+    padding: 1rem;
+  }
+  .org-profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .org-form-input {
+    height: 42px;
+    font-size: 0.9rem;
+    padding: 0 0.75rem;
+  }
+}
+
+

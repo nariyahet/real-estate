@@ -304,34 +304,78 @@ export default function LegalGovernanceModule() {
           )}
 
           {/* TAB 3: ORGANIZATION PROFILE */}
-          {activeTab === "organization" && organization && (
+          {activeTab === "organization" && (
             <div className="tab-content-area">
-              <div className="ent-card">
-                <h3>🏢 Enterprise Legal Entity Profile</h3>
-                <div className="form-grid-2" style={{ marginTop: "1.5rem" }}>
+              <div className="ent-card org-profile-card">
+                <div className="org-profile-header">
+                  <span className="org-profile-icon">🏢</span>
                   <div>
-                    <label>Enterprise Entity Name</label>
-                    <input type="text" readOnly value={organization.name || "EstateElite Enterprises Ltd."} />
+                    <h3>Enterprise Legal Entity Profile</h3>
+                    <p className="org-profile-subtitle">Official corporate registry details, compliance identity & platform governance credentials</p>
                   </div>
-                  <div>
-                    <label>Corporate Tax Registration / GSTIN</label>
-                    <input type="text" readOnly value={organization.tax_id || "24ABCDE1234F1Z5"} />
+                </div>
+
+                <div className="org-profile-grid">
+                  {/* Left Column */}
+                  <div className="org-profile-col">
+                    <div className="org-form-group">
+                      <label className="org-form-label">Enterprise Entity Name</label>
+                      <input
+                        type="text"
+                        className="org-form-input"
+                        readOnly
+                        value={organization?.name || "EstateElite Enterprises Ltd."}
+                      />
+                    </div>
+                    <div className="org-form-group">
+                      <label className="org-form-label">Corporate Headquarters</label>
+                      <input
+                        type="text"
+                        className="org-form-input"
+                        readOnly
+                        value={organization?.address || "Ring Road Financial District"}
+                      />
+                    </div>
+                    <div className="org-form-group">
+                      <label className="org-form-label">Enterprise Support Email</label>
+                      <input
+                        type="text"
+                        className="org-form-input"
+                        readOnly
+                        value={organization?.support_email || "support@estateelite.com"}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label>Corporate Headquarters</label>
-                    <input type="text" readOnly value={organization.address || "Ring Road Financial District"} />
-                  </div>
-                  <div>
-                    <label>Headquarters City & State</label>
-                    <input type="text" readOnly value={`${organization.city || "Surat"}, ${organization.state || "Gujarat"}`} />
-                  </div>
-                  <div>
-                    <label>Enterprise Support Email</label>
-                    <input type="text" readOnly value={organization.support_email || "support@estateelite.com"} />
-                  </div>
-                  <div>
-                    <label>Enterprise Support Phone</label>
-                    <input type="text" readOnly value={organization.support_phone || "+91 (0261) 2500000"} />
+
+                  {/* Right Column */}
+                  <div className="org-profile-col">
+                    <div className="org-form-group">
+                      <label className="org-form-label">Corporate Tax Registration / GSTIN</label>
+                      <input
+                        type="text"
+                        className="org-form-input"
+                        readOnly
+                        value={organization?.tax_id || "24ABCDE1234F1Z5"}
+                      />
+                    </div>
+                    <div className="org-form-group">
+                      <label className="org-form-label">Headquarters City & State</label>
+                      <input
+                        type="text"
+                        className="org-form-input"
+                        readOnly
+                        value={`${organization?.city || "Surat"}, ${organization?.state || "Gujarat"}`}
+                      />
+                    </div>
+                    <div className="org-form-group">
+                      <label className="org-form-label">Enterprise Support Phone</label>
+                      <input
+                        type="text"
+                        className="org-form-input"
+                        readOnly
+                        value={organization?.support_phone || "+91 (0261) 2500000"}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

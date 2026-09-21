@@ -6,6 +6,17 @@ export default function BrokerModule() {
   const [searchParams, setSearchParams] = useSearchParams();
   const subParam = searchParams.get("sub");
   const [brokerTab, setBrokerTab] = useState(subParam || "overview"); // 'overview' | 'commissions' | 'quotas' | 'leaderboard' | 'territories' | 'payouts'
+  const [agents, setAgents] = useState([]);
+  const [selectedAgentId, setSelectedAgentId] = useState(1);
+  const [performance, setPerformance] = useState(null);
+  const [commissions, setCommissions] = useState([]);
+  const [quotas, setQuotas] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [territories, setTerritories] = useState([]);
+  const [payouts, setPayouts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
     const sub = searchParams.get("sub");
@@ -239,27 +250,27 @@ export default function BrokerModule() {
       ) : (
         <>
           {/* TAB 1: OVERVIEW & PERFORMANCE */}
-          {brokerTab === "overview" && performance && (
+          {brokerTab === "overview" && (
             <div className="tab-content-area">
               <div className="ent-kpi-grid">
                 <div className="ent-kpi-card">
                   <span className="ent-kpi-title">Active Property Listings</span>
-                  <span className="ent-kpi-val">{performance.activeListings || 0}</span>
+                  <span className="ent-kpi-val">{performance?.activeListings || 0}</span>
                   <span className="ent-kpi-sub">Currently under management</span>
                 </div>
                 <div className="ent-kpi-card">
                   <span className="ent-kpi-title">Closed Deals (YTD)</span>
-                  <span className="ent-kpi-val">{performance.dealsClosed || 0}</span>
+                  <span className="ent-kpi-val">{performance?.dealsClosed || 0}</span>
                   <span className="ent-kpi-sub">Finalized sales transactions</span>
                 </div>
                 <div className="ent-kpi-card">
                   <span className="ent-kpi-title">Total Sales Volume</span>
-                  <span className="ent-kpi-val">₹{Number(performance.totalSalesVolume || 0).toLocaleString("en-IN")}</span>
+                  <span className="ent-kpi-val">₹{Number(performance?.totalSalesVolume || 0).toLocaleString("en-IN")}</span>
                   <span className="ent-kpi-sub">Gross closed transaction value</span>
                 </div>
                 <div className="ent-kpi-card">
                   <span className="ent-kpi-title">Net Commission Earned</span>
-                  <span className="ent-kpi-val">₹{Number(performance.totalCommissionEarned || 0).toLocaleString("en-IN")}</span>
+                  <span className="ent-kpi-val">₹{Number(performance?.totalCommissionEarned || 0).toLocaleString("en-IN")}</span>
                   <span className="ent-kpi-sub">Approved / Paid agent earnings</span>
                 </div>
               </div>
@@ -268,15 +279,15 @@ export default function BrokerModule() {
                 <h3>📈 Closure Velocity & Lead Metrics</h3>
                 <div className="velocity-grid">
                   <div className="velocity-metric">
-                    <strong>{performance.assignedLeads || 0}</strong>
+                    <strong>{performance?.assignedLeads || 0}</strong>
                     <span>Total Leads Assigned</span>
                   </div>
                   <div className="velocity-metric">
-                    <strong>{performance.avgDaysToClose || 32} Days</strong>
+                    <strong>{performance?.avgDaysToClose || 32} Days</strong>
                     <span>Average Days to Close Deal</span>
                   </div>
                   <div className="velocity-metric">
-                    <strong>{performance.leadConversionRate || "18.5%"}</strong>
+                    <strong>{performance?.leadConversionRate || "18.5%"}</strong>
                     <span>Lead-to-Close Conversion</span>
                   </div>
                   <div className="velocity-metric">

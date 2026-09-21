@@ -65,9 +65,9 @@ export default function AdminSidebar({ className = "" }) {
         icon: "💰",
         children: [
           { id: "fin_pnl", label: "Profit & Loss Statement", path: "/enterprise", tab: "finance", sub: "pnl", isDefaultSub: true },
-          { id: "fin_ledger", label: "General Ledger", path: "/enterprise", tab: "finance", sub: "ledger" },
-          { id: "fin_invoices", label: "Milestone Invoices", path: "/enterprise", tab: "finance", sub: "invoices" },
           { id: "fin_accounts", label: "Chart of Accounts", path: "/enterprise", tab: "finance", sub: "accounts" },
+          { id: "fin_invoices", label: "Milestone Invoices", path: "/enterprise", tab: "finance", sub: "invoices" },
+          { id: "fin_ledger", label: "General Ledger", path: "/enterprise", tab: "finance", sub: "ledger" },
           { id: "fin_expenses", label: "Operating Expenses", path: "/enterprise", tab: "finance", sub: "expenses" },
         ],
       },
