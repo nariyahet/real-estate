@@ -7,7 +7,6 @@ import Properties from "./pages/Properties";
 import Users from "./pages/Users";
 import SavedProperties from "./pages/SavedProperties";
 import EnterprisePortal from "./pages/Enterprise/EnterprisePortal";
-import SubscriptionPlans from "./pages/SaaS/SubscriptionPlans";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -68,24 +67,6 @@ function App() {
         element={
           <ProtectedRoute>
             <EnterprisePortal />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/subscription"
-        element={
-          <ProtectedRoute>
-            <SubscriptionPlans />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/pricing"
-        element={
-          <ProtectedRoute>
-            <SubscriptionPlans />
           </ProtectedRoute>
         }
       />

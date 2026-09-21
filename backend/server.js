@@ -70,7 +70,6 @@ const marketingRoutes = require("./routes/marketingRoutes");
 const communicationsRoutes = require("./routes/communicationsRoutes");
 const aiMapsRoutes = require("./routes/aiMapsRoutes");
 const enterpriseRoutes = require("./routes/enterpriseRoutes");
-const saasRoutes = require("./routes/saasRoutes");
 
 const { getAllAgents } = require("./controllers/adminController");
 const { protect } = require("./middleware/authMiddleware");
@@ -87,7 +86,6 @@ app.use("/api/deals", dealsRoutes);
 app.use("/api/finance", financeRoutes);
 app.use("/api/marketing", marketingRoutes);
 app.use("/api/communications", communicationsRoutes);
-app.use("/api/saas", saasRoutes);
 app.use("/api", aiMapsRoutes);
 app.use("/api", enterpriseRoutes);
 app.use("/api", savedRoutes);
