@@ -20,7 +20,7 @@ const formatPinPrice = (price) => {
 };
 
 export default function AIMapsModule() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const subParam = searchParams.get("sub");
   const [activeTab, setActiveTab] = useState(subParam || "nl_search");
 
@@ -30,6 +30,14 @@ export default function AIMapsModule() {
       setActiveTab(sub);
     }
   }, [searchParams, activeTab]);
+
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", "aimaps");
+    newParams.set("sub", key);
+    setSearchParams(newParams);
+  };
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -167,7 +175,7 @@ export default function AIMapsModule() {
         <button
           type="button"
           className={`ent-subtab ${activeTab === "nl_search" ? "active" : ""}`}
-          onClick={() => setActiveTab("nl_search")}
+          onClick={() => handleTabChange("nl_search")}
         >
           🔍 Rule-Based Natural Language Search
         </button>
@@ -175,7 +183,7 @@ export default function AIMapsModule() {
           type="button"
           className={`ent-subtab ${activeTab === "buyer_match" ? "active" : ""}`}
           onClick={() => {
-            setActiveTab("buyer_match");
+            handleTabChange("buyer_match");
             if (matchLeads.length === 0 && matchProperties.length === 0) {
               fetchBuyerMatchData();
             }
@@ -186,7 +194,7 @@ export default function AIMapsModule() {
         <button
           type="button"
           className={`ent-subtab ${activeTab === "geo_map" ? "active" : ""}`}
-          onClick={() => setActiveTab("geo_map")}
+          onClick={() => handleTabChange("geo_map")}
         >
           🗺️ Geospatial Location Foundation & Proximity Index
         </button>

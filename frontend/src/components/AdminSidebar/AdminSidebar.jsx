@@ -25,44 +25,17 @@ export default function AdminSidebar({ className = "" }) {
   };
 
   // ─────────────────────────────────────────────────────────────
-  // 15 BUSINESS-ORIENTED ENTERPRISE SUITE CATEGORIES
+  // ENTERPRISE SUITE CATEGORIES (VERIFIED IMPLEMENTED FEATURES)
   // ─────────────────────────────────────────────────────────────
   const enterpriseCategories = useMemo(
     () => [
-      {
-        id: "prop_intelligence",
-        label: "Property Intelligence",
-        icon: "🧠",
-        children: [
-          { id: "adv_search", label: "Advanced Property Search", path: "/properties", isDefaultSub: true },
-          { id: "smart_filters", label: "Smart Filters", path: "/properties", query: { filter: "active" } },
-          { id: "prop_analytics", label: "Property Analytics", path: "/properties", query: { tab: "analytics" } },
-          { id: "prop_insights", label: "Property Insights", path: "/properties", query: { tab: "insights" } },
-          { id: "prop_recommendations", label: "Property Recommendations", path: "/properties", query: { tab: "recommendations" } },
-        ],
-      },
-      {
-        id: "prop_management",
-        label: "Property Management",
-        icon: "🏢",
-        children: [
-          { id: "inventory", label: "Property Inventory", path: "/properties", query: { view: "inventory" } },
-          { id: "studio_3d", label: "3D Studio View", path: "/properties", query: { view: "3d" } },
-          { id: "doc_vault", label: "Document Vault", path: "/properties", query: { action: "vault" } },
-          { id: "operations", label: "Property Operations", path: "/properties", query: { action: "operations" } },
-          { id: "saved_props", label: "Saved Properties", path: "/saved-properties" },
-        ],
-      },
       {
         id: "leads_crm",
         label: "Leads & CRM",
         icon: "📋",
         children: [
-          { id: "crm_kanban", label: "Lead Pipeline", path: "/enterprise", tab: "crm", isDefaultSub: true },
+          { id: "crm_kanban", label: "Lead Pipeline", path: "/enterprise", tab: "crm", query: { view: "kanban" }, isDefaultSub: true },
           { id: "crm_table", label: "Lead Management", path: "/enterprise", tab: "crm", query: { view: "table" } },
-          { id: "crm_assignment", label: "Lead Assignment", path: "/enterprise", tab: "crm", query: { view: "assignment" } },
-          { id: "crm_followups", label: "Follow-ups & Tasks", path: "/enterprise", tab: "crm", query: { view: "followups" } },
-          { id: "crm_activity", label: "Lead Activity Stream", path: "/enterprise", tab: "crm", query: { view: "activity" } },
         ],
       },
       {
@@ -70,10 +43,12 @@ export default function AdminSidebar({ className = "" }) {
         label: "Agent Management",
         icon: "👔",
         children: [
-          { id: "agent_directory", label: "Agent Directory", path: "/agents" },
-          { id: "broker_leaderboard", label: "Performance Leaderboard", path: "/enterprise", tab: "broker", sub: "leaderboard", isDefaultSub: true },
-          { id: "broker_commissions", label: "Commission Split", path: "/enterprise", tab: "broker", sub: "commissions" },
-          { id: "broker_allocation", label: "Desk & Licensing Allocation", path: "/enterprise", tab: "broker", sub: "allocation" },
+          { id: "broker_kpi", label: "KPIs & Performance", path: "/enterprise", tab: "broker", sub: "overview", isDefaultSub: true },
+          { id: "broker_commissions", label: "Commission Ledger", path: "/enterprise", tab: "broker", sub: "commissions" },
+          { id: "broker_payouts", label: "Agent Payouts", path: "/enterprise", tab: "broker", sub: "payouts" },
+          { id: "broker_quotas", label: "Sales Quotas", path: "/enterprise", tab: "broker", sub: "quotas" },
+          { id: "broker_leaderboard", label: "Performance Leaderboard", path: "/enterprise", tab: "broker", sub: "leaderboard" },
+          { id: "broker_territories", label: "Territory Assignments", path: "/enterprise", tab: "broker", sub: "territories" },
         ],
       },
       {
@@ -81,10 +56,7 @@ export default function AdminSidebar({ className = "" }) {
         label: "Sales & Deals",
         icon: "🤝",
         children: [
-          { id: "deals_pipeline", label: "Deal Pipeline", path: "/enterprise", tab: "deals", sub: "pipeline", isDefaultSub: true },
-          { id: "deals_milestones", label: "Escrow Milestones", path: "/enterprise", tab: "deals", sub: "milestones" },
-          { id: "deals_offers", label: "Offers & Contracts", path: "/enterprise", tab: "deals", sub: "offers" },
-          { id: "deals_closing", label: "Closing Checklist", path: "/enterprise", tab: "deals", sub: "closing" },
+          { id: "deals_pipeline", label: "Deal Pipeline & Escrow", path: "/enterprise", tab: "deals", isDefaultSub: true },
         ],
       },
       {
@@ -92,9 +64,11 @@ export default function AdminSidebar({ className = "" }) {
         label: "Finance & Accounting",
         icon: "💰",
         children: [
-          { id: "fin_ledger", label: "General Ledger", path: "/enterprise", tab: "finance", sub: "ledger", isDefaultSub: true },
-          { id: "fin_pnl", label: "Cash Flow & P&L", path: "/enterprise", tab: "finance", sub: "pnl" },
-          { id: "fin_invoices", label: "Invoicing & Tax Schedules", path: "/enterprise", tab: "finance", sub: "invoices" },
+          { id: "fin_pnl", label: "Profit & Loss Statement", path: "/enterprise", tab: "finance", sub: "pnl", isDefaultSub: true },
+          { id: "fin_ledger", label: "General Ledger", path: "/enterprise", tab: "finance", sub: "ledger" },
+          { id: "fin_invoices", label: "Milestone Invoices", path: "/enterprise", tab: "finance", sub: "invoices" },
+          { id: "fin_accounts", label: "Chart of Accounts", path: "/enterprise", tab: "finance", sub: "accounts" },
+          { id: "fin_expenses", label: "Operating Expenses", path: "/enterprise", tab: "finance", sub: "expenses" },
         ],
       },
       {
@@ -103,9 +77,8 @@ export default function AdminSidebar({ className = "" }) {
         icon: "📢",
         children: [
           { id: "mkt_campaigns", label: "Campaign Hub", path: "/enterprise", tab: "marketing", sub: "campaigns", isDefaultSub: true },
-          { id: "mkt_landing", label: "Landing Page Builder", path: "/enterprise", tab: "marketing", sub: "landing" },
-          { id: "mkt_social", label: "Social & Ad Channels", path: "/enterprise", tab: "marketing", sub: "social" },
-          { id: "mkt_brochures", label: "Brochure Generator", path: "/enterprise", tab: "marketing", sub: "brochures" },
+          { id: "mkt_landing", label: "Dynamic Landing Pages", path: "/enterprise", tab: "marketing", sub: "landing_pages" },
+          { id: "mkt_automations", label: "Lead Automations", path: "/enterprise", tab: "marketing", sub: "automations" },
         ],
       },
       {
@@ -113,9 +86,9 @@ export default function AdminSidebar({ className = "" }) {
         label: "Communications",
         icon: "💬",
         children: [
-          { id: "comm_chat", label: "Live Chat & Messaging", path: "/enterprise", tab: "communications", sub: "chat", isDefaultSub: true },
-          { id: "comm_tours", label: "Virtual Tour Requests", path: "/enterprise", tab: "communications", sub: "tours" },
-          { id: "comm_notifs", label: "Automated Notifications", path: "/enterprise", tab: "communications", sub: "notifications" },
+          { id: "comm_threads", label: "Live Messaging & Threads", path: "/enterprise", tab: "communications", sub: "threads", isDefaultSub: true },
+          { id: "comm_appts", label: "Virtual Tour Appointments", path: "/enterprise", tab: "communications", sub: "appointments" },
+          { id: "comm_notifs", label: "Centralized Notifications", path: "/enterprise", tab: "communications", sub: "notifications" },
         ],
       },
       {
@@ -132,8 +105,7 @@ export default function AdminSidebar({ className = "" }) {
         label: "Maps & Geo",
         icon: "🗺️",
         children: [
-          { id: "geo_property_map", label: "Geo-Spatial Property Map", path: "/enterprise", tab: "aimaps", sub: "geo_map", isDefaultSub: true },
-          { id: "geo_density", label: "City Density Heatmap", path: "/enterprise", tab: "aimaps", sub: "geo_map", query: { view: "density" } },
+          { id: "geo_property_map", label: "Geospatial Property Map", path: "/enterprise", tab: "aimaps", sub: "geo_map" },
         ],
       },
       {
@@ -142,8 +114,6 @@ export default function AdminSidebar({ className = "" }) {
         icon: "📊",
         children: [
           { id: "bi_overview", label: "Executive BI Dashboard", path: "/enterprise", tab: "executive", sub: "bi", isDefaultSub: true },
-          { id: "bi_velocity", label: "Revenue Velocity", path: "/enterprise", tab: "executive", sub: "bi", query: { metric: "velocity" } },
-          { id: "bi_funnels", label: "Conversion Funnels", path: "/enterprise", tab: "executive", sub: "bi", query: { metric: "funnels" } },
         ],
       },
       {
@@ -151,9 +121,8 @@ export default function AdminSidebar({ className = "" }) {
         label: "Security & RBAC",
         icon: "🛡️",
         children: [
-          { id: "sec_roles", label: "User Permissions & Roles", path: "/enterprise", tab: "executive", sub: "rbac", isDefaultSub: true },
+          { id: "sec_roles", label: "Roles & Permissions", path: "/enterprise", tab: "executive", sub: "rbac" },
           { id: "sec_audit", label: "Security Audit Logs", path: "/enterprise", tab: "executive", sub: "audit" },
-          { id: "sec_branches", label: "Branch Access Control", path: "/enterprise", tab: "executive", sub: "rbac", query: { view: "branches" } },
         ],
       },
       {
@@ -161,9 +130,7 @@ export default function AdminSidebar({ className = "" }) {
         label: "Legal & Compliance",
         icon: "⚖️",
         children: [
-          { id: "legal_templates", label: "Document Templates", path: "/enterprise", tab: "governance", sub: "agreements", isDefaultSub: true },
-          { id: "legal_contracts", label: "Digital Contracts & Signatures", path: "/enterprise", tab: "governance", sub: "agreements", query: { view: "signed" } },
-          { id: "legal_disputes", label: "Dispute Tracking", path: "/enterprise", tab: "governance", sub: "agreements", query: { view: "disputes" } },
+          { id: "legal_contracts", label: "Legal Contracts & E-Signs", path: "/enterprise", tab: "governance", sub: "agreements", isDefaultSub: true },
         ],
       },
       {
@@ -171,8 +138,7 @@ export default function AdminSidebar({ className = "" }) {
         label: "Integrations & API",
         icon: "🔌",
         children: [
-          { id: "api_keys", label: "Developer API Keys", path: "/enterprise", tab: "governance", sub: "apikeys", isDefaultSub: true },
-          { id: "api_webhooks", label: "Webhooks & Endpoints", path: "/enterprise", tab: "governance", sub: "apikeys", query: { view: "webhooks" } },
+          { id: "api_keys", label: "Developer API Keys", path: "/enterprise", tab: "governance", sub: "apikeys" },
         ],
       },
       {
@@ -180,8 +146,7 @@ export default function AdminSidebar({ className = "" }) {
         label: "Organization",
         icon: "🏛️",
         children: [
-          { id: "org_profile", label: "Organization Profile", path: "/enterprise", tab: "governance", sub: "organization", isDefaultSub: true },
-          { id: "org_governance", label: "Branch & Entity Governance", path: "/enterprise", tab: "governance", sub: "organization", query: { view: "governance" } },
+          { id: "org_profile", label: "Organization Profile", path: "/enterprise", tab: "governance", sub: "organization" },
         ],
       },
     ],
@@ -192,9 +157,6 @@ export default function AdminSidebar({ className = "" }) {
   // ROUTE-AWARE ACTIVE STATE EVALUATION
   // ─────────────────────────────────────────────────────────────
   const isPrimaryActive = (path) => {
-    if (path === "/properties") {
-      return location.pathname === "/properties" && !searchParams.has("tab") && !searchParams.has("action") && !searchParams.has("sub") && !searchParams.has("filter");
-    }
     return location.pathname === path;
   };
 
@@ -209,25 +171,38 @@ export default function AdminSidebar({ className = "" }) {
         const currentSub = searchParams.get("sub");
         if (child.sub) {
           if (currentSub) {
-            return currentSub === child.sub;
+            if (currentSub !== child.sub) return false;
+          } else if (!child.isDefaultSub) {
+            return false;
           }
-          return !!child.isDefaultSub;
         } else if (currentSub) {
           return false;
         }
 
         if (child.query) {
           for (const [k, v] of Object.entries(child.query)) {
-            if (searchParams.get(k) !== v) return false;
+            const val = searchParams.get(k);
+            if (val) {
+              if (val !== v) return false;
+            } else {
+              if (!child.isDefaultSub) return false;
+            }
           }
           return true;
-        } else if (child.isDefaultSub && !searchParams.get("view")) {
+        }
+
+        if (searchParams.get("view") && !child.query) {
+          return false;
+        }
+
+        if (child.isDefaultSub) {
           return true;
         }
-        return false;
+
+        return !child.sub && !child.query;
       }
 
-      // 2. Direct routes (/properties, /saved-properties, /agents, /users)
+      // 2. Direct routes
       if (location.pathname === child.path) {
         if (child.query) {
           for (const [k, v] of Object.entries(child.query)) {
@@ -364,7 +339,7 @@ export default function AdminSidebar({ className = "" }) {
             <span className="enterprise-section-title">Enterprise Suite</span>
           </div>
 
-          {/* 15 Expandable Categories */}
+          {/* Enterprise Categories */}
           <div className="enterprise-categories-list">
             {enterpriseCategories.map((category) => {
               const isExpanded = !!expandedCategories[category.id];

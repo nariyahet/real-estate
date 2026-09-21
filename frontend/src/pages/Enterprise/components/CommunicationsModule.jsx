@@ -1,8 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../../../api/axios";
 
 export default function CommunicationsModule() {
-  const [commTab, setCommTab] = useState("threads"); // 'threads' | 'appointments' | 'notifications'
+  const [searchParams, setSearchParams] = useSearchParams();
+  const subParam = searchParams.get("sub");
+  const [commTab, setCommTab] = useState(subParam || "threads"); // 'threads' | 'appointments' | 'notifications'
+
+  useEffect(() => {
+    const sub = searchParams.get("sub");
+    if (sub && ["threads", "appointments", "notifications"].includes(sub)) {
+      setCommTab(sub);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (key) => {
+    setCommTab(key);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", "communications");
+    newParams.set("sub", key);
+    setSearchParams(newParams);
+  };
   const [threads, setThreads] = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -185,21 +203,21 @@ export default function CommunicationsModule() {
         <button
           type="button"
           className={`ent-subtab ${commTab === "threads" ? "active" : ""}`}
-          onClick={() => setCommTab("threads")}
+          onClick={() => handleTabChange("threads")}
         >
           💬 Messaging Threads ({threads.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${commTab === "appointments" ? "active" : ""}`}
-          onClick={() => setCommTab("appointments")}
+          onClick={() => handleTabChange("appointments")}
         >
           📅 Appointments & Virtual Tours ({appointments.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${commTab === "notifications" ? "active" : ""}`}
-          onClick={() => setCommTab("notifications")}
+          onClick={() => handleTabChange("notifications")}
         >
           🔔 Centralized Notifications ({notifications.length})
         </button>

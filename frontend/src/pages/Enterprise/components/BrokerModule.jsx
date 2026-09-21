@@ -1,21 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../../../api/axios";
 
 export default function BrokerModule() {
-  const [agents, setAgents] = useState([]);
-  const [selectedAgentId, setSelectedAgentId] = useState(1);
-  const [performance, setPerformance] = useState(null);
-  const [commissions, setCommissions] = useState([]);
-  const [quotas, setQuotas] = useState([]);
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [territories, setTerritories] = useState([]);
-  const [payouts, setPayouts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const subParam = searchParams.get("sub");
+  const [brokerTab, setBrokerTab] = useState(subParam || "overview"); // 'overview' | 'commissions' | 'quotas' | 'leaderboard' | 'territories' | 'payouts'
 
-  // Sub-tabs in Broker Module
-  const [brokerTab, setBrokerTab] = useState("overview"); // 'overview' | 'commissions' | 'quotas' | 'leaderboard' | 'territories' | 'payouts'
+  useEffect(() => {
+    const sub = searchParams.get("sub");
+    if (sub && ["overview", "commissions", "quotas", "leaderboard", "territories", "payouts"].includes(sub)) {
+      setBrokerTab(sub);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (key) => {
+    setBrokerTab(key);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", "broker");
+    newParams.set("sub", key);
+    setSearchParams(newParams);
+  };
 
   // New Commission Payout update
   const [processingCommissionId, setProcessingCommissionId] = useState(null);
@@ -188,42 +193,42 @@ export default function BrokerModule() {
         <button
           type="button"
           className={`ent-subtab ${brokerTab === "overview" ? "active" : ""}`}
-          onClick={() => setBrokerTab("overview")}
+          onClick={() => handleTabChange("overview")}
         >
           📊 KPIs & Performance
         </button>
         <button
           type="button"
           className={`ent-subtab ${brokerTab === "commissions" ? "active" : ""}`}
-          onClick={() => setBrokerTab("commissions")}
+          onClick={() => handleTabChange("commissions")}
         >
           💰 Commission Ledger ({commissions.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${brokerTab === "payouts" ? "active" : ""}`}
-          onClick={() => setBrokerTab("payouts")}
+          onClick={() => handleTabChange("payouts")}
         >
           💳 Agent Payouts ({payouts.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${brokerTab === "quotas" ? "active" : ""}`}
-          onClick={() => setBrokerTab("quotas")}
+          onClick={() => handleTabChange("quotas")}
         >
           🎯 Sales Quotas
         </button>
         <button
           type="button"
           className={`ent-subtab ${brokerTab === "leaderboard" ? "active" : ""}`}
-          onClick={() => setBrokerTab("leaderboard")}
+          onClick={() => handleTabChange("leaderboard")}
         >
           🏆 Live Leaderboard
         </button>
         <button
           type="button"
           className={`ent-subtab ${brokerTab === "territories" ? "active" : ""}`}
-          onClick={() => setBrokerTab("territories")}
+          onClick={() => handleTabChange("territories")}
         >
           🗺️ Territories ({territories.length})
         </button>

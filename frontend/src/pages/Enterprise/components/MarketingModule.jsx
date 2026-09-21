@@ -1,8 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../../../api/axios";
 
 export default function MarketingModule() {
-  const [marketingTab, setMarketingTab] = useState("campaigns"); // 'campaigns' | 'landing_pages' | 'automations'
+  const [searchParams, setSearchParams] = useSearchParams();
+  const subParam = searchParams.get("sub");
+  const [marketingTab, setMarketingTab] = useState(subParam || "campaigns"); // 'campaigns' | 'landing_pages' | 'automations'
+
+  useEffect(() => {
+    const sub = searchParams.get("sub");
+    if (sub && ["campaigns", "landing_pages", "automations"].includes(sub)) {
+      setMarketingTab(sub);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (key) => {
+    setMarketingTab(key);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", "marketing");
+    newParams.set("sub", key);
+    setSearchParams(newParams);
+  };
   const [campaigns, setCampaigns] = useState([]);
   const [landingPages, setLandingPages] = useState([]);
   const [automations, setAutomations] = useState([]);
@@ -196,21 +214,21 @@ export default function MarketingModule() {
         <button
           type="button"
           className={`ent-subtab ${marketingTab === "campaigns" ? "active" : ""}`}
-          onClick={() => setMarketingTab("campaigns")}
+          onClick={() => handleTabChange("campaigns")}
         >
           🚀 Active Campaigns ({campaigns.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${marketingTab === "landing_pages" ? "active" : ""}`}
-          onClick={() => setMarketingTab("landing_pages")}
+          onClick={() => handleTabChange("landing_pages")}
         >
           🌐 Dynamic Landing Pages ({landingPages.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${marketingTab === "automations" ? "active" : ""}`}
-          onClick={() => setMarketingTab("automations")}
+          onClick={() => handleTabChange("automations")}
         >
           🤖 Lead Nurturing Automations ({automations.length})
         </button>

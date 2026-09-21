@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import api from "../../../api/axios";
 
 export default function AnalyticsSecurityModule() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const subParam = searchParams.get("sub");
   const [activeTab, setActiveTab] = useState(subParam || "bi"); // 'bi' | 'rbac' | 'audit'
 
@@ -13,6 +13,14 @@ export default function AnalyticsSecurityModule() {
       setActiveTab(sub);
     }
   }, [searchParams, activeTab]);
+
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", "executive");
+    newParams.set("sub", key);
+    setSearchParams(newParams);
+  };
   const [executiveBI, setExecutiveBI] = useState(null);
   const [roles, setRoles] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -67,21 +75,21 @@ export default function AnalyticsSecurityModule() {
         <button
           type="button"
           className={`ent-subtab ${activeTab === "bi" ? "active" : ""}`}
-          onClick={() => setActiveTab("bi")}
+          onClick={() => handleTabChange("bi")}
         >
           📈 C-Suite Executive BI Dashboard
         </button>
         <button
           type="button"
           className={`ent-subtab ${activeTab === "rbac" ? "active" : ""}`}
-          onClick={() => setActiveTab("rbac")}
+          onClick={() => handleTabChange("rbac")}
         >
           🛡️ Roles, Permissions & Branches ({roles.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${activeTab === "audit" ? "active" : ""}`}
-          onClick={() => setActiveTab("audit")}
+          onClick={() => handleTabChange("audit")}
         >
           🔒 Security Audit Trail ({auditLogs.length})
         </button>

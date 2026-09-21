@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import api from "../../../api/axios";
 
 export default function LegalGovernanceModule() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const subParam = searchParams.get("sub");
   const [activeTab, setActiveTab] = useState(subParam || "agreements"); // 'agreements' | 'apikeys' | 'organization'
 
@@ -13,6 +13,14 @@ export default function LegalGovernanceModule() {
       setActiveTab(sub);
     }
   }, [searchParams, activeTab]);
+
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", "governance");
+    newParams.set("sub", key);
+    setSearchParams(newParams);
+  };
   const [agreements, setAgreements] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [deals, setDeals] = useState([]);
@@ -156,21 +164,21 @@ export default function LegalGovernanceModule() {
         <button
           type="button"
           className={`ent-subtab ${activeTab === "agreements" ? "active" : ""}`}
-          onClick={() => setActiveTab("agreements")}
+          onClick={() => handleTabChange("agreements")}
         >
           📜 Legal Contracts & E-Signs ({agreements.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${activeTab === "apikeys" ? "active" : ""}`}
-          onClick={() => setActiveTab("apikeys")}
+          onClick={() => handleTabChange("apikeys")}
         >
           🔑 Developer APIs & Webhooks ({apiKeys.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${activeTab === "organization" ? "active" : ""}`}
-          onClick={() => setActiveTab("organization")}
+          onClick={() => handleTabChange("organization")}
         >
           🏢 Organization Profile
         </button>

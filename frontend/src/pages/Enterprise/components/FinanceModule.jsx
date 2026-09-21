@@ -1,8 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../../../api/axios";
 
 export default function FinanceModule() {
-  const [financeTab, setFinanceTab] = useState("pnl"); // 'pnl' | 'accounts' | 'invoices' | 'ledger' | 'expenses'
+  const [searchParams, setSearchParams] = useSearchParams();
+  const subParam = searchParams.get("sub");
+  const [financeTab, setFinanceTab] = useState(subParam || "pnl"); // 'pnl' | 'accounts' | 'invoices' | 'ledger' | 'expenses'
+
+  useEffect(() => {
+    const sub = searchParams.get("sub");
+    if (sub && ["pnl", "accounts", "invoices", "ledger", "expenses"].includes(sub)) {
+      setFinanceTab(sub);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (key) => {
+    setFinanceTab(key);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", "finance");
+    newParams.set("sub", key);
+    setSearchParams(newParams);
+  };
   const [pnlData, setPnlData] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [invoices, setInvoices] = useState([]);
@@ -218,35 +236,35 @@ export default function FinanceModule() {
         <button
           type="button"
           className={`ent-subtab ${financeTab === "pnl" ? "active" : ""}`}
-          onClick={() => setFinanceTab("pnl")}
+          onClick={() => handleTabChange("pnl")}
         >
           📈 Profit & Loss Statement
         </button>
         <button
           type="button"
           className={`ent-subtab ${financeTab === "accounts" ? "active" : ""}`}
-          onClick={() => setFinanceTab("accounts")}
+          onClick={() => handleTabChange("accounts")}
         >
           📑 Chart of Accounts ({accounts.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${financeTab === "invoices" ? "active" : ""}`}
-          onClick={() => setFinanceTab("invoices")}
+          onClick={() => handleTabChange("invoices")}
         >
           📄 Invoices ({invoices.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${financeTab === "ledger" ? "active" : ""}`}
-          onClick={() => setFinanceTab("ledger")}
+          onClick={() => handleTabChange("ledger")}
         >
           ⚖️ General Ledger ({ledgerEntries.length})
         </button>
         <button
           type="button"
           className={`ent-subtab ${financeTab === "expenses" ? "active" : ""}`}
-          onClick={() => setFinanceTab("expenses")}
+          onClick={() => handleTabChange("expenses")}
         >
           💸 Operating Expenses ({expenses.length})
         </button>
