@@ -327,6 +327,15 @@ export default function AdminSidebar({ className = "" }) {
             <span className="nav-icon">🏠</span>
             <span className="nav-label">Properties</span>
           </button>
+
+          <button
+            type="button"
+            className={`admin-nav-item ${isPrimaryActive("/subscription") ? "active" : ""}`}
+            onClick={() => navigate("/subscription")}
+          >
+            <span className="nav-icon">💎</span>
+            <span className="nav-label">Plans & Billing</span>
+          </button>
         </div>
 
         {/* Subtle Separator */}
