@@ -95,6 +95,17 @@ const createOrganizationWithMembership = async ({ name, slug, phone, email, curr
   }
 };
 
+// Canonical Plan Names: Starter, Professional, Enterprise
+const getCanonicalPlanName = (plan) => {
+  if (!plan) return 'Starter';
+  const slug = (plan.slug || '').toLowerCase();
+  const name = (plan.name || '').toLowerCase();
+  if (slug === 'enterprise' || name.includes('enterprise')) return 'Enterprise';
+  if (slug === 'pro' || name.includes('pro')) return 'Professional';
+  if (slug === 'starter' || name.includes('starter')) return 'Starter';
+  return plan.name || 'Starter';
+};
+
 // 3. Get all available SaaS plans
 const getPlans = async () => {
   const [rows] = await pool.query(
@@ -119,6 +130,7 @@ const getPlans = async () => {
 
   return rows.map((p) => ({
     ...p,
+    name: getCanonicalPlanName(p),
     features: typeof p.features === 'string' ? JSON.parse(p.features) : p.features || [],
   }));
 };
@@ -161,6 +173,7 @@ const getOrganizationSubscription = async (organizationId) => {
   const sub = rows[0];
   return {
     ...sub,
+    plan_name: getCanonicalPlanName({ slug: sub.plan_slug, name: sub.plan_name }),
     plan_features: typeof sub.plan_features === 'string' ? JSON.parse(sub.plan_features) : sub.plan_features || [],
   };
 };
@@ -267,6 +280,8 @@ const subscribeOrganizationPlan = async ({ organizationId, planId, billingCycle 
       subscriptionId = insertRes.insertId;
     }
 
+    const canonicalName = getCanonicalPlanName(plan);
+
     // Generate simulated formal invoice
     const invoiceNumber = `INV-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
     const [invRes] = await conn.execute(
@@ -282,7 +297,7 @@ const subscribeOrganizationPlan = async ({ organizationId, planId, billingCycle 
         totalAmount,
         taxAmount,
         plan.currency || 'INR',
-        `${plan.name} (${billingCycle.toUpperCase()}) Subscription`,
+        `${canonicalName} (${billingCycle.toUpperCase()}) Subscription`,
         paymentMethod,
         now,
         now,
@@ -295,7 +310,7 @@ const subscribeOrganizationPlan = async ({ organizationId, planId, billingCycle 
       subscriptionId,
       invoiceId: invRes.insertId,
       invoiceNumber,
-      planName: plan.name,
+      planName: canonicalName,
       amount: totalAmount,
       currency: plan.currency,
       currentPeriodEnd: periodEnd,
@@ -412,6 +427,7 @@ const addOrganizationMember = async ({ organizationId, email, role = 'agent' }) 
 
 // 11. SaaS Super Admin Overview: Metrics across all tenants
 const getSaaSAdminMetrics = async () => {
+  // Query only the latest active subscription for each organization
   const [subs] = await pool.query(
     `
       SELECT
@@ -426,15 +442,29 @@ const getSaaSAdminMetrics = async () => {
       FROM subscriptions s
       JOIN saas_plans p ON s.plan_id = p.id
       WHERE s.status = 'active'
+        AND s.id IN (
+          SELECT MAX(id) FROM subscriptions WHERE status = 'active' GROUP BY organization_id
+        )
     `
   );
 
   let mrr = 0;
+  let arr = 0;
+  const uniquePaidOrgs = new Set();
   const planDistribution = { starter: 0, pro: 0, enterprise: 0 };
 
   subs.forEach((s) => {
-    const monthlyVal = s.billing_cycle === 'yearly' ? Number(s.price_yearly) / 12 : Number(s.price_monthly);
-    mrr += monthlyVal;
+    const isPaid = (s.billing_cycle === 'yearly' && Number(s.price_yearly) > 0) ||
+                   (s.billing_cycle === 'monthly' && Number(s.price_monthly) > 0);
+
+    if (isPaid) {
+      uniquePaidOrgs.add(s.organization_id);
+      const monthlyVal = s.billing_cycle === 'yearly' ? Number(s.price_yearly) / 12 : Number(s.price_monthly);
+      mrr += monthlyVal;
+      const annualVal = s.billing_cycle === 'yearly' ? Number(s.price_yearly) : Number(s.price_monthly) * 12;
+      arr += annualVal;
+    }
+
     if (planDistribution[s.plan_slug] !== undefined) {
       planDistribution[s.plan_slug] += 1;
     }
@@ -445,8 +475,9 @@ const getSaaSAdminMetrics = async () => {
 
   return {
     mrr: Math.round(mrr * 100) / 100,
-    arr: Math.round(mrr * 12 * 100) / 100,
-    activeSubscribers: subs.length,
+    arr: Math.round(arr * 100) / 100,
+    activePaidSubscribers: uniquePaidOrgs.size,
+    activeSubscribers: uniquePaidOrgs.size, // for compatibility
     totalTenants: Number(orgCount[0]?.total_tenants || 0),
     totalRevenue: Number(paidInvoices[0]?.total_revenue || 0),
     totalInvoicesCount: Number(paidInvoices[0]?.total_invoices || 0),
@@ -478,13 +509,18 @@ const getSaaSAdminTenants = async () => {
          JOIN org_memberships om2 ON a.user_id = om2.user_id
          WHERE om2.organization_id = o.id) as properties_count
       FROM organizations o
-      LEFT JOIN subscriptions s ON o.id = s.organization_id
+      LEFT JOIN subscriptions s ON s.id = (
+        SELECT MAX(id) FROM subscriptions WHERE organization_id = o.id AND status = 'active'
+      )
       LEFT JOIN saas_plans p ON s.plan_id = p.id
       ORDER BY o.id DESC
     `
   );
 
-  return rows;
+  return rows.map((r) => ({
+    ...r,
+    plan_name: r.plan_name ? getCanonicalPlanName({ slug: r.plan_slug, name: r.plan_name }) : null,
+  }));
 };
 
 module.exports = {

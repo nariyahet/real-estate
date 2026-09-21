@@ -236,6 +236,17 @@ export default function SubscriptionPlans() {
     }
   };
 
+  // Canonical Plan Name Helper: Starter, Professional, Enterprise
+  const getCanonicalPlanName = (plan) => {
+    if (!plan) return "Starter";
+    const slug = typeof plan === "string" ? plan.toLowerCase() : (plan.slug || plan.plan_slug || "").toLowerCase();
+    const name = typeof plan === "string" ? plan.toLowerCase() : (plan.name || plan.plan_name || "").toLowerCase();
+    if (slug === "enterprise" || name.includes("enterprise")) return "Enterprise";
+    if (slug === "pro" || name.includes("pro")) return "Professional";
+    if (slug === "starter" || name.includes("starter")) return "Starter";
+    return typeof plan === "string" ? plan : plan.name || "Starter";
+  };
+
   // Helper for pricing display
   const getDisplayPrice = (plan) => {
     if (plan.price_monthly === "0.00" || Number(plan.price_monthly) === 0) return "Free";
@@ -430,7 +441,7 @@ export default function SubscriptionPlans() {
                         : "starter"
                     }`}
                   >
-                    {subscription?.plan_name || "Free Starter"}
+                    {getCanonicalPlanName(subscription) || "Starter"}
                   </span>
                 </div>
 
@@ -479,7 +490,7 @@ export default function SubscriptionPlans() {
               {/* Agent Seats Quota */}
               <div className="usage-meter-card">
                 <div className="meter-header">
-                  <span className="meter-title">👔 Organization Agent Seats</span>
+                  <span className="meter-title">👔 Licensed Agent Seats</span>
                   <span className="meter-stat">
                     {usage?.agentsCount || 0} /{" "}
                     {usage?.maxAgents === -1 ? "∞ Unlimited" : usage?.maxAgents || 1}
@@ -498,9 +509,12 @@ export default function SubscriptionPlans() {
                   />
                 </div>
                 <div className="meter-subtext">
-                  <span>{usage?.agentsPercentage || 0}% Seats Occupied</span>
-                  <span>{usage?.totalMembers || 0} Total Workspace Members</span>
+                  <span>{usage?.agentsCount || 0} agent seats used</span>
+                  <span>{usage?.totalMembers || 0} total workspace member{usage?.totalMembers === 1 ? "" : "s"}</span>
                 </div>
+                <p className="meter-caption">
+                  Agent seats count licensed agents only. Workspace owners and admins are not counted.
+                </p>
               </div>
             </div>
 
@@ -581,7 +595,7 @@ export default function SubscriptionPlans() {
 
                         <div className="card-top">
                           <div className="card-title-row">
-                            <h3>{plan.name}</h3>
+                            <h3>{getCanonicalPlanName(plan)}</h3>
                           </div>
                           <p className="card-tagline">{plan.tagline}</p>
 
@@ -616,7 +630,7 @@ export default function SubscriptionPlans() {
                               className={`card-cta-btn ${isPopular ? "primary-btn" : "outline-btn"}`}
                               onClick={() => handleOpenCheckout(plan)}
                             >
-                              {Number(plan.price_monthly) === 0 ? "Downgrade to Starter" : `Upgrade to ${plan.name}`}
+                              {Number(plan.price_monthly) === 0 ? "Downgrade to Starter" : `Upgrade to ${getCanonicalPlanName(plan)}`}
                             </button>
                           )}
 
@@ -704,7 +718,10 @@ export default function SubscriptionPlans() {
             {activeTab === "team" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "14px", padding: "1.5rem" }}>
-                  <h3 style={{ margin: "0 0 1rem 0", color: "#071A33" }}>Invite Colleague to Organization Workspace</h3>
+                  <h3 style={{ margin: "0 0 0.35rem 0", color: "#071A33" }}>Invite Colleague to Organization Workspace</h3>
+                  <p style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", color: "#64748B" }}>
+                    Agent seats count licensed agents only. Workspace owners and admins are not counted against the agent seat quota.
+                  </p>
                   <form onSubmit={handleInviteMember} style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "flex-end" }}>
                     <div style={{ flex: 2, minWidth: "260px" }} className="form-group">
                       <label>Registered User Email</label>
@@ -736,7 +753,10 @@ export default function SubscriptionPlans() {
 
                 <div className="invoices-card">
                   <div className="invoices-header">
-                    <h3>Active Organization Members ({teamMembers.length})</h3>
+                    <h3>Active Workspace Members ({teamMembers.length})</h3>
+                    <span style={{ fontSize: "0.85rem", color: "#64748B" }}>
+                      Licensed Agent Seats: {usage?.agentsCount || 0} / {usage?.maxAgents === -1 ? "∞ Unlimited" : usage?.maxAgents || 1}
+                    </span>
                   </div>
                   <table className="invoices-table">
                     <thead>
@@ -744,6 +764,7 @@ export default function SubscriptionPlans() {
                         <th>Member Name</th>
                         <th>Email</th>
                         <th>Role</th>
+                        <th>Seat Allocation</th>
                         <th>Joined Date</th>
                         <th>Workspace Status</th>
                       </tr>
@@ -757,6 +778,13 @@ export default function SubscriptionPlans() {
                           <td>{m.email}</td>
                           <td>
                             <span style={{ textTransform: "capitalize" }}>{m.role}</span>
+                          </td>
+                          <td>
+                            {m.role === "agent" ? (
+                              <span className="seat-badge-agent">Licensed Agent Seat</span>
+                            ) : (
+                              <span className="seat-badge-staff">Workspace Member</span>
+                            )}
                           </td>
                           <td>{new Date(m.joined_at).toLocaleDateString()}</td>
                           <td>
@@ -786,7 +814,7 @@ export default function SubscriptionPlans() {
                   </div>
                   <div className="admin-kpi-card">
                     <div className="kpi-label">Active Paid Subscribers</div>
-                    <div className="kpi-value">{adminMetrics?.activeSubscribers || 0}</div>
+                    <div className="kpi-value">{(adminMetrics?.activePaidSubscribers ?? adminMetrics?.activeSubscribers ?? 0)}</div>
                   </div>
                   <div className="admin-kpi-card">
                     <div className="kpi-label">Total Registered Tenants</div>
@@ -827,7 +855,7 @@ export default function SubscriptionPlans() {
                                     : "starter"
                                 }`}
                               >
-                                {t.plan_name || "No Plan"}
+                                {getCanonicalPlanName({ slug: t.plan_slug, name: t.plan_name }) || "No Plan"}
                               </span>
                             </td>
                             <td>{t.members_count || 0}</td>
@@ -851,7 +879,7 @@ export default function SubscriptionPlans() {
           <div className="saas-modal-backdrop" onClick={() => setSelectedPlanForCheckout(null)}>
             <div className="saas-modal-dialog" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <h3>Upgrade to {selectedPlanForCheckout.name}</h3>
+                <h3>Upgrade to {getCanonicalPlanName(selectedPlanForCheckout)}</h3>
                 <button
                   type="button"
                   className="modal-close-btn"
@@ -865,7 +893,7 @@ export default function SubscriptionPlans() {
                 <div className="order-summary-box">
                   <div className="summary-row">
                     <span>Selected Plan</span>
-                    <strong>{selectedPlanForCheckout.name}</strong>
+                    <strong>{getCanonicalPlanName(selectedPlanForCheckout)}</strong>
                   </div>
                   <div className="summary-row">
                     <span>Billing Cycle</span>
