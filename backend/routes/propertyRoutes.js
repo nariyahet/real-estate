@@ -23,6 +23,10 @@ const {
   protect,
 } = require("../middleware/authMiddleware");
 
+const {
+  checkPropertyQuota,
+} = require("../middleware/saasMiddleware");
+
 const router = express.Router();
 
 router.get("/", getProperties);
@@ -45,7 +49,7 @@ router.post(
 
 router.get("/:id", getProperty);
 
-router.post("/", protect, addProperty);
+router.post("/", protect, checkPropertyQuota, addProperty);
 
 router.put("/:id", protect, editProperty);
 
