@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
+import "../../App.css";
 import "./SubscriptionPlans.css";
 
 export default function SubscriptionPlans() {
@@ -257,6 +258,24 @@ export default function SubscriptionPlans() {
     return `₹${Number(plan.price_monthly).toLocaleString()}`;
   };
 
+  // Robust Quota Calculations
+  const maxProperties = usage?.maxProperties ?? subscription?.max_properties ?? 5;
+  const maxAgents = usage?.maxAgents ?? subscription?.max_agents ?? 1;
+  const propertiesCount = usage?.propertiesCount || 0;
+  const agentsCount = usage?.agentsCount || 0;
+  const propertiesPercentage = maxProperties === -1
+    ? 0
+    : Math.min(100, Math.round((propertiesCount / maxProperties) * 100));
+  const agentsPercentage = maxAgents === -1
+    ? 0
+    : Math.min(100, Math.round((agentsCount / maxAgents) * 100));
+  const remainingProperties = maxProperties === -1
+    ? "Unlimited"
+    : Math.max(0, maxProperties - propertiesCount);
+  const remainingAgents = maxAgents === -1
+    ? "Unlimited"
+    : Math.max(0, maxAgents - agentsCount);
+
   return (
     <div className="admin-layout">
       <AdminSidebar />
@@ -463,26 +482,25 @@ export default function SubscriptionPlans() {
                 <div className="meter-header">
                   <span className="meter-title">🏠 Property Listings Quota</span>
                   <span className="meter-stat">
-                    {usage?.propertiesCount || 0} /{" "}
-                    {usage?.maxProperties === -1 ? "∞ Unlimited" : usage?.maxProperties || 5}
+                    {propertiesCount} / {maxProperties === -1 ? "∞ Unlimited" : maxProperties}
                   </span>
                 </div>
                 <div className="meter-progress-track">
                   <div
                     className={`meter-progress-bar ${
-                      (usage?.propertiesPercentage || 0) >= 90
+                      propertiesPercentage >= 90
                         ? "danger"
-                        : (usage?.propertiesPercentage || 0) >= 70
+                        : propertiesPercentage >= 70
                         ? "warning"
                         : ""
                     }`}
-                    style={{ width: `${usage?.propertiesPercentage || 0}%` }}
+                    style={{ width: `${propertiesPercentage}%` }}
                   />
                 </div>
                 <div className="meter-subtext">
-                  <span>{usage?.propertiesPercentage || 0}% Capacity Consumed</span>
-                  {usage?.maxProperties !== -1 && (
-                    <span>{Math.max(0, (usage?.maxProperties || 5) - (usage?.propertiesCount || 0))} Listings Remaining</span>
+                  <span>{propertiesPercentage}% Capacity Consumed</span>
+                  {maxProperties !== -1 && (
+                    <span>{remainingProperties} Listings Remaining</span>
                   )}
                 </div>
               </div>
@@ -492,24 +510,23 @@ export default function SubscriptionPlans() {
                 <div className="meter-header">
                   <span className="meter-title">👔 Licensed Agent Seats</span>
                   <span className="meter-stat">
-                    {usage?.agentsCount || 0} /{" "}
-                    {usage?.maxAgents === -1 ? "∞ Unlimited" : usage?.maxAgents || 1}
+                    {agentsCount} / {maxAgents === -1 ? "∞ Unlimited" : maxAgents}
                   </span>
                 </div>
                 <div className="meter-progress-track">
                   <div
                     className={`meter-progress-bar ${
-                      (usage?.agentsPercentage || 0) >= 90
+                      agentsPercentage >= 90
                         ? "danger"
-                        : (usage?.agentsPercentage || 0) >= 70
+                        : agentsPercentage >= 70
                         ? "warning"
                         : ""
                     }`}
-                    style={{ width: `${usage?.agentsPercentage || 0}%` }}
+                    style={{ width: `${agentsPercentage}%` }}
                   />
                 </div>
                 <div className="meter-subtext">
-                  <span>{usage?.agentsCount || 0} agent seats used</span>
+                  <span>{agentsCount} agent seat{agentsCount === 1 ? "" : "s"} used</span>
                   <span>{usage?.totalMembers || 0} total workspace member{usage?.totalMembers === 1 ? "" : "s"}</span>
                 </div>
                 <p className="meter-caption">
@@ -668,7 +685,7 @@ export default function SubscriptionPlans() {
                     <p>No billing invoices generated yet. Invoices appear automatically upon subscription activation.</p>
                   </div>
                 ) : (
-                  <div style={{ overflowX: "auto" }}>
+                  <div className="saas-table-wrap">
                     <table className="invoices-table">
                       <thead>
                         <tr>
@@ -722,8 +739,8 @@ export default function SubscriptionPlans() {
                   <p style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", color: "#64748B" }}>
                     Agent seats count licensed agents only. Workspace owners and admins are not counted against the agent seat quota.
                   </p>
-                  <form onSubmit={handleInviteMember} style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "flex-end" }}>
-                    <div style={{ flex: 2, minWidth: "260px" }} className="form-group">
+                  <form onSubmit={handleInviteMember} className="team-invite-form">
+                    <div className="form-group flex-2">
                       <label>Registered User Email</label>
                       <input
                         type="email"
@@ -733,7 +750,7 @@ export default function SubscriptionPlans() {
                         onChange={(e) => setInviteEmail(e.target.value)}
                       />
                     </div>
-                    <div style={{ flex: 1, minWidth: "160px" }} className="form-group">
+                    <div className="form-group flex-1">
                       <label>Role</label>
                       <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
                         <option value="agent">Licensed Agent</option>
@@ -743,8 +760,7 @@ export default function SubscriptionPlans() {
                     <button
                       type="submit"
                       disabled={inviteLoading}
-                      className="card-cta-btn primary-btn"
-                      style={{ height: "42px", padding: "0 1.5rem", width: "auto" }}
+                      className="card-cta-btn primary-btn team-invite-btn"
                     >
                       {inviteLoading ? "Adding..." : "+ Add to Team"}
                     </button>
@@ -755,10 +771,11 @@ export default function SubscriptionPlans() {
                   <div className="invoices-header">
                     <h3>Active Workspace Members ({teamMembers.length})</h3>
                     <span style={{ fontSize: "0.85rem", color: "#64748B" }}>
-                      Licensed Agent Seats: {usage?.agentsCount || 0} / {usage?.maxAgents === -1 ? "∞ Unlimited" : usage?.maxAgents || 1}
+                      Licensed Agent Seats: {agentsCount} / {maxAgents === -1 ? "∞ Unlimited" : maxAgents}
                     </span>
                   </div>
-                  <table className="invoices-table">
+                  <div className="saas-table-wrap">
+                    <table className="invoices-table">
                     <thead>
                       <tr>
                         <th>Member Name</th>
@@ -796,6 +813,7 @@ export default function SubscriptionPlans() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </div>
             )}
@@ -826,7 +844,7 @@ export default function SubscriptionPlans() {
                   <div className="invoices-header">
                     <h3>All Platform Tenant Workspaces ({adminTenants.length})</h3>
                   </div>
-                  <div style={{ overflowX: "auto" }}>
+                  <div className="saas-table-wrap">
                     <table className="invoices-table">
                       <thead>
                         <tr>

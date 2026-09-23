@@ -69,7 +69,26 @@ const getCurrentSubscription = async (req, res) => {
   try {
     const organizationId = req.tenant.organization_id;
     const subscription = await getOrganizationSubscription(organizationId);
-    const usage = await getOrganizationUsage(organizationId);
+    const rawUsage = await getOrganizationUsage(organizationId);
+
+    const maxProperties = subscription ? subscription.max_properties : 5;
+    const maxAgents = subscription ? subscription.max_agents : 1;
+    const propertiesPercentage = maxProperties === -1
+      ? 0
+      : Math.min(100, Math.round(((rawUsage.propertiesCount || 0) / maxProperties) * 100));
+    const agentsPercentage = maxAgents === -1
+      ? 0
+      : Math.min(100, Math.round(((rawUsage.agentsCount || 0) / maxAgents) * 100));
+
+    const usage = {
+      ...rawUsage,
+      maxProperties,
+      maxAgents,
+      propertiesPercentage,
+      agentsPercentage,
+      remainingProperties: maxProperties === -1 ? 'Unlimited' : Math.max(0, maxProperties - (rawUsage.propertiesCount || 0)),
+      remainingAgents: maxAgents === -1 ? 'Unlimited' : Math.max(0, maxAgents - (rawUsage.agentsCount || 0)),
+    };
 
     return res.status(200).json({
       success: true,

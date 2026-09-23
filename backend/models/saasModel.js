@@ -171,7 +171,46 @@ const getOrganizationSubscription = async (organizationId) => {
     [organizationId]
   );
 
-  if (!rows[0]) return null;
+  if (!rows[0]) {
+    const [starterPlan] = await pool.execute(`SELECT * FROM saas_plans WHERE slug = 'starter' LIMIT 1`);
+    if (starterPlan[0]) {
+      const now = new Date();
+      const nextMonth = new Date(now);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+      const [ins] = await pool.execute(
+        `
+          INSERT INTO subscriptions
+            (organization_id, plan_id, billing_cycle, status, current_period_start, current_period_end, auto_renew, payment_method)
+          VALUES (?, ?, 'monthly', 'active', ?, ?, TRUE, 'Starter Tier Auto-Provision')
+        `,
+        [organizationId, starterPlan[0].id, now, nextMonth]
+      );
+
+      return {
+        subscription_id: ins.insertId,
+        organization_id: organizationId,
+        plan_id: starterPlan[0].id,
+        billing_cycle: 'monthly',
+        status: 'active',
+        current_period_start: now,
+        current_period_end: nextMonth,
+        auto_renew: 1,
+        payment_method: 'Starter Tier Auto-Provision',
+        subscribed_at: now,
+        plan_slug: 'starter',
+        plan_name: 'Starter',
+        plan_tagline: starterPlan[0].tagline,
+        price_monthly: starterPlan[0].price_monthly,
+        price_yearly: starterPlan[0].price_yearly,
+        currency: starterPlan[0].currency,
+        max_properties: starterPlan[0].max_properties,
+        max_agents: starterPlan[0].max_agents,
+        plan_features: typeof starterPlan[0].features === 'string' ? JSON.parse(starterPlan[0].features) : starterPlan[0].features || [],
+      };
+    }
+    return null;
+  }
 
   const sub = rows[0];
   return {
