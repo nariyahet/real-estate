@@ -1452,7 +1452,7 @@ export default function SubscriptionPlans() {
               </div>
 
               <div className="modal-body">
-                <div className="receipt-paper" id="printable-tax-receipt">
+                <div className="receipt-paper invoice-print-root" id="printable-tax-receipt">
                   <div className="receipt-header">
                     <h2>REALESTATE ARCHITECTURAL PLATFORM</h2>
                     <p>Official Cloud Services • GSTIN: 24AAACE0123M1Z5</p>

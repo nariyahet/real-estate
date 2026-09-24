@@ -1912,22 +1912,39 @@
     min-height: auto !important;
     height: auto !important;
     overflow: visible !important;
-    font-size: 12pt !important;
+    font-size: 11pt !important;
     line-height: 1.4 !important;
   }
 
-  /* 2. Hide Everything Outside the Tax Receipt */
+  /* 2. Print Root Isolation Strategy: Hide all page content by default */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* 3. Explicitly remove all application shell & background UI from print layout */
+  .admin-layout > :not(.main-content),
+  .main-content > :not(.saas-modal-backdrop),
+  .saas-modal-backdrop > :not(.saas-modal-dialog),
+  .saas-modal-dialog > :not(.modal-body),
+  .modal-body > :not(.invoice-print-root),
+  .admin-sidebar-root,
   .admin-sidebar,
-  .saas-sidebar,
-  .saas-page-root,
+  .sidebar,
+  .topbar,
+  .saas-notification,
   .saas-header-card,
   .saas-nav-tabs,
+  .saas-tab-content,
   .pricing-hero-section,
   .pricing-cards-section,
+  .pricing-cards-grid,
   .feature-comparison-section,
   .enterprise-showcase-section,
   .pricing-faq-section,
   .final-conversion-cta,
+  .billing-history-section,
+  .team-seats-section,
+  .workspace-settings-section,
   .order-summary-box,
   .payment-method-selector,
   .simulated-note,
@@ -1936,13 +1953,27 @@
   .modal-close-btn,
   .card-cta-btn,
   #toggle-billing-monthly,
-  #toggle-billing-yearly {
+  #toggle-billing-yearly,
+  .onboarding-wrap,
+  .saas-loading-state,
+  header,
+  aside,
+  nav {
     display: none !important;
     visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  /* 3. Strip Backdrop and Dialog Positioning */
-  .saas-modal-backdrop {
+  /* 4. Strip backdrop, dialog, layout and positioning from ancestors */
+  #root,
+  .admin-layout,
+  .main-content,
+  .saas-modal-backdrop,
+  .saas-modal-dialog,
+  .saas-modal-dialog.receipt-dialog,
+  .modal-body {
     position: static !important;
     inset: auto !important;
     display: block !important;
@@ -1952,45 +1983,41 @@
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
     height: auto !important;
     overflow: visible !important;
-    z-index: auto !important;
-  }
-
-  .saas-modal-dialog,
-  .saas-modal-dialog.receipt-dialog {
-    position: static !important;
-    display: block !important;
-    background: #ffffff !important;
+    transform: none !important;
     border: none !important;
     box-shadow: none !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transform: none !important;
-    overflow: visible !important;
   }
 
-  .modal-body {
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: visible !important;
-    max-height: none !important;
-  }
-
-  /* 4. Format Official Tax Receipt Document */
+  /* 5. Make ONLY the designated invoice print root visible */
   .receipt-paper,
+  .invoice-print-root,
+  #printable-tax-receipt,
+  .receipt-paper *,
+  .invoice-print-root *,
+  #printable-tax-receipt * {
+    visibility: visible !important;
+  }
+
+  /* 6. Isolated Official Tax Receipt Document */
+  .receipt-paper,
+  .invoice-print-root,
   #printable-tax-receipt {
     display: block !important;
     visibility: visible !important;
+    position: relative !important;
     background: #ffffff !important;
     border: 1.5px solid #1f2937 !important;
     border-radius: 8px !important;
     padding: 28px 32px !important;
     margin: 0 auto !important;
     max-width: 760px !important;
+    width: 100% !important;
     box-sizing: border-box !important;
+    box-shadow: none !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
