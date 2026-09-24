@@ -37,6 +37,7 @@ export default function SubscriptionPlans() {
   // UI State
   const [activeTab, setActiveTab] = useState("plans"); // 'plans' | 'invoices' | 'team' | 'admin'
   const [billingCycle, setBillingCycle] = useState("monthly"); // 'monthly' | 'yearly'
+  const [userToggledCycle, setUserToggledCycle] = useState(false);
   const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("Simulated Credit Card");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -79,6 +80,9 @@ export default function SubscriptionPlans() {
           setSubscription(subRes.data.subscription);
           setUsage(subRes.data.usage);
           setNeedsOnboarding(false);
+          if (!userToggledCycle && subRes.data.subscription?.billing_cycle) {
+            setBillingCycle(subRes.data.subscription.billing_cycle);
+          }
         }
       } catch (err) {
         if (err.response?.status === 403 && err.response?.data?.code === "ORGANIZATION_REQUIRED") {
@@ -197,6 +201,7 @@ export default function SubscriptionPlans() {
         const canonical = getCanonicalPlanName(selectedPlanForCheckout);
         setSuccessMsg(`Subscription successfully updated to ${canonical}!`);
         setSelectedPlanForCheckout(null);
+        setUserToggledCycle(false);
 
         // Fetch fresh subscription & invoices
         await fetchSaaSData();
@@ -263,14 +268,24 @@ export default function SubscriptionPlans() {
     return typeof plan === "string" ? plan : plan.name || "Starter";
   };
 
+  // Currency formatting helper
+  const formatCurrency = (val, forceDecimals = false) => {
+    const num = Number(val) || 0;
+    if (num === 0 && !forceDecimals) return "₹0";
+    if (forceDecimals || num % 1 !== 0) {
+      return `₹${num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `₹${num.toLocaleString("en-IN")}`;
+  };
+
   // Helper for pricing display
   const getDisplayPrice = (plan) => {
     if (plan.price_monthly === "0.00" || Number(plan.price_monthly) === 0) return "₹0";
     if (billingCycle === "yearly") {
       const annual = Number(plan.price_yearly);
-      return `₹${annual.toLocaleString()}`;
+      return formatCurrency(annual);
     }
-    return `₹${Number(plan.price_monthly).toLocaleString()}`;
+    return formatCurrency(Number(plan.price_monthly));
   };
 
   // Robust Quota Calculations
@@ -551,7 +566,7 @@ export default function SubscriptionPlans() {
                         : "starter"
                     }`}
                   >
-                    {getCanonicalPlanName(subscription) || "Starter"}
+                    {getCanonicalPlanName(subscription)} ({subscription?.billing_cycle ? subscription.billing_cycle.toUpperCase() : "MONTHLY"})
                   </span>
                 </div>
 
@@ -701,7 +716,10 @@ export default function SubscriptionPlans() {
                         type="button"
                         className={`toggle-option ${billingCycle === "monthly" ? "active" : ""}`}
                         id="toggle-billing-monthly"
-                        onClick={() => setBillingCycle("monthly")}
+                        onClick={() => {
+                          setUserToggledCycle(true);
+                          setBillingCycle("monthly");
+                        }}
                       >
                         Monthly Billing
                       </button>
@@ -709,7 +727,10 @@ export default function SubscriptionPlans() {
                         type="button"
                         className={`toggle-option ${billingCycle === "yearly" ? "active" : ""}`}
                         id="toggle-billing-yearly"
-                        onClick={() => setBillingCycle("yearly")}
+                        onClick={() => {
+                          setUserToggledCycle(true);
+                          setBillingCycle("yearly");
+                        }}
                       >
                         <span>Annual Billing</span>
                         <span className="annual-save-badge">2 Months Free</span>
@@ -723,14 +744,16 @@ export default function SubscriptionPlans() {
                   <div className="pricing-cards-grid">
                     {plans.map((plan) => {
                       const canonicalName = getCanonicalPlanName(plan);
-                      const isCurrent = subscription?.plan_id === plan.id;
+                      const isCurrentPlan = subscription?.plan_id === plan.id;
+                      const isCurrentCycle = Number(plan.price_monthly) === 0 || (subscription?.billing_cycle || "monthly") === billingCycle;
+                      const isCurrentActive = isCurrentPlan && isCurrentCycle;
                       const isPopular = canonicalName === "Professional Agency" || Boolean(plan.is_popular);
                       const isEnterprise = canonicalName === "Enterprise Elite";
 
                       return (
                         <div
                           key={plan.id}
-                          className={`luxury-plan-card ${isPopular ? "highlighted-popular" : ""} ${isCurrent ? "is-current-plan" : ""}`}
+                          className={`luxury-plan-card ${isPopular ? "highlighted-popular" : ""} ${isCurrentActive ? "is-current-plan" : ""}`}
                         >
                           {isPopular && (
                             <div className="card-popular-pill">
@@ -741,7 +764,7 @@ export default function SubscriptionPlans() {
                           <div className="card-header-block">
                             <div className="card-title-row">
                               <h3 className="plan-name-heading">{canonicalName}</h3>
-                              {isCurrent && (
+                              {isCurrentActive && (
                                 <span className="current-active-tag">Active</span>
                               )}
                             </div>
@@ -790,7 +813,7 @@ export default function SubscriptionPlans() {
 
                           {/* Dynamic Action Buttons */}
                           <div className="card-action-container">
-                            {isCurrent ? (
+                            {isCurrentActive ? (
                               <button
                                 type="button"
                                 className="card-cta-btn btn-current-active"
@@ -798,6 +821,15 @@ export default function SubscriptionPlans() {
                                 id={`cta-current-${plan.id}`}
                               >
                                 ✓ Current Active Plan
+                              </button>
+                            ) : isCurrentPlan && !isCurrentCycle ? (
+                              <button
+                                type="button"
+                                className="card-cta-btn btn-purple-primary"
+                                id={`cta-switch-${plan.id}`}
+                                onClick={() => handleOpenCheckout(plan)}
+                              >
+                                Switch to {billingCycle === "yearly" ? "Annual" : "Monthly"} Billing
                               </button>
                             ) : (
                               <button
@@ -814,7 +846,7 @@ export default function SubscriptionPlans() {
                               </button>
                             )}
 
-                            {isCurrent && Number(plan.price_monthly) > 0 && subscription?.auto_renew && (
+                            {isCurrentActive && Number(plan.price_monthly) > 0 && Boolean(subscription?.auto_renew) && (
                               <button
                                 type="button"
                                 onClick={handleCancelAutoRenew}
@@ -1055,7 +1087,7 @@ export default function SubscriptionPlans() {
                             <td>{inv.billing_reason}</td>
                             <td>{inv.payment_method}</td>
                             <td>
-                              <strong>₹{Number(inv.amount).toLocaleString()}</strong>
+                              <strong>{formatCurrency(inv.amount, true)}</strong>
                             </td>
                             <td>
                               <span className="status-badge-paid">Paid (Simulated)</span>
@@ -1277,50 +1309,49 @@ export default function SubscriptionPlans() {
               </div>
 
               <div className="modal-body">
-                <div className="order-summary-box">
-                  <div className="summary-row">
-                    <span>Selected Plan</span>
-                    <strong>{getCanonicalPlanName(selectedPlanForCheckout)}</strong>
-                  </div>
-                  <div className="summary-row">
-                    <span>Billing Frequency</span>
-                    <strong style={{ textTransform: "capitalize" }}>{billingCycle}</strong>
-                  </div>
-                  <div className="summary-row">
-                    <span>Base Subscription Subtotal</span>
-                    <span>{getDisplayPrice(selectedPlanForCheckout)}</span>
-                  </div>
-                  {Number(selectedPlanForCheckout.price_monthly) > 0 ? (
-                    <div className="summary-row">
-                      <span>GST / Statutory Tax (18%)</span>
-                      <span>
-                        ₹
-                        {(
-                          (billingCycle === "yearly"
-                            ? Number(selectedPlanForCheckout.price_yearly)
-                            : Number(selectedPlanForCheckout.price_monthly)) * 0.18
-                        ).toLocaleString()}
-                      </span>
+                {(() => {
+                  const checkoutBasePrice = billingCycle === "yearly"
+                    ? Number(selectedPlanForCheckout.price_yearly)
+                    : Number(selectedPlanForCheckout.price_monthly);
+                  const checkoutGstAmount = checkoutBasePrice > 0 ? Math.round(checkoutBasePrice * 0.18 * 100) / 100 : 0;
+                  const checkoutTotalAmount = checkoutBasePrice + checkoutGstAmount;
+
+                  return (
+                    <div className="order-summary-box">
+                      <div className="summary-row">
+                        <span>Selected Plan</span>
+                        <strong>{getCanonicalPlanName(selectedPlanForCheckout)}</strong>
+                      </div>
+                      <div className="summary-row">
+                        <span>Billing Frequency</span>
+                        <strong style={{ textTransform: "capitalize" }}>{billingCycle}</strong>
+                      </div>
+                      <div className="summary-row">
+                        <span>Base Subscription Subtotal</span>
+                        <span>{formatCurrency(checkoutBasePrice)}</span>
+                      </div>
+                      {checkoutBasePrice > 0 ? (
+                        <div className="summary-row">
+                          <span>GST / Statutory Tax (18%)</span>
+                          <span>{formatCurrency(checkoutGstAmount, true)}</span>
+                        </div>
+                      ) : (
+                        <div className="summary-row">
+                          <span>GST / Statutory Tax (18%)</span>
+                          <span>₹0 (Tax Exempt for Free Tier)</span>
+                        </div>
+                      )}
+                      <div className="summary-row total">
+                        <span>Total Due Now (INR)</span>
+                        <span className="total-highlight">
+                          {checkoutBasePrice === 0
+                            ? "₹0 (Free Forever)"
+                            : formatCurrency(checkoutTotalAmount, true)}
+                        </span>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="summary-row">
-                      <span>GST / Statutory Tax (18%)</span>
-                      <span>₹0 (Tax Exempt for Free Tier)</span>
-                    </div>
-                  )}
-                  <div className="summary-row total">
-                    <span>Total Due Now (INR)</span>
-                    <span className="total-highlight">
-                      {Number(selectedPlanForCheckout.price_monthly) === 0
-                        ? "₹0 (Free Forever)"
-                        : `₹${(
-                            (billingCycle === "yearly"
-                              ? Number(selectedPlanForCheckout.price_yearly)
-                              : Number(selectedPlanForCheckout.price_monthly)) * 1.18
-                          ).toLocaleString()}`}
-                    </span>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 <div className="payment-method-selector">
                   <label className="payment-method-label">
@@ -1415,7 +1446,7 @@ export default function SubscriptionPlans() {
               </div>
 
               <div className="modal-body">
-                <div className="receipt-paper">
+                <div className="receipt-paper" id="printable-tax-receipt">
                   <div className="receipt-header">
                     <h2>REALESTATE ARCHITECTURAL PLATFORM</h2>
                     <p>Official Cloud Services • GSTIN: 24AAACE0123M1Z5</p>
@@ -1445,15 +1476,15 @@ export default function SubscriptionPlans() {
                     <tbody>
                       <tr>
                         <td>{activeReceipt.billing_reason}</td>
-                        <td>₹{Number(activeReceipt.tax_amount || 0).toLocaleString()}</td>
-                        <td>₹{Number(activeReceipt.amount).toLocaleString()}</td>
+                        <td>{formatCurrency(activeReceipt.tax_amount || 0, true)}</td>
+                        <td>{formatCurrency(activeReceipt.amount, true)}</td>
                       </tr>
                     </tbody>
                   </table>
 
                   <div className="receipt-total-row">
                     <span>Total Paid:</span>
-                    <span>₹{Number(activeReceipt.amount).toLocaleString()} ({activeReceipt.payment_method})</span>
+                    <span>{formatCurrency(activeReceipt.amount, true)} ({activeReceipt.payment_method})</span>
                   </div>
                 </div>
               </div>
@@ -1463,6 +1494,7 @@ export default function SubscriptionPlans() {
                   type="button"
                   className="card-cta-btn btn-modal-confirm"
                   style={{ width: "auto" }}
+                  id="btn-print-receipt"
                   onClick={() => window.print()}
                 >
                   🖨️ Print / Download Receipt

@@ -1883,3 +1883,206 @@
     animation: none !important;
   }
 }
+
+/* ==========================================================================
+   PRINT STYLES: EXCLUSIVE OFFICIAL TAX INVOICE & RECEIPT PRINTING
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+
+  /* 1. Global Reset for Print */
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+  }
+
+  /* 2. Hide Everything Outside the Tax Receipt */
+  .admin-sidebar,
+  .saas-sidebar,
+  .saas-page-root,
+  .saas-header-card,
+  .saas-nav-tabs,
+  .pricing-hero-section,
+  .pricing-cards-section,
+  .feature-comparison-section,
+  .enterprise-showcase-section,
+  .pricing-faq-section,
+  .final-conversion-cta,
+  .order-summary-box,
+  .payment-method-selector,
+  .simulated-note,
+  .modal-header,
+  .modal-footer,
+  .modal-close-btn,
+  .card-cta-btn,
+  #toggle-billing-monthly,
+  #toggle-billing-yearly {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* 3. Strip Backdrop and Dialog Positioning */
+  .saas-modal-backdrop {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+
+  .saas-modal-dialog,
+  .saas-modal-dialog.receipt-dialog {
+    position: static !important;
+    display: block !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    overflow: visible !important;
+  }
+
+  .modal-body {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  /* 4. Format Official Tax Receipt Document */
+  .receipt-paper,
+  #printable-tax-receipt {
+    display: block !important;
+    visibility: visible !important;
+    background: #ffffff !important;
+    border: 1.5px solid #1f2937 !important;
+    border-radius: 8px !important;
+    padding: 28px 32px !important;
+    margin: 0 auto !important;
+    max-width: 760px !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .receipt-header {
+    border-bottom: 2px solid #111827 !important;
+    padding-bottom: 16px !important;
+    margin-bottom: 24px !important;
+    text-align: center !important;
+  }
+
+  .receipt-header h2 {
+    font-size: 16pt !important;
+    font-weight: 800 !important;
+    color: #111827 !important;
+    margin: 0 0 6px 0 !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  .receipt-header p {
+    font-size: 10pt !important;
+    color: #4b5563 !important;
+    margin: 0 !important;
+  }
+
+  .receipt-meta {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 24px !important;
+    font-size: 10.5pt !important;
+    line-height: 1.5 !important;
+  }
+
+  .receipt-meta strong {
+    color: #111827 !important;
+    font-weight: 700 !important;
+  }
+
+  .meta-label {
+    color: #6b7280 !important;
+    font-size: 9pt !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    margin-bottom: 2px !important;
+  }
+
+  .meta-tax,
+  .meta-date {
+    color: #4b5563 !important;
+    font-size: 9.5pt !important;
+  }
+
+  .receipt-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 20px !important;
+    border: 1px solid #d1d5db !important;
+  }
+
+  .receipt-table th {
+    background: #f3f4f6 !important;
+    color: #111827 !important;
+    font-weight: 700 !important;
+    font-size: 10pt !important;
+    text-transform: uppercase !important;
+    padding: 10px 14px !important;
+    border-bottom: 2px solid #9ca3af !important;
+    text-align: left !important;
+  }
+
+  .receipt-table th:last-child,
+  .receipt-table td:last-child {
+    text-align: right !important;
+  }
+
+  .receipt-table td {
+    padding: 12px 14px !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    color: #1f2937 !important;
+    font-size: 10.5pt !important;
+  }
+
+  .receipt-total-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 14px !important;
+    margin-top: 12px !important;
+    border-top: 2px solid #111827 !important;
+    font-size: 12pt !important;
+    font-weight: 800 !important;
+    color: #111827 !important;
+  }
+}
+

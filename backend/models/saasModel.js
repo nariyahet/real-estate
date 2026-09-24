@@ -192,6 +192,7 @@ const getOrganizationSubscription = async (organizationId) => {
         organization_id: organizationId,
         plan_id: starterPlan[0].id,
         billing_cycle: 'monthly',
+        price: Number(starterPlan[0].price_monthly || 0),
         status: 'active',
         current_period_start: now,
         current_period_end: nextMonth,
@@ -213,8 +214,13 @@ const getOrganizationSubscription = async (organizationId) => {
   }
 
   const sub = rows[0];
+  const normalizedCycle = (sub.billing_cycle || 'monthly').toLowerCase() === 'yearly' ? 'yearly' : 'monthly';
+  const currentPrice = normalizedCycle === 'yearly' ? Number(sub.price_yearly) : Number(sub.price_monthly);
+
   return {
     ...sub,
+    price: currentPrice,
+    billing_cycle: normalizedCycle,
     plan_name: getCanonicalPlanName({ slug: sub.plan_slug, name: sub.plan_name }),
     plan_features: typeof sub.plan_features === 'string' ? JSON.parse(sub.plan_features) : sub.plan_features || [],
   };
@@ -274,7 +280,8 @@ const subscribeOrganizationPlan = async ({ organizationId, planId, billingCycle 
     }
     const plan = plans[0];
 
-    const isAnnual = billingCycle === 'yearly';
+    const normalizedCycle = (billingCycle || 'monthly').trim().toLowerCase() === 'yearly' ? 'yearly' : 'monthly';
+    const isAnnual = normalizedCycle === 'yearly';
     const rawPrice = isAnnual ? Number(plan.price_yearly) : Number(plan.price_monthly);
     const taxRate = rawPrice > 0 ? 0.18 : 0; // 18% GST for paid plans
     const taxAmount = Math.round(rawPrice * taxRate * 100) / 100;
@@ -310,7 +317,7 @@ const subscribeOrganizationPlan = async ({ organizationId, planId, billingCycle 
               updated_at = NOW()
           WHERE id = ?
         `,
-        [planId, billingCycle, now, periodEnd, paymentMethod, subscriptionId]
+        [planId, normalizedCycle, now, periodEnd, paymentMethod, subscriptionId]
       );
     } else {
       const [insertRes] = await conn.execute(
@@ -319,7 +326,7 @@ const subscribeOrganizationPlan = async ({ organizationId, planId, billingCycle 
             (organization_id, plan_id, billing_cycle, status, current_period_start, current_period_end, auto_renew, payment_method)
           VALUES (?, ?, ?, 'active', ?, ?, TRUE, ?)
         `,
-        [organizationId, planId, billingCycle, now, periodEnd, paymentMethod]
+        [organizationId, planId, normalizedCycle, now, periodEnd, paymentMethod]
       );
       subscriptionId = insertRes.insertId;
     }
@@ -341,7 +348,7 @@ const subscribeOrganizationPlan = async ({ organizationId, planId, billingCycle 
         totalAmount,
         taxAmount,
         plan.currency || 'INR',
-        `${canonicalName} (${billingCycle.toUpperCase()}) Subscription`,
+        `${canonicalName} (${normalizedCycle.toUpperCase()}) Subscription`,
         paymentMethod,
         now,
         now,
@@ -355,6 +362,9 @@ const subscribeOrganizationPlan = async ({ organizationId, planId, billingCycle 
       invoiceId: invRes.insertId,
       invoiceNumber,
       planName: canonicalName,
+      billingCycle: normalizedCycle,
+      price: rawPrice,
+      taxAmount,
       amount: totalAmount,
       currency: plan.currency,
       currentPeriodEnd: periodEnd,
