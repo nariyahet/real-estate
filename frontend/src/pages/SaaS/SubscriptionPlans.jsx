@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../../api/axios";
 import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
 import "../../App.css";
@@ -41,6 +41,7 @@ export default function SubscriptionPlans() {
   const [paymentMethod, setPaymentMethod] = useState("Simulated Credit Card");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [activeReceipt, setActiveReceipt] = useState(null);
+  const [openFaqIndex, setOpenFaqIndex] = useState(0);
 
   // Onboarding Form State
   const [onboardingForm, setOnboardingForm] = useState({
@@ -58,7 +59,7 @@ export default function SubscriptionPlans() {
   const [inviteLoading, setInviteLoading] = useState(false);
 
   // ─────────────────────────────────────────────────────────────
-  // DATA FETCHING
+  // DATA FETCHING (Strictly reusing existing endpoints)
   // ─────────────────────────────────────────────────────────────
   const fetchSaaSData = useCallback(async () => {
     setLoading(true);
@@ -84,12 +85,9 @@ export default function SubscriptionPlans() {
           setNeedsOnboarding(true);
           setTenant(null);
           setSubscription(null);
-        } else {
-          console.error("Sub Fetch Error:", err);
         }
       }
     } catch (err) {
-      console.error("SaaS Data Fetch Error:", err);
       setError("Failed to load subscription data. Please check your connection.");
     } finally {
       setLoading(false);
@@ -103,7 +101,7 @@ export default function SubscriptionPlans() {
         setInvoices(res.data.invoices || []);
       }
     } catch (err) {
-      console.error("Invoices Fetch Error:", err);
+      // Handled silently
     }
   }, []);
 
@@ -114,7 +112,7 @@ export default function SubscriptionPlans() {
         setTeamMembers(res.data.members || []);
       }
     } catch (err) {
-      console.error("Team Fetch Error:", err);
+      // Handled silently
     }
   }, []);
 
@@ -128,7 +126,7 @@ export default function SubscriptionPlans() {
       if (metricsRes.data?.success) setAdminMetrics(metricsRes.data.metrics);
       if (tenantsRes.data?.success) setAdminTenants(tenantsRes.data.tenants || []);
     } catch (err) {
-      console.error("Admin SaaS Fetch Error:", err);
+      // Handled silently
     }
   }, [isAdmin]);
 
@@ -141,6 +139,18 @@ export default function SubscriptionPlans() {
     if (activeTab === "team" && !needsOnboarding) fetchTeamMembers();
     if (activeTab === "admin" && isAdmin) fetchAdminData();
   }, [activeTab, needsOnboarding, isAdmin, fetchInvoices, fetchTeamMembers, fetchAdminData]);
+
+  // Keyboard accessibility: Close modals on ESC
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        if (selectedPlanForCheckout) setSelectedPlanForCheckout(null);
+        if (activeReceipt) setActiveReceipt(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedPlanForCheckout, activeReceipt]);
 
   // ─────────────────────────────────────────────────────────────
   // HANDLERS
@@ -162,7 +172,6 @@ export default function SubscriptionPlans() {
         await fetchSaaSData();
       }
     } catch (err) {
-      console.error("Onboarding Submit Error:", err);
       setError(err.response?.data?.message || "Failed to create organization workspace.");
     } finally {
       setOnboardingSubmitting(false);
@@ -185,13 +194,21 @@ export default function SubscriptionPlans() {
       });
 
       if (res.data?.success) {
-        setSuccessMsg(`Subscription successfully upgraded to ${selectedPlanForCheckout.name}!`);
+        const canonical = getCanonicalPlanName(selectedPlanForCheckout);
+        setSuccessMsg(`Subscription successfully updated to ${canonical}!`);
         setSelectedPlanForCheckout(null);
+
+        // Fetch fresh subscription & invoices
         await fetchSaaSData();
-        await fetchInvoices();
+        const invRes = await api.get("/saas/invoices");
+        if (invRes.data?.success && invRes.data.invoices?.length > 0) {
+          setInvoices(invRes.data.invoices);
+          // Auto-show official receipt
+          const latestInv = invRes.data.invoices[0];
+          if (latestInv) setActiveReceipt(latestInv);
+        }
       }
     } catch (err) {
-      console.error("Checkout Error:", err);
       setError(err.response?.data?.message || "Failed to complete simulated payment.");
     } finally {
       setCheckoutLoading(false);
@@ -207,7 +224,6 @@ export default function SubscriptionPlans() {
         await fetchSaaSData();
       }
     } catch (err) {
-      console.error("Cancel Sub Error:", err);
       setError(err.response?.data?.message || "Failed to cancel subscription.");
     }
   };
@@ -230,27 +246,26 @@ export default function SubscriptionPlans() {
         await fetchSaaSData();
       }
     } catch (err) {
-      console.error("Invite Error:", err);
       setError(err.response?.data?.message || "Failed to invite member.");
     } finally {
       setInviteLoading(false);
     }
   };
 
-  // Canonical Plan Name Helper: Starter, Professional, Enterprise
+  // Canonical Plan Name Helper: Starter, Professional Agency, Enterprise Elite
   const getCanonicalPlanName = (plan) => {
     if (!plan) return "Starter";
     const slug = typeof plan === "string" ? plan.toLowerCase() : (plan.slug || plan.plan_slug || "").toLowerCase();
     const name = typeof plan === "string" ? plan.toLowerCase() : (plan.name || plan.plan_name || "").toLowerCase();
-    if (slug === "enterprise" || name.includes("enterprise")) return "Enterprise";
-    if (slug === "pro" || name.includes("pro")) return "Professional";
+    if (slug === "enterprise" || name.includes("enterprise")) return "Enterprise Elite";
+    if (slug === "pro" || name.includes("pro")) return "Professional Agency";
     if (slug === "starter" || name.includes("starter")) return "Starter";
     return typeof plan === "string" ? plan : plan.name || "Starter";
   };
 
   // Helper for pricing display
   const getDisplayPrice = (plan) => {
-    if (plan.price_monthly === "0.00" || Number(plan.price_monthly) === 0) return "Free";
+    if (plan.price_monthly === "0.00" || Number(plan.price_monthly) === 0) return "₹0";
     if (billingCycle === "yearly") {
       const annual = Number(plan.price_yearly);
       return `₹${annual.toLocaleString()}`;
@@ -275,6 +290,106 @@ export default function SubscriptionPlans() {
   const remainingAgents = maxAgents === -1
     ? "Unlimited"
     : Math.max(0, maxAgents - agentsCount);
+
+  // Grouped Feature Comparison Matrix Data
+  const comparisonGroups = [
+    {
+      group: "PROPERTY MANAGEMENT",
+      features: [
+        { name: "Active Property Listings", starter: "5 Listings", pro: "50 Listings", enterprise: "Unlimited" },
+        { name: "Property Document Vault", starter: "Standard", pro: "Encrypted Multi-file", enterprise: "Enterprise Audit Vault" },
+        { name: "Ownership Verification Badge", starter: false, pro: true, enterprise: true },
+        { name: "Interactive Map Explorer & AI Maps", starter: true, pro: true, enterprise: true },
+        { name: "AI Property Valuation", starter: false, pro: "Basic Market Est.", enterprise: "Real-Time AI Model" },
+      ],
+    },
+    {
+      group: "CRM & LEADS",
+      features: [
+        { name: "Lead Capture & Inquiry System", starter: "Standard Form", pro: "Automated Routing", enterprise: "Omnichannel AI Dispatch" },
+        { name: "CRM Pipeline with Kanban Board", starter: false, pro: true, enterprise: true },
+        { name: "Client Activity Timeline & History", starter: false, pro: true, enterprise: true },
+        { name: "AI Buyer-Property Matching", starter: false, pro: false, enterprise: true },
+      ],
+    },
+    {
+      group: "SALES & DEALS",
+      features: [
+        { name: "Deal Milestone Escrow Tracking", starter: false, pro: true, enterprise: true },
+        { name: "Digital Contracts & E-Signatures", starter: false, pro: true, enterprise: true },
+        { name: "Legal Agreement Templates", starter: false, pro: "Standard Legal", enterprise: "Unlimited Custom" },
+        { name: "Closing Milestone Notifications", starter: false, pro: true, enterprise: true },
+      ],
+    },
+    {
+      group: "TEAM & AGENTS",
+      features: [
+        { name: "Licensed Agent Seats Included", starter: "1 Seat", pro: "5 Seats", enterprise: "Unlimited Seats" },
+        { name: "Role-Based Access Control (RBAC)", starter: "Standard", pro: "Branch & Agent Roles", enterprise: "Custom Enterprise Roles" },
+        { name: "Automated Commission Ledger", starter: false, pro: true, enterprise: true },
+        { name: "Multi-Branch & Territory Management", starter: false, pro: false, enterprise: true },
+      ],
+    },
+    {
+      group: "FINANCE & COMPLIANCE",
+      features: [
+        { name: "Automated Tax Invoicing", starter: true, pro: true, enterprise: true },
+        { name: "18% GST Compliant Receipts", starter: true, pro: true, enterprise: true },
+        { name: "Executive P&L & Chart of Accounts", starter: false, pro: "Basic Ledger", enterprise: "Full Chart of Accounts" },
+        { name: "Multi-Currency Transactions", starter: "INR Only", pro: "INR / USD / EUR", enterprise: "Global Multi-Currency" },
+      ],
+    },
+    {
+      group: "ANALYTICS & BI",
+      features: [
+        { name: "Performance KPI Dashboard", starter: "Basic Stats", pro: "Advanced Metrics", enterprise: "Executive BI Studio" },
+        { name: "Deal Velocity & Conversion Funnel", starter: false, pro: true, enterprise: true },
+        { name: "Locality Market Heatmaps", starter: false, pro: false, enterprise: true },
+        { name: "Data Export (CSV & Audit PDF)", starter: false, pro: true, enterprise: true },
+      ],
+    },
+    {
+      group: "ENTERPRISE OPERATIONS",
+      features: [
+        { name: "Developer API Keys & Webhooks", starter: false, pro: false, enterprise: true },
+        { name: "Multi-Tenant Data Isolation", starter: true, pro: true, enterprise: true },
+        { name: "Custom Domain & Whitelabel", starter: false, pro: false, enterprise: true },
+        { name: "Support SLA", starter: "Standard Community", pro: "Priority Agency (12h)", enterprise: "24/7 Dedicated SLA (1h)" },
+      ],
+    },
+  ];
+
+  // FAQ Items
+  const faqItems = [
+    {
+      q: "Can I upgrade or switch my subscription plan at any time?",
+      a: "Yes, you can upgrade, downgrade, or switch plans at any moment. When upgrading, your new property listing quotas and collaborative agent seats activate immediately, and an updated simulated invoice is generated.",
+    },
+    {
+      q: "What happens when my agency reaches its property listing quota?",
+      a: "Once your organization reaches its plan limit (e.g. 5 on Starter, 50 on Professional Agency), adding new listings will be safely paused with a friendly notification. Existing listings remain live and fully accessible. Upgrading your tier instantly restores full creation capacity.",
+    },
+    {
+      q: "Can I switch between monthly and annual billing cycles?",
+      a: "Absolutely! Switching to annual billing provides approximately 17% savings (2 full months free of charge). You can toggle between monthly and yearly billing anytime using the toggle switch in the hero section.",
+    },
+    {
+      q: "Are payments real or simulated in this environment?",
+      a: "All payments in this application are 100% simulated for demonstration and portfolio review. No real credit card or bank credentials are ever required, while formal tax invoices, GST calculations, and multi-tenant ledger entries are executed accurately.",
+    },
+    {
+      q: "How is the 18% Goods and Services Tax (GST) calculated?",
+      a: "For paid subscription plans (Professional Agency and Enterprise Elite), 18% GST is automatically calculated on top of the base plan price, itemized in your checkout breakdown, and reflected on official downloadable tax receipts.",
+    },
+    {
+      q: "Can I cancel subscription auto-renewal?",
+      a: "Yes, workspace owners can cancel auto-renewal with a single click. Your plan will remain active with full privileges until the end of the current billing cycle, without automatically renewing.",
+    },
+    {
+      q: "What happens to our agency data and team members if we change plans?",
+      a: "All organization records, client relationships, property listings, and legal documents are preserved with strict multi-tenant isolation. No data is deleted when changing plans.",
+    },
+  ];
 
   return (
     <div className="admin-layout">
@@ -302,46 +417,26 @@ export default function SubscriptionPlans() {
 
         {/* Global Notifications */}
         {error && (
-          <div className="error-box" style={{ margin: "1rem 0" }}>
+          <div className="saas-notification error" role="alert">
             <span>⚠️ {error}</span>
-            <button type="button" onClick={() => setError("")}>×</button>
+            <button type="button" onClick={() => setError("")} aria-label="Dismiss error">×</button>
           </div>
         )}
 
         {successMsg && (
-          <div
-            style={{
-              background: "#ECFDF5",
-              color: "#065F46",
-              border: "1px solid #A7F3D0",
-              padding: "0.85rem 1.25rem",
-              borderRadius: "8px",
-              margin: "1rem 0",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              fontWeight: 600,
-            }}
-          >
+          <div className="saas-notification success" role="status">
             <span>✓ {successMsg}</span>
-            <button
-              type="button"
-              onClick={() => setSuccessMsg("")}
-              style={{ background: "none", border: "none", color: "#065F46", fontSize: "1.2rem", cursor: "pointer" }}
-            >
-              ×
-            </button>
+            <button type="button" onClick={() => setSuccessMsg("")} aria-label="Dismiss message">×</button>
           </div>
         )}
 
         {loading ? (
-          <div style={{ padding: "4rem", textAlign: "center", color: "#64748B" }}>
+          <div className="saas-loading-state">
+            <div className="saas-spinner" aria-hidden="true" />
             <p>Loading multi-tenant SaaS workspace...</p>
           </div>
         ) : needsOnboarding ? (
-          /* ─────────────────────────────────────────────────────────────
-             ONBOARDING VIEW (When User Has No Organization Membership)
-             ───────────────────────────────────────────────────────────── */
+          /* ONBOARDING VIEW (When User Has No Organization Membership) */
           <div className="onboarding-wrap">
             <div className="onboarding-card">
               <div className="onboarding-icon">🏢</div>
@@ -381,7 +476,7 @@ export default function SubscriptionPlans() {
                   />
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div className="form-row-2">
                   <div className="form-group">
                     <label htmlFor="orgEmail">Business Email</label>
                     <input
@@ -426,11 +521,9 @@ export default function SubscriptionPlans() {
             </div>
           </div>
         ) : (
-          /* ─────────────────────────────────────────────────────────────
-             ACTIVE TENANT SAAS WORKSPACE
-             ───────────────────────────────────────────────────────────── */
+          /* ACTIVE TENANT SAAS WORKSPACE */
           <div className="saas-page-root">
-            {/* Top Tenant Context Card */}
+            {/* Top Tenant Context Card & Subscription State */}
             <div className="tenant-context-card">
               <div className="tenant-identity-wrap">
                 <div className="tenant-badge-icon">🏛️</div>
@@ -448,9 +541,7 @@ export default function SubscriptionPlans() {
 
               <div className="tenant-status-pill">
                 <div>
-                  <div style={{ fontSize: "0.75rem", color: "#94A3B8", textTransform: "uppercase", marginBottom: "0.2rem" }}>
-                    Active Subscription
-                  </div>
+                  <div className="pill-subtext">Active Subscription</div>
                   <span
                     className={`plan-tier-badge ${
                       subscription?.plan_slug === "enterprise"
@@ -465,9 +556,9 @@ export default function SubscriptionPlans() {
                 </div>
 
                 {subscription?.current_period_end && (
-                  <div style={{ borderLeft: "1px solid rgba(255,255,255,0.15)", paddingLeft: "0.85rem" }}>
-                    <div style={{ fontSize: "0.72rem", color: "#94A3B8" }}>Next Renewal</div>
-                    <strong style={{ fontSize: "0.88rem", color: "#FFFFFF" }}>
+                  <div className="renewal-block">
+                    <div className="pill-subtext">Next Renewal</div>
+                    <strong className="renewal-date">
                       {new Date(subscription.current_period_end).toLocaleDateString()}
                     </strong>
                   </div>
@@ -530,30 +621,39 @@ export default function SubscriptionPlans() {
                   <span>{usage?.totalMembers || 0} total workspace member{usage?.totalMembers === 1 ? "" : "s"}</span>
                 </div>
                 <p className="meter-caption">
-                  Agent seats count licensed agents only. Workspace owners and admins are not counted.
+                  Agent seats count licensed agents only. Workspace owners and admins are not counted against the quota.
                 </p>
               </div>
             </div>
 
             {/* Navigation Tabs */}
-            <div className="saas-nav-tabs">
+            <div className="saas-nav-tabs" role="tablist">
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === "plans"}
                 className={`saas-tab-btn ${activeTab === "plans" ? "active" : ""}`}
+                id="tab-pricing-plans"
                 onClick={() => setActiveTab("plans")}
               >
                 💎 Subscription Plans
               </button>
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === "invoices"}
                 className={`saas-tab-btn ${activeTab === "invoices" ? "active" : ""}`}
+                id="tab-billing-invoices"
                 onClick={() => setActiveTab("invoices")}
               >
                 📜 Billing & Invoices
               </button>
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === "team"}
                 className={`saas-tab-btn ${activeTab === "team" ? "active" : ""}`}
+                id="tab-team-seats"
                 onClick={() => setActiveTab("team")}
               >
                 👥 Team & Agent Seats
@@ -562,7 +662,10 @@ export default function SubscriptionPlans() {
               {isAdmin && (
                 <button
                   type="button"
+                  role="tab"
+                  aria-selected={activeTab === "admin"}
                   className={`saas-tab-btn ${activeTab === "admin" ? "active" : ""}`}
+                  id="tab-super-admin"
                   onClick={() => setActiveTab("admin")}
                 >
                   📊 SaaS Super Admin
@@ -570,128 +673,372 @@ export default function SubscriptionPlans() {
               )}
             </div>
 
-            {/* TAB 1: PRICING MATRIX & SUBSCRIPTION PLANS */}
+            {/* ==============================================================
+               TAB 1: PRICING PLANS & ARCHITECTURAL EXPERIENCE
+               ============================================================== */}
             {activeTab === "plans" && (
-              <div>
-                <div className="pricing-header-wrap">
-                  <h2>Architectural SaaS Tiers</h2>
-                  <p>
-                    Scale your brokerage operations with deterministic listing quotas, AI matching intelligence, and team governance.
+              <div className="pricing-experience-container">
+                {/* 1. PRICING HERO SECTION */}
+                <section className="pricing-hero-section">
+                  <div className="pricing-hero-badge">
+                    <span className="hero-badge-dot" />
+                    <span>✨ Enterprise Architectural SaaS</span>
+                  </div>
+
+                  <h2 className="pricing-hero-title">
+                    Scale Your Real Estate Business with{" "}
+                    <span className="pricing-gradient-text">Deterministic Power</span>
+                  </h2>
+
+                  <p className="pricing-hero-description">
+                    Empowering modern brokerages, property aggregators, and enterprise real-estate syndicates with deterministic listing quotas, AI matching intelligence, and unified multi-agent governance.
                   </p>
 
-                  <div className="billing-cycle-toggle">
-                    <button
-                      type="button"
-                      className={`cycle-btn ${billingCycle === "monthly" ? "active" : ""}`}
-                      onClick={() => setBillingCycle("monthly")}
-                    >
-                      Monthly Billing
-                    </button>
-                    <button
-                      type="button"
-                      className={`cycle-btn ${billingCycle === "yearly" ? "active" : ""}`}
-                      onClick={() => setBillingCycle("yearly")}
-                    >
-                      Annual Billing
-                      <span className="save-badge">Save ~17% (2 Mo Free)</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="pricing-cards-grid">
-                  {plans.map((plan) => {
-                    const isCurrent = subscription?.plan_id === plan.id;
-                    const isPopular = Boolean(plan.is_popular);
-
-                    return (
-                      <div
-                        key={plan.id}
-                        className={`pricing-card ${isPopular ? "popular" : ""}`}
+                  {/* 3. BILLING TOGGLE */}
+                  <div className="billing-toggle-wrapper">
+                    <div className="billing-toggle-pill" role="group" aria-label="Billing frequency selection">
+                      <button
+                        type="button"
+                        className={`toggle-option ${billingCycle === "monthly" ? "active" : ""}`}
+                        id="toggle-billing-monthly"
+                        onClick={() => setBillingCycle("monthly")}
                       >
-                        {isPopular && <div className="popular-ribbon">Most Popular</div>}
+                        Monthly Billing
+                      </button>
+                      <button
+                        type="button"
+                        className={`toggle-option ${billingCycle === "yearly" ? "active" : ""}`}
+                        id="toggle-billing-yearly"
+                        onClick={() => setBillingCycle("yearly")}
+                      >
+                        <span>Annual Billing</span>
+                        <span className="annual-save-badge">2 Months Free</span>
+                      </button>
+                    </div>
+                  </div>
+                </section>
 
-                        <div className="card-top">
-                          <div className="card-title-row">
-                            <h3>{getCanonicalPlanName(plan)}</h3>
+                {/* 2. THREE PRICING CARDS */}
+                <section className="pricing-cards-section">
+                  <div className="pricing-cards-grid">
+                    {plans.map((plan) => {
+                      const canonicalName = getCanonicalPlanName(plan);
+                      const isCurrent = subscription?.plan_id === plan.id;
+                      const isPopular = canonicalName === "Professional Agency" || Boolean(plan.is_popular);
+                      const isEnterprise = canonicalName === "Enterprise Elite";
+
+                      return (
+                        <div
+                          key={plan.id}
+                          className={`luxury-plan-card ${isPopular ? "highlighted-popular" : ""} ${isCurrent ? "is-current-plan" : ""}`}
+                        >
+                          {isPopular && (
+                            <div className="card-popular-pill">
+                              <span>⭐ Recommended for Agencies</span>
+                            </div>
+                          )}
+
+                          <div className="card-header-block">
+                            <div className="card-title-row">
+                              <h3 className="plan-name-heading">{canonicalName}</h3>
+                              {isCurrent && (
+                                <span className="current-active-tag">Active</span>
+                              )}
+                            </div>
+                            <p className="plan-tagline-text">{plan.tagline}</p>
                           </div>
-                          <p className="card-tagline">{plan.tagline}</p>
 
-                          <div className="card-price-block">
-                            <span className="card-currency">₹</span>
-                            <span className="card-price">{getDisplayPrice(plan)}</span>
-                            {Number(plan.price_monthly) > 0 && (
-                              <span className="card-period">
-                                / {billingCycle === "yearly" ? "year" : "month"}
-                              </span>
+                          <div className="card-price-container">
+                            <div className="price-display-row">
+                              <span className="price-number">{getDisplayPrice(plan)}</span>
+                              {Number(plan.price_monthly) > 0 && (
+                                <span className="price-cadence">
+                                  / {billingCycle === "yearly" ? "year" : "month"}
+                                </span>
+                              )}
+                            </div>
+
+                            {billingCycle === "yearly" && Number(plan.price_monthly) > 0 && (
+                              <div className="yearly-savings-note">
+                                <span>Includes 2 months free • Billed annually</span>
+                              </div>
+                            )}
+
+                            {Number(plan.price_monthly) === 0 && (
+                              <div className="yearly-savings-note">
+                                <span>Free forever workspace for individual agents</span>
+                              </div>
                             )}
                           </div>
 
-                          <ul className="card-features-list">
-                            {(plan.features || []).map((feat, idx) => (
-                              <li key={idx} className="feature-item">
-                                <span className="feature-check">✓</span>
-                                <span>{feat}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                          {/* Plan Feature Highlights */}
+                          <div className="card-features-container">
+                            <div className="features-section-title">Included Features:</div>
+                            <ul className="plan-features-list">
+                              {(plan.features || []).map((feat, idx) => (
+                                <li key={idx} className="plan-feature-row">
+                                  <span className="feature-check-icon">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                  </span>
+                                  <span>{feat}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
 
-                        <div>
-                          {isCurrent ? (
-                            <button type="button" className="card-cta-btn active-btn" disabled>
-                              ✓ Current Active Plan
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className={`card-cta-btn ${isPopular ? "primary-btn" : "outline-btn"}`}
-                              onClick={() => handleOpenCheckout(plan)}
-                            >
-                              {Number(plan.price_monthly) === 0 ? "Downgrade to Starter" : `Upgrade to ${getCanonicalPlanName(plan)}`}
-                            </button>
-                          )}
+                          {/* Dynamic Action Buttons */}
+                          <div className="card-action-container">
+                            {isCurrent ? (
+                              <button
+                                type="button"
+                                className="card-cta-btn btn-current-active"
+                                disabled
+                                id={`cta-current-${plan.id}`}
+                              >
+                                ✓ Current Active Plan
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className={`card-cta-btn ${isPopular ? "btn-purple-primary" : "btn-purple-outline"}`}
+                                id={`cta-plan-${plan.id}`}
+                                onClick={() => handleOpenCheckout(plan)}
+                              >
+                                {Number(plan.price_monthly) === 0
+                                  ? "Downgrade to Starter"
+                                  : isEnterprise
+                                  ? `Upgrade to ${canonicalName}`
+                                  : `Upgrade to ${canonicalName}`}
+                              </button>
+                            )}
 
-                          {isCurrent && Number(plan.price_monthly) > 0 && subscription?.auto_renew && (
-                            <div style={{ textAlign: "center", marginTop: "0.75rem" }}>
+                            {isCurrent && Number(plan.price_monthly) > 0 && subscription?.auto_renew && (
                               <button
                                 type="button"
                                 onClick={handleCancelAutoRenew}
-                                style={{ background: "none", border: "none", color: "#EF4444", fontSize: "0.78rem", cursor: "pointer", textDecoration: "underline" }}
+                                className="cancel-autorenew-btn"
+                                id="btn-cancel-autorenew"
                               >
                                 Cancel Auto-Renew
                               </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {/* 4. FEATURE COMPARISON MATRIX */}
+                <section className="feature-comparison-section">
+                  <div className="section-intro-header">
+                    <span className="section-kicker">DETAILED MATRIX</span>
+                    <h3 className="section-main-heading">Every Feature, Side by Side</h3>
+                    <p className="section-sub-heading">
+                      A complete architectural breakdown of capabilities across all subscription tiers.
+                    </p>
+                  </div>
+
+                  <div className="comparison-table-wrapper" tabIndex="0" aria-label="Feature comparison table">
+                    <table className="luxury-comparison-table">
+                      <thead>
+                        <tr>
+                          <th className="th-feature">Feature / Capability</th>
+                          <th className="th-tier">Starter</th>
+                          <th className="th-tier th-popular">
+                            <span>Professional Agency</span>
+                            <span className="th-tag">Popular</span>
+                          </th>
+                          <th className="th-tier">Enterprise Elite</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {comparisonGroups.map((group, gIdx) => (
+                          <React.Fragment key={gIdx}>
+                            <tr className="table-group-header-row">
+                              <td colSpan="4">
+                                <span className="group-title-label">{group.group}</span>
+                              </td>
+                            </tr>
+                            {group.features.map((feat, fIdx) => (
+                              <tr key={fIdx} className="table-feature-row">
+                                <td className="td-feature-name">{feat.name}</td>
+                                <td className="td-val">
+                                  {typeof feat.starter === "boolean" ? (
+                                    feat.starter ? (
+                                      <span className="check-icon-yes" title="Included">✓</span>
+                                    ) : (
+                                      <span className="check-icon-no" title="Not Included">—</span>
+                                    )
+                                  ) : (
+                                    <span className="text-val-badge">{feat.starter}</span>
+                                  )}
+                                </td>
+                                <td className="td-val td-popular-col">
+                                  {typeof feat.pro === "boolean" ? (
+                                    feat.pro ? (
+                                      <span className="check-icon-yes" title="Included">✓</span>
+                                    ) : (
+                                      <span className="check-icon-no" title="Not Included">—</span>
+                                    )
+                                  ) : (
+                                    <span className="text-val-badge pro-badge">{feat.pro}</span>
+                                  )}
+                                </td>
+                                <td className="td-val">
+                                  {typeof feat.enterprise === "boolean" ? (
+                                    feat.enterprise ? (
+                                      <span className="check-icon-yes" title="Included">✓</span>
+                                    ) : (
+                                      <span className="check-icon-no" title="Not Included">—</span>
+                                    )
+                                  ) : (
+                                    <span className="text-val-badge enterprise-badge">{feat.enterprise}</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </React.Fragment>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                {/* 11. ENTERPRISE CTA SECTION */}
+                <section className="enterprise-banner-section">
+                  <div className="enterprise-banner-card">
+                    <div className="enterprise-content-column">
+                      <div className="enterprise-pill">
+                        <span>🏛️ MULTI-BRANCH CONGLOMERATES</span>
+                      </div>
+                      <h3 className="enterprise-banner-title">
+                        Built for Ambitious Real-Estate Organizations
+                      </h3>
+                      <p className="enterprise-banner-desc">
+                        Need tailored listing boundaries, dedicated multi-region DB clustering, customized legal escrow pipelines, or white-label mobile applications? Our enterprise engineering team crafts bespoke deployments.
+                      </p>
+                      <div className="enterprise-features-inline">
+                        <span>✓ Custom API Webhooks</span>
+                        <span>✓ Dedicated Account SLA</span>
+                        <span>✓ 99.99% Uptime Guarantee</span>
+                      </div>
+                    </div>
+
+                    <div className="enterprise-action-column">
+                      <button
+                        type="button"
+                        className="enterprise-action-btn"
+                        id="btn-explore-enterprise"
+                        onClick={() => navigate("/enterprise")}
+                      >
+                        Explore Enterprise Portal →
+                      </button>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 12. FAQ ACCORDION SECTION */}
+                <section className="faq-section" id="pricing-faq">
+                  <div className="section-intro-header">
+                    <span className="section-kicker">QUESTIONS & ANSWERS</span>
+                    <h3 className="section-main-heading">Frequently Asked Questions</h3>
+                    <p className="section-sub-heading">
+                      Clear answers about billing cycles, listing quotas, simulated payments, and subscription management.
+                    </p>
+                  </div>
+
+                  <div className="faq-accordion-list">
+                    {faqItems.map((item, index) => {
+                      const isOpen = openFaqIndex === index;
+                      return (
+                        <div key={index} className={`faq-item-card ${isOpen ? "open" : ""}`}>
+                          <button
+                            type="button"
+                            className="faq-question-btn"
+                            aria-expanded={isOpen}
+                            onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                          >
+                            <span className="faq-q-text">{item.q}</span>
+                            <span className="faq-chevron-icon" aria-hidden="true">
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                              </svg>
+                            </span>
+                          </button>
+                          {isOpen && (
+                            <div className="faq-answer-block">
+                              <p>{item.a}</p>
                             </div>
                           )}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {/* 13. FINAL CONVERSION CTA */}
+                <section className="final-cta-section">
+                  <div className="final-cta-card">
+                    <div className="final-cta-text">
+                      <h3>Build the Next Generation of Your Real-Estate Business</h3>
+                      <p>
+                        Activate deterministic agency pipelines, collaborative team seats, and architectural listing tools today.
+                      </p>
+                    </div>
+                    <div className="final-cta-buttons">
+                      <button
+                        type="button"
+                        className="final-cta-primary"
+                        id="btn-final-cta-start"
+                        onClick={() => {
+                          const proPlan = plans.find((p) => p.slug === "pro" || p.name.includes("Pro"));
+                          if (proPlan) handleOpenCheckout(proPlan);
+                          else window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                      >
+                        Get Started with Pro Agency →
+                      </button>
+                      <Link to="/properties" className="final-cta-secondary" id="btn-final-cta-browse">
+                        Browse Properties
+                      </Link>
+                    </div>
+                  </div>
+                </section>
               </div>
             )}
 
-            {/* TAB 2: INVOICES & BILLING HISTORY */}
+            {/* ==============================================================
+               TAB 2: INVOICES & BILLING HISTORY
+               ============================================================== */}
             {activeTab === "invoices" && (
               <div className="invoices-card">
                 <div className="invoices-header">
-                  <h3>Tenant Billing History & Tax Receipts</h3>
-                  <span style={{ fontSize: "0.85rem", color: "#64748B" }}>
+                  <div>
+                    <h3>Tenant Billing History & Tax Receipts</h3>
+                    <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "#64748B" }}>
+                      Itemized invoices generated automatically upon subscription activation with 18% GST compliance.
+                    </p>
+                  </div>
+                  <span className="invoices-count-badge">
                     Total Invoices: {invoices.length}
                   </span>
                 </div>
 
                 {invoices.length === 0 ? (
-                  <div style={{ padding: "3rem", textAlign: "center", color: "#64748B" }}>
+                  <div className="empty-invoices-box">
                     <p>No billing invoices generated yet. Invoices appear automatically upon subscription activation.</p>
                   </div>
                 ) : (
-                  <div className="saas-table-wrap">
+                  <div className="saas-table-wrap" tabIndex="0" aria-label="Billing history table">
                     <table className="invoices-table">
                       <thead>
                         <tr>
                           <th>Invoice #</th>
                           <th>Date</th>
-                          <th>Description</th>
+                          <th>Plan / Description</th>
                           <th>Payment Method</th>
                           <th>Total Amount</th>
                           <th>Status</th>
@@ -731,18 +1078,21 @@ export default function SubscriptionPlans() {
               </div>
             )}
 
-            {/* TAB 3: TEAM & AGENT SEATS */}
+            {/* ==============================================================
+               TAB 3: TEAM & AGENT SEATS
+               ============================================================== */}
             {activeTab === "team" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "14px", padding: "1.5rem" }}>
-                  <h3 style={{ margin: "0 0 0.35rem 0", color: "#071A33" }}>Invite Colleague to Organization Workspace</h3>
-                  <p style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", color: "#64748B" }}>
-                    Agent seats count licensed agents only. Workspace owners and admins are not counted against the agent seat quota.
+              <div className="team-seats-container">
+                <div className="invite-member-card">
+                  <h3>Invite Colleague to Organization Workspace</h3>
+                  <p>
+                    Agent seats count licensed agents only. Workspace owners and staff are not counted against the licensed agent quota.
                   </p>
                   <form onSubmit={handleInviteMember} className="team-invite-form">
                     <div className="form-group flex-2">
-                      <label>Registered User Email</label>
+                      <label htmlFor="inviteEmailInput">Registered User Email</label>
                       <input
+                        id="inviteEmailInput"
                         type="email"
                         required
                         placeholder="colleague@realestate.com"
@@ -751,8 +1101,12 @@ export default function SubscriptionPlans() {
                       />
                     </div>
                     <div className="form-group flex-1">
-                      <label>Role</label>
-                      <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
+                      <label htmlFor="inviteRoleSelect">Role</label>
+                      <select
+                        id="inviteRoleSelect"
+                        value={inviteRole}
+                        onChange={(e) => setInviteRole(e.target.value)}
+                      >
                         <option value="agent">Licensed Agent</option>
                         <option value="user">Team Member / Staff</option>
                       </select>
@@ -770,55 +1124,57 @@ export default function SubscriptionPlans() {
                 <div className="invoices-card">
                   <div className="invoices-header">
                     <h3>Active Workspace Members ({teamMembers.length})</h3>
-                    <span style={{ fontSize: "0.85rem", color: "#64748B" }}>
+                    <span className="invoices-count-badge">
                       Licensed Agent Seats: {agentsCount} / {maxAgents === -1 ? "∞ Unlimited" : maxAgents}
                     </span>
                   </div>
-                  <div className="saas-table-wrap">
+                  <div className="saas-table-wrap" tabIndex="0" aria-label="Team members table">
                     <table className="invoices-table">
-                    <thead>
-                      <tr>
-                        <th>Member Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Seat Allocation</th>
-                        <th>Joined Date</th>
-                        <th>Workspace Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {teamMembers.map((m) => (
-                        <tr key={m.membership_id}>
-                          <td>
-                            <strong>{m.name}</strong>
-                          </td>
-                          <td>{m.email}</td>
-                          <td>
-                            <span style={{ textTransform: "capitalize" }}>{m.role}</span>
-                          </td>
-                          <td>
-                            {m.role === "agent" ? (
-                              <span className="seat-badge-agent">Licensed Agent Seat</span>
-                            ) : (
-                              <span className="seat-badge-staff">Workspace Member</span>
-                            )}
-                          </td>
-                          <td>{new Date(m.joined_at).toLocaleDateString()}</td>
-                          <td>
-                            <span className="status-badge-paid">
-                              {m.is_primary ? "Primary Owner" : "Active Member"}
-                            </span>
-                          </td>
+                      <thead>
+                        <tr>
+                          <th>Member Name</th>
+                          <th>Email</th>
+                          <th>Role</th>
+                          <th>Seat Allocation</th>
+                          <th>Joined Date</th>
+                          <th>Workspace Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {teamMembers.map((m) => (
+                          <tr key={m.membership_id}>
+                            <td>
+                              <strong>{m.name}</strong>
+                            </td>
+                            <td>{m.email}</td>
+                            <td>
+                              <span style={{ textTransform: "capitalize" }}>{m.role}</span>
+                            </td>
+                            <td>
+                              {m.role === "agent" ? (
+                                <span className="seat-badge-agent">Licensed Agent Seat</span>
+                              ) : (
+                                <span className="seat-badge-staff">Workspace Member</span>
+                              )}
+                            </td>
+                            <td>{new Date(m.joined_at).toLocaleDateString()}</td>
+                            <td>
+                              <span className="status-badge-paid">
+                                {m.is_primary ? "Primary Owner" : "Active Member"}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* TAB 4: SAAS SUPER ADMIN (ADMIN ONLY) */}
+            {/* ==============================================================
+               TAB 4: SAAS SUPER ADMIN (ADMIN ONLY)
+               ============================================================== */}
             {activeTab === "admin" && isAdmin && (
               <div>
                 <div className="admin-kpis-grid">
@@ -844,7 +1200,7 @@ export default function SubscriptionPlans() {
                   <div className="invoices-header">
                     <h3>All Platform Tenant Workspaces ({adminTenants.length})</h3>
                   </div>
-                  <div className="saas-table-wrap">
+                  <div className="saas-table-wrap" tabIndex="0" aria-label="Tenant directory table">
                     <table className="invoices-table">
                       <thead>
                         <tr>
@@ -891,19 +1247,32 @@ export default function SubscriptionPlans() {
         )}
 
         {/* ─────────────────────────────────────────────────────────────
-           SIMULATED CHECKOUT MODAL
+           5. SIMULATED CHECKOUT MODAL
            ───────────────────────────────────────────────────────────── */}
         {selectedPlanForCheckout && (
-          <div className="saas-modal-backdrop" onClick={() => setSelectedPlanForCheckout(null)}>
+          <div
+            className="saas-modal-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="checkout-modal-title"
+            onClick={() => setSelectedPlanForCheckout(null)}
+          >
             <div className="saas-modal-dialog" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <h3>Upgrade to {getCanonicalPlanName(selectedPlanForCheckout)}</h3>
+                <div className="modal-title-wrap">
+                  <span className="modal-badge-icon">💳</span>
+                  <div>
+                    <h3 id="checkout-modal-title">Upgrade to {getCanonicalPlanName(selectedPlanForCheckout)}</h3>
+                    <p className="modal-subtitle">Instant multi-tenant activation with simulated billing</p>
+                  </div>
+                </div>
                 <button
                   type="button"
                   className="modal-close-btn"
                   onClick={() => setSelectedPlanForCheckout(null)}
+                  aria-label="Close checkout"
                 >
-                  ×
+                  ✕
                 </button>
               </div>
 
@@ -914,16 +1283,16 @@ export default function SubscriptionPlans() {
                     <strong>{getCanonicalPlanName(selectedPlanForCheckout)}</strong>
                   </div>
                   <div className="summary-row">
-                    <span>Billing Cycle</span>
+                    <span>Billing Frequency</span>
                     <strong style={{ textTransform: "capitalize" }}>{billingCycle}</strong>
                   </div>
                   <div className="summary-row">
-                    <span>Subtotal</span>
+                    <span>Base Subscription Subtotal</span>
                     <span>{getDisplayPrice(selectedPlanForCheckout)}</span>
                   </div>
-                  {Number(selectedPlanForCheckout.price_monthly) > 0 && (
+                  {Number(selectedPlanForCheckout.price_monthly) > 0 ? (
                     <div className="summary-row">
-                      <span>GST / VAT (18%)</span>
+                      <span>GST / Statutory Tax (18%)</span>
                       <span>
                         ₹
                         {(
@@ -933,12 +1302,17 @@ export default function SubscriptionPlans() {
                         ).toLocaleString()}
                       </span>
                     </div>
+                  ) : (
+                    <div className="summary-row">
+                      <span>GST / Statutory Tax (18%)</span>
+                      <span>₹0 (Tax Exempt for Free Tier)</span>
+                    </div>
                   )}
                   <div className="summary-row total">
-                    <span>Total Due Now</span>
-                    <span>
+                    <span>Total Due Now (INR)</span>
+                    <span className="total-highlight">
                       {Number(selectedPlanForCheckout.price_monthly) === 0
-                        ? "₹0 (Free)"
+                        ? "₹0 (Free Forever)"
                         : `₹${(
                             (billingCycle === "yearly"
                               ? Number(selectedPlanForCheckout.price_yearly)
@@ -949,8 +1323,8 @@ export default function SubscriptionPlans() {
                 </div>
 
                 <div className="payment-method-selector">
-                  <label style={{ fontSize: "0.85rem", fontWeight: 700, color: "#334155" }}>
-                    Simulated Payment Method
+                  <label className="payment-method-label">
+                    Select Simulated Payment Method
                   </label>
                   {[
                     { id: "Simulated Credit Card", label: "💳 Simulated Credit / Debit Card (Instant 3DS)" },
@@ -964,24 +1338,27 @@ export default function SubscriptionPlans() {
                     >
                       <input
                         type="radio"
+                        id={`pay-${m.id}`}
+                        name="payment_method_group"
                         checked={paymentMethod === m.id}
                         onChange={() => setPaymentMethod(m.id)}
                       />
-                      <span>{m.label}</span>
+                      <label htmlFor={`pay-${m.id}`} style={{ cursor: "pointer", flex: 1, margin: 0 }}>
+                        {m.label}
+                      </label>
                     </div>
                   ))}
                 </div>
 
                 <div className="simulated-note">
-                  ℹ️ 100% Simulated Gateway: Zero real payment credentials required. Formal tax invoice and subscription will be generated immediately.
+                  ℹ️ <strong>100% Simulated Gateway:</strong> No real payment credentials required. A formal tax receipt and subscription state will be activated instantly.
                 </div>
               </div>
 
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="card-cta-btn outline-btn"
-                  style={{ width: "auto" }}
+                  className="card-cta-btn btn-modal-cancel"
                   onClick={() => setSelectedPlanForCheckout(null)}
                 >
                   Cancel
@@ -989,11 +1366,18 @@ export default function SubscriptionPlans() {
                 <button
                   type="button"
                   disabled={checkoutLoading}
-                  className="card-cta-btn primary-btn"
-                  style={{ width: "auto", minWidth: "160px" }}
+                  className="card-cta-btn btn-modal-confirm"
+                  id="btn-confirm-checkout"
                   onClick={handleConfirmCheckout}
                 >
-                  {checkoutLoading ? "Processing..." : "Confirm & Activate (Simulated)"}
+                  {checkoutLoading ? (
+                    <span className="spinner-wrap">
+                      <span className="btn-spinner" aria-hidden="true" />
+                      <span>Activating...</span>
+                    </span>
+                  ) : (
+                    "Confirm & Activate (Simulated)"
+                  )}
                 </button>
               </div>
             </div>
@@ -1001,37 +1385,52 @@ export default function SubscriptionPlans() {
         )}
 
         {/* ─────────────────────────────────────────────────────────────
-           OFFICIAL TAX RECEIPT MODAL
+           6. OFFICIAL TAX RECEIPT / INVOICE MODAL
            ───────────────────────────────────────────────────────────── */}
         {activeReceipt && (
-          <div className="saas-modal-backdrop" onClick={() => setActiveReceipt(null)}>
-            <div className="saas-modal-dialog" style={{ maxWidth: "580px" }} onClick={(e) => e.stopPropagation()}>
+          <div
+            className="saas-modal-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="receipt-modal-title"
+            onClick={() => setActiveReceipt(null)}
+          >
+            <div className="saas-modal-dialog receipt-dialog" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <h3>Official Tax Receipt</h3>
-                <button type="button" className="modal-close-btn" onClick={() => setActiveReceipt(null)}>
-                  ×
+                <div className="modal-title-wrap">
+                  <span className="modal-badge-icon">📜</span>
+                  <div>
+                    <h3 id="receipt-modal-title">Official Tax Invoice & Receipt</h3>
+                    <p className="modal-subtitle">GSTIN Compliant Architectural Cloud Services</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => setActiveReceipt(null)}
+                  aria-label="Close receipt"
+                >
+                  ✕
                 </button>
               </div>
 
               <div className="modal-body">
                 <div className="receipt-paper">
                   <div className="receipt-header">
-                    <h2>REALESTATE SAAS PLATFORM</h2>
-                    <p style={{ margin: 0, fontSize: "0.82rem", color: "#64748B" }}>
-                      Official Architectural Cloud Services • GSTIN: 24AAACE0123M1Z5
-                    </p>
+                    <h2>REALESTATE ARCHITECTURAL PLATFORM</h2>
+                    <p>Official Cloud Services • GSTIN: 24AAACE0123M1Z5</p>
                   </div>
 
                   <div className="receipt-meta">
                     <div>
-                      <div style={{ color: "#64748B" }}>Billed To:</div>
-                      <strong>{activeReceipt.organization_name}</strong>
-                      <div>Tax ID: {activeReceipt.organization_tax_id || "GSTIN-PENDING"}</div>
+                      <div className="meta-label">Billed To:</div>
+                      <strong>{activeReceipt.organization_name || tenant?.name || "Workspace Tenant"}</strong>
+                      <div className="meta-tax">GSTIN / Tax ID: {activeReceipt.organization_tax_id || "GSTIN-PENDING"}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ color: "#64748B" }}>Invoice Number:</div>
+                      <div className="meta-label">Invoice Number:</div>
                       <strong>{activeReceipt.invoice_number}</strong>
-                      <div>Date: {new Date(activeReceipt.invoice_date).toLocaleDateString()}</div>
+                      <div className="meta-date">Date: {new Date(activeReceipt.invoice_date).toLocaleDateString()}</div>
                     </div>
                   </div>
 
@@ -1039,7 +1438,7 @@ export default function SubscriptionPlans() {
                     <thead>
                       <tr>
                         <th>Description</th>
-                        <th>Tax</th>
+                        <th>Tax (18%)</th>
                         <th>Amount</th>
                       </tr>
                     </thead>
@@ -1052,7 +1451,7 @@ export default function SubscriptionPlans() {
                     </tbody>
                   </table>
 
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.95rem", fontWeight: 800 }}>
+                  <div className="receipt-total-row">
                     <span>Total Paid:</span>
                     <span>₹{Number(activeReceipt.amount).toLocaleString()} ({activeReceipt.payment_method})</span>
                   </div>
@@ -1062,7 +1461,7 @@ export default function SubscriptionPlans() {
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="card-cta-btn primary-btn"
+                  className="card-cta-btn btn-modal-confirm"
                   style={{ width: "auto" }}
                   onClick={() => window.print()}
                 >
@@ -1070,7 +1469,7 @@ export default function SubscriptionPlans() {
                 </button>
                 <button
                   type="button"
-                  className="card-cta-btn outline-btn"
+                  className="card-cta-btn btn-modal-cancel"
                   style={{ width: "auto" }}
                   onClick={() => setActiveReceipt(null)}
                 >
