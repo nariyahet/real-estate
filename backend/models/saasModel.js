@@ -10,7 +10,7 @@ const getCanonicalPlanName = (plan) => {
   if (!plan) return 'Starter';
   const slug = (plan.slug || '').toLowerCase();
   const name = (plan.name || '').toLowerCase();
-  if (slug === 'enterprise' || name.includes('enterprise')) return 'Enterprise';
+  if (slug === 'enterprise' || name.includes('enterprise')) return 'Enterprise Elite';
   if (slug === 'pro' || name.includes('pro')) return 'Professional';
   if (slug === 'starter' || name.includes('starter')) return 'Starter';
   return plan.name || 'Starter';
@@ -339,7 +339,7 @@ const subscribeOrganizationPlan = async ({ organizationId, planId, billingCycle 
       `
         INSERT INTO subscription_invoices
           (organization_id, subscription_id, invoice_number, amount, tax_amount, currency, status, billing_reason, payment_method, invoice_date, paid_at)
-        VALUES (?, ?, ?, ?, ?, ?, 'paid', ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, 'paid', ?, ?, NOW(), NOW())
       `,
       [
         organizationId,
@@ -350,8 +350,6 @@ const subscribeOrganizationPlan = async ({ organizationId, planId, billingCycle 
         plan.currency || 'INR',
         `${canonicalName} (${normalizedCycle.toUpperCase()}) Subscription`,
         paymentMethod,
-        now,
-        now,
       ]
     );
 
@@ -411,7 +409,7 @@ const getOrganizationInvoices = async (organizationId) => {
       FROM subscription_invoices si
       JOIN organizations o ON si.organization_id = o.id
       WHERE si.organization_id = ?
-      ORDER BY si.invoice_date DESC
+      ORDER BY si.id DESC
     `,
     [organizationId]
   );

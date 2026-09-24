@@ -187,18 +187,20 @@ export default function SubscriptionPlans() {
   };
 
   const handleConfirmCheckout = async () => {
-    if (!selectedPlanForCheckout) return;
+    if (!selectedPlanForCheckout || checkoutLoading) return;
     setCheckoutLoading(true);
     setError("");
     try {
+      const planToActivate = selectedPlanForCheckout;
+      const cycleToActivate = billingCycle;
       const res = await api.post("/saas/subscription/subscribe", {
-        planId: selectedPlanForCheckout.id,
-        billingCycle,
+        planId: planToActivate.id,
+        billingCycle: cycleToActivate,
         paymentMethod,
       });
 
       if (res.data?.success) {
-        const canonical = getCanonicalPlanName(selectedPlanForCheckout);
+        const canonical = getCanonicalPlanName(planToActivate);
         setSuccessMsg(`Subscription successfully updated to ${canonical}!`);
         setSelectedPlanForCheckout(null);
         setUserToggledCycle(false);
@@ -208,9 +210,13 @@ export default function SubscriptionPlans() {
         const invRes = await api.get("/saas/invoices");
         if (invRes.data?.success && invRes.data.invoices?.length > 0) {
           setInvoices(invRes.data.invoices);
-          // Auto-show official receipt
-          const latestInv = invRes.data.invoices[0];
-          if (latestInv) setActiveReceipt(latestInv);
+          // Auto-show official receipt specifically created for THIS transaction
+          const createdInvoiceId = res.data.data?.invoiceId;
+          const createdInvoiceNum = res.data.data?.invoiceNumber;
+          const thisInv = invRes.data.invoices.find(
+            (i) => (createdInvoiceId && i.id === createdInvoiceId) || (createdInvoiceNum && i.invoice_number === createdInvoiceNum)
+          ) || invRes.data.invoices[0];
+          if (thisInv) setActiveReceipt(thisInv);
         }
       }
     } catch (err) {
@@ -271,7 +277,7 @@ export default function SubscriptionPlans() {
   // Currency formatting helper
   const formatCurrency = (val, forceDecimals = false) => {
     const num = Number(val) || 0;
-    if (num === 0 && !forceDecimals) return "₹0";
+    if (num === 0) return "₹0";
     if (forceDecimals || num % 1 !== 0) {
       return `₹${num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
