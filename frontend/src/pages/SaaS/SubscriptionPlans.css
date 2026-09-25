@@ -2246,3 +2246,193 @@
   }
 }
 
+/* ==========================================================================
+   ACTIVE SUBSCRIPTION ENTITLEMENTS CARD
+   ========================================================================== */
+.active-entitlements-card {
+  background: linear-gradient(135deg, rgba(8, 22, 44, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: var(--saas-radius-lg, 16px);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+
+.active-entitlements-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #7C3AED 0%, #4F46E5 50%, #06B6D4 100%);
+}
+
+.active-entitlements-card.tier-starter::before {
+  background: linear-gradient(90deg, #64748B 0%, #94A3B8 100%);
+}
+
+.active-entitlements-card.tier-pro::before {
+  background: linear-gradient(90deg, #7C3AED 0%, #6366F1 50%, #A855F7 100%);
+}
+
+.active-entitlements-card.tier-enterprise::before {
+  background: linear-gradient(90deg, #D97706 0%, #F59E0B 50%, #EF4444 100%);
+}
+
+.active-entitlements-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 1.25rem;
+}
+
+.entitlements-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.entitlements-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(124, 58, 237, 0.2);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.entitlements-kicker {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #A78BFA;
+  margin-bottom: 0.2rem;
+}
+
+.entitlements-heading {
+  font-family: var(--font-heading, "Outfit", sans-serif);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0 0 0.25rem 0;
+}
+
+.entitlements-subtext {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  margin: 0;
+}
+
+.entitlements-meta-pills {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.entitlements-cycle-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #CBD5E1;
+}
+
+.entitlements-seat-pill {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.85rem;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34D399;
+}
+
+.active-entitlements-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.entitlements-list-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #CBD5E1;
+}
+
+.active-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.65rem 1rem;
+}
+
+.active-feature-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.active-feature-badge-item:hover {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(167, 139, 250, 0.3);
+  transform: translateY(-1px);
+}
+
+.active-feat-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+  font-weight: 900;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+.active-feat-name {
+  font-size: 0.84rem;
+  color: #E2E8F0;
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  .active-entitlements-card {
+    padding: 1.25rem 1rem;
+  }
+  .active-entitlements-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .active-features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+

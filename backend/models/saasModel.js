@@ -11,7 +11,7 @@ const getCanonicalPlanName = (plan) => {
   const slug = (plan.slug || '').toLowerCase();
   const name = (plan.name || '').toLowerCase();
   if (slug === 'enterprise' || name.includes('enterprise')) return 'Enterprise Elite';
-  if (slug === 'pro' || name.includes('pro')) return 'Professional';
+  if (slug === 'pro' || name.includes('pro')) return 'Professional Agency';
   if (slug === 'starter' || name.includes('starter')) return 'Starter';
   return plan.name || 'Starter';
 };
@@ -208,6 +208,7 @@ const getOrganizationSubscription = async (organizationId) => {
         max_properties: starterPlan[0].max_properties,
         max_agents: starterPlan[0].max_agents,
         plan_features: typeof starterPlan[0].features === 'string' ? JSON.parse(starterPlan[0].features) : starterPlan[0].features || [],
+        features: typeof starterPlan[0].features === 'string' ? JSON.parse(starterPlan[0].features) : starterPlan[0].features || [],
       };
     }
     return null;
@@ -216,13 +217,15 @@ const getOrganizationSubscription = async (organizationId) => {
   const sub = rows[0];
   const normalizedCycle = (sub.billing_cycle || 'monthly').toLowerCase() === 'yearly' ? 'yearly' : 'monthly';
   const currentPrice = normalizedCycle === 'yearly' ? Number(sub.price_yearly) : Number(sub.price_monthly);
+  const parsedFeatures = typeof sub.plan_features === 'string' ? JSON.parse(sub.plan_features) : sub.plan_features || [];
 
   return {
     ...sub,
     price: currentPrice,
     billing_cycle: normalizedCycle,
     plan_name: getCanonicalPlanName({ slug: sub.plan_slug, name: sub.plan_name }),
-    plan_features: typeof sub.plan_features === 'string' ? JSON.parse(sub.plan_features) : sub.plan_features || [],
+    plan_features: parsedFeatures,
+    features: parsedFeatures,
   };
 };
 

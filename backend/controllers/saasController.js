@@ -72,7 +72,7 @@ const getCurrentSubscription = async (req, res) => {
     const rawUsage = await getOrganizationUsage(organizationId);
 
     const maxProperties = subscription ? subscription.max_properties : 5;
-    const maxAgents = subscription ? subscription.max_agents : 1;
+    const maxAgents = subscription ? subscription.max_agents : 5;
     const propertiesPercentage = maxProperties === -1
       ? 0
       : Math.min(100, Math.round(((rawUsage.propertiesCount || 0) / maxProperties) * 100));

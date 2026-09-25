@@ -89,10 +89,10 @@ async function runSaaSMigration() {
         price_yearly: 0,
         currency: 'INR',
         max_properties: 5,
-        max_agents: 1,
+        max_agents: 5,
         features: JSON.stringify([
           'Up to 5 active property listings',
-          '1 dedicated agent seat',
+          'Up to 5 agent seats (5+ agents)',
           'Standard lead inquiry forms',
           'Basic property photo gallery',
           'Standard email support'
@@ -101,7 +101,7 @@ async function runSaaSMigration() {
       },
       {
         slug: 'pro',
-        name: 'Professional',
+        name: 'Professional Agency',
         tagline: 'High-velocity growth suite for growing brokerages',
         price_monthly: 2499.00,
         price_yearly: 24990.00, // 2 months free on annual
@@ -110,7 +110,7 @@ async function runSaaSMigration() {
         max_agents: 5,
         features: JSON.stringify([
           'Up to 50 active property listings',
-          'Up to 5 collaborative agent seats',
+          'Up to 5 agent seats (5+ agents)',
           'Full CRM Pipeline with Kanban board',
           'Deal escrow & milestone tracking',
           'Digital legal contracts & e-signatures',
@@ -121,7 +121,7 @@ async function runSaaSMigration() {
       },
       {
         slug: 'enterprise',
-        name: 'Enterprise',
+        name: 'Enterprise Elite',
         tagline: 'Unrestricted enterprise scale for real estate conglomerates',
         price_monthly: 7999.00,
         price_yearly: 79990.00,
@@ -130,7 +130,7 @@ async function runSaaSMigration() {
         max_agents: -1,     // Unlimited
         features: JSON.stringify([
           'Unlimited property listings',
-          'Unlimited agent & broker seats',
+          'Unlimited agent & broker seats (15+ agents)',
           'AI Buyer-Property Match & NL Search',
           'Multi-branch management & territories',
           'Advanced Financial P&L & Chart of Accounts',

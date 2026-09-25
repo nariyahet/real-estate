@@ -260,69 +260,59 @@ export default function SubscriptionPlans() {
     }
   };
 
-  // Plan-Specific Tier Configurations (Core, Advanced, Enterprise Hierarchy)
+  // Plan-Specific Tier Configurations (Authoritative Plan Entitlements)
   const PLAN_TIER_CONFIG = {
     starter: {
       tierKey: "starter",
       canonicalName: "Starter",
-      badgeLabel: "Individual Agent",
-      seatAllowance: "1 dedicated agent seat",
-      seatBadgeText: "1 Agent Seat",
-      sectionTitle: "Core Features",
+      badgeLabel: "Individual & Small Teams",
+      seatAllowance: "5+ agents (Up to 5 agents)",
+      seatBadgeText: "5+ Agents / Up to 5 Seats",
+      sectionTitle: "Starter Entitlements",
       inheritedNote: null,
       features: [
         "Up to 5 active property listings",
-        "1 dedicated agent seat",
+        "Up to 5 agent seats (5+ agents)",
         "Standard lead inquiry forms",
-        "Basic property management",
-        "Basic customer management",
-        "Basic dashboard",
-        "Basic saved properties",
-        "Basic inquiry tracking",
+        "Basic property photo gallery",
+        "Standard email support",
       ],
     },
     pro: {
       tierKey: "pro",
       canonicalName: "Professional Agency",
       badgeLabel: "Growing Brokerage",
-      seatAllowance: "Up to 5 agent seats",
-      seatBadgeText: "Up to 5 Agent Seats",
-      sectionTitle: "Advanced Features",
-      inheritedNote: "Everything in Starter +",
+      seatAllowance: "5+ agents (Up to 5 agent seats)",
+      seatBadgeText: "5+ Agents / Up to 5 Seats",
+      sectionTitle: "Professional Entitlements",
+      inheritedNote: null,
       features: [
         "Up to 50 active property listings",
-        "Up to 5 agent seats",
-        "Full CRM pipeline",
-        "Kanban lead management",
-        "Advanced property search",
-        "Lead assignment",
-        "Agent collaboration",
-        "Advanced dashboard/analytics",
-        "Property performance tracking",
-        "Advanced inquiry management",
-        "Team management",
+        "Up to 5 agent seats (5+ agents)",
+        "Full CRM Pipeline with Kanban board",
+        "Deal escrow & milestone tracking",
+        "Digital legal contracts & e-signatures",
+        "Automated commission calculation",
+        "Priority agency badge & support",
       ],
     },
     enterprise: {
       tierKey: "enterprise",
       canonicalName: "Enterprise Elite",
       badgeLabel: "Large Organization",
-      seatAllowance: "Unlimited agent/broker seats",
-      seatBadgeText: "Unlimited Agent / Broker Seats",
-      sectionTitle: "Enterprise Features",
-      inheritedNote: "Everything in Professional +",
+      seatAllowance: "15+ agents (Unlimited agent/broker seats)",
+      seatBadgeText: "15+ Agents / Unlimited Seats",
+      sectionTitle: "Enterprise Entitlements",
+      inheritedNote: null,
       features: [
         "Unlimited property listings",
-        "Unlimited agent/broker seats",
-        "AI Buyer–Property Match",
-        "Natural Language Property Search",
-        "Advanced analytics/reporting",
-        "Enterprise CRM",
-        "Advanced role & permission management",
-        "Multi-team/department management",
-        "Priority support",
-        "Enterprise-level customization",
-        "Advanced security/audit controls",
+        "Unlimited agent & broker seats (15+ agents)",
+        "AI Buyer-Property Match & NL Search",
+        "Multi-branch management & territories",
+        "Advanced Financial P&L & Chart of Accounts",
+        "Developer API Keys & Webhook events",
+        "Executive BI Analytics & Audit Logs",
+        "Custom brand styling & dedicated SLA",
       ],
     },
   };
@@ -420,7 +410,7 @@ export default function SubscriptionPlans() {
     {
       group: "TEAM & AGENTS",
       features: [
-        { name: "Licensed Agent Seats Included", starter: "1 Seat", pro: "5 Seats", enterprise: "Unlimited Seats" },
+        { name: "Licensed Agent Capacity", starter: "Up to 5 Seats (5+)", pro: "Up to 5 Seats (5+)", enterprise: "Unlimited Seats (15+)" },
         { name: "Role-Based Access Control (RBAC)", starter: "Standard", pro: "Branch & Agent Roles", enterprise: "Custom Enterprise Roles" },
         { name: "Automated Commission Ledger", starter: false, pro: true, enterprise: true },
         { name: "Multi-Branch & Territory Management", starter: false, pro: false, enterprise: true },
@@ -722,6 +712,69 @@ export default function SubscriptionPlans() {
               </div>
             </div>
 
+            {/* Active Subscription Entitlements & Plan-Specific Features */}
+            {(() => {
+              const activeTierKey = getPlanTierKey(subscription);
+              const canonicalActiveName = getCanonicalPlanName(subscription);
+              const activePlanObj = plans.find((p) => getPlanTierKey(p) === activeTierKey);
+              const activeFeatures = (activePlanObj?.features && Array.isArray(activePlanObj.features) && activePlanObj.features.length > 0)
+                ? activePlanObj.features
+                : (subscription?.features && Array.isArray(subscription.features) && subscription.features.length > 0)
+                ? subscription.features
+                : (subscription?.plan_features && Array.isArray(subscription.plan_features) && subscription.plan_features.length > 0)
+                ? subscription.plan_features
+                : (PLAN_TIER_CONFIG[activeTierKey]?.features || []);
+              const activeCycle = subscription?.billing_cycle ? subscription.billing_cycle.toUpperCase() : "MONTHLY";
+              const activeSeatText = activeTierKey === "enterprise"
+                ? "15+ agents (Unlimited agent/broker seats)"
+                : activeTierKey === "pro"
+                ? "5+ agents (Up to 5 agent seats)"
+                : "5+ agents (Up to 5 agents)";
+
+              return (
+                <div className={`active-entitlements-card tier-${activeTierKey}`} id="active-subscription-entitlements">
+                  <div className="active-entitlements-header">
+                    <div className="entitlements-title-wrap">
+                      <div className="entitlements-icon-box">🛡️</div>
+                      <div>
+                        <div className="entitlements-kicker">CURRENT SUBSCRIPTION ENTITLEMENTS</div>
+                        <h3 className="entitlements-heading">{canonicalActiveName}</h3>
+                        <p className="entitlements-subtext">
+                          Active capabilities, agent capacity, and listing quotas under your current subscription ({activeCycle} Billing).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="entitlements-meta-pills">
+                      <span className={`plan-tier-badge ${activeTierKey}`}>
+                        {canonicalActiveName}
+                      </span>
+                      <span className="entitlements-cycle-pill">
+                        {activeCycle} BILLING
+                      </span>
+                      <span className="entitlements-seat-pill">
+                        {activeSeatText}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="active-entitlements-body">
+                    <div className="entitlements-list-title">
+                      <span>Included Plan Features ({activeFeatures.length} Plan-Specific Entitlements):</span>
+                    </div>
+                    <div className="active-features-grid">
+                      {activeFeatures.map((feat, idx) => (
+                        <div key={idx} className="active-feature-badge-item">
+                          <span className="active-feat-check">✓</span>
+                          <span className="active-feat-name">{feat}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Navigation Tabs */}
             <div className="saas-nav-tabs" role="tablist">
               <button
@@ -894,19 +947,15 @@ export default function SubscriptionPlans() {
                             </div>
                           </div>
 
-                          {/* Task 2: Plan Feature Highlights with Section & Inheritance */}
+                          {/* Plan-Specific Feature Entitlements */}
                           <div className="card-features-container">
-                            {tierConfig.inheritedNote && (
-                              <div className={`plan-inherited-banner tier-${tierKey}`}>
-                                <span className="inherited-badge-icon">✦</span>
-                                <span className="inherited-badge-text">{tierConfig.inheritedNote}</span>
-                              </div>
-                            )}
-
                             <div className="features-section-title">{tierConfig.sectionTitle}:</div>
 
                             <ul className={`plan-features-list tier-${tierKey}`}>
-                              {(tierConfig.features || []).map((feat, idx) => (
+                              {((plan.features && Array.isArray(plan.features) && plan.features.length > 0)
+                                ? plan.features
+                                : tierConfig.features || []
+                              ).map((feat, idx) => (
                                 <li key={idx} className="plan-feature-row">
                                   <span className="feature-check-icon">
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -1433,6 +1482,22 @@ export default function SubscriptionPlans() {
                       <div className="summary-row">
                         <span>Billing Frequency</span>
                         <strong style={{ textTransform: "capitalize" }}>{billingCycle}</strong>
+                      </div>
+                      <div className="summary-row">
+                        <span>Agent Capacity</span>
+                        <strong style={{ color: "#DDD6FE" }}>
+                          {getPlanTierKey(selectedPlanForCheckout) === "enterprise"
+                            ? "15+ agents (Unlimited Seats)"
+                            : getPlanTierKey(selectedPlanForCheckout) === "pro"
+                            ? "5+ agents (Up to 5 Seats)"
+                            : "5+ agents (Up to 5 agents)"}
+                        </strong>
+                      </div>
+                      <div className="summary-row">
+                        <span>Plan Entitlements</span>
+                        <span style={{ fontSize: "0.85rem", color: "#A78BFA", fontWeight: 600 }}>
+                          {(selectedPlanForCheckout.features || PLAN_TIER_CONFIG[getPlanTierKey(selectedPlanForCheckout)]?.features || []).length} Plan-Specific Features Included
+                        </span>
                       </div>
                       <div className="summary-row">
                         <span>Base Subscription Subtotal</span>
