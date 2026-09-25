@@ -80,9 +80,6 @@ export default function SubscriptionPlans() {
           setSubscription(subRes.data.subscription);
           setUsage(subRes.data.usage);
           setNeedsOnboarding(false);
-          if (!userToggledCycle && subRes.data.subscription?.billing_cycle) {
-            setBillingCycle(subRes.data.subscription.billing_cycle);
-          }
         }
       } catch (err) {
         if (err.response?.status === 403 && err.response?.data?.code === "ORGANIZATION_REQUIRED") {
@@ -261,6 +258,84 @@ export default function SubscriptionPlans() {
     } finally {
       setInviteLoading(false);
     }
+  };
+
+  // Plan-Specific Tier Configurations (Core, Advanced, Enterprise Hierarchy)
+  const PLAN_TIER_CONFIG = {
+    starter: {
+      tierKey: "starter",
+      canonicalName: "Starter",
+      badgeLabel: "Individual Agent",
+      seatAllowance: "1 dedicated agent seat",
+      seatBadgeText: "1 Agent Seat",
+      sectionTitle: "Core Features",
+      inheritedNote: null,
+      features: [
+        "Up to 5 active property listings",
+        "1 dedicated agent seat",
+        "Standard lead inquiry forms",
+        "Basic property management",
+        "Basic customer management",
+        "Basic dashboard",
+        "Basic saved properties",
+        "Basic inquiry tracking",
+      ],
+    },
+    pro: {
+      tierKey: "pro",
+      canonicalName: "Professional Agency",
+      badgeLabel: "Growing Brokerage",
+      seatAllowance: "Up to 5 agent seats",
+      seatBadgeText: "Up to 5 Agent Seats",
+      sectionTitle: "Advanced Features",
+      inheritedNote: "Everything in Starter +",
+      features: [
+        "Up to 50 active property listings",
+        "Up to 5 agent seats",
+        "Full CRM pipeline",
+        "Kanban lead management",
+        "Advanced property search",
+        "Lead assignment",
+        "Agent collaboration",
+        "Advanced dashboard/analytics",
+        "Property performance tracking",
+        "Advanced inquiry management",
+        "Team management",
+      ],
+    },
+    enterprise: {
+      tierKey: "enterprise",
+      canonicalName: "Enterprise Elite",
+      badgeLabel: "Large Organization",
+      seatAllowance: "Unlimited agent/broker seats",
+      seatBadgeText: "Unlimited Agent / Broker Seats",
+      sectionTitle: "Enterprise Features",
+      inheritedNote: "Everything in Professional +",
+      features: [
+        "Unlimited property listings",
+        "Unlimited agent/broker seats",
+        "AI Buyer–Property Match",
+        "Natural Language Property Search",
+        "Advanced analytics/reporting",
+        "Enterprise CRM",
+        "Advanced role & permission management",
+        "Multi-team/department management",
+        "Priority support",
+        "Enterprise-level customization",
+        "Advanced security/audit controls",
+      ],
+    },
+  };
+
+  // Helper to determine the tier key for styling & feature mapping
+  const getPlanTierKey = (plan) => {
+    if (!plan) return "starter";
+    const slug = (typeof plan === "string" ? plan : (plan.slug || plan.plan_slug || "")).toLowerCase();
+    const name = (typeof plan === "string" ? plan : (plan.name || plan.plan_name || "")).toLowerCase();
+    if (slug === "enterprise" || name.includes("enterprise")) return "enterprise";
+    if (slug === "pro" || name.includes("pro")) return "pro";
+    if (slug === "starter" || name.includes("starter")) return "starter";
+    return "starter";
   };
 
   // Canonical Plan Name Helper: Starter, Professional Agency, Enterprise Elite
@@ -749,17 +824,19 @@ export default function SubscriptionPlans() {
                 <section className="pricing-cards-section">
                   <div className="pricing-cards-grid">
                     {plans.map((plan) => {
-                      const canonicalName = getCanonicalPlanName(plan);
+                      const tierKey = getPlanTierKey(plan);
+                      const tierConfig = PLAN_TIER_CONFIG[tierKey] || PLAN_TIER_CONFIG.starter;
+                      const canonicalName = tierConfig.canonicalName || getCanonicalPlanName(plan);
                       const isCurrentPlan = subscription?.plan_id === plan.id;
                       const isCurrentCycle = Number(plan.price_monthly) === 0 || (subscription?.billing_cycle || "monthly") === billingCycle;
                       const isCurrentActive = isCurrentPlan && isCurrentCycle;
-                      const isPopular = canonicalName === "Professional Agency" || Boolean(plan.is_popular);
-                      const isEnterprise = canonicalName === "Enterprise Elite";
+                      const isPopular = tierKey === "pro" || canonicalName === "Professional Agency" || Boolean(plan.is_popular);
+                      const isEnterprise = tierKey === "enterprise" || canonicalName === "Enterprise Elite";
 
                       return (
                         <div
                           key={plan.id}
-                          className={`luxury-plan-card ${isPopular ? "highlighted-popular" : ""} ${isCurrentActive ? "is-current-plan" : ""}`}
+                          className={`luxury-plan-card tier-${tierKey} ${isPopular ? "highlighted-popular" : ""} ${isEnterprise ? "enterprise-card" : ""} ${isCurrentActive ? "is-current-plan" : ""}`}
                         >
                           {isPopular && (
                             <div className="card-popular-pill">
@@ -768,6 +845,7 @@ export default function SubscriptionPlans() {
                           )}
 
                           <div className="card-header-block">
+                            <div className="card-tier-kicker">{tierConfig.badgeLabel}</div>
                             <div className="card-title-row">
                               <h3 className="plan-name-heading">{canonicalName}</h3>
                               {isCurrentActive && (
@@ -800,18 +878,42 @@ export default function SubscriptionPlans() {
                             )}
                           </div>
 
-                          {/* Plan Feature Highlights */}
+                          {/* Task 3: Prominent Agent / Seat Allowance Badge */}
+                          <div className={`plan-seat-allowance-bar tier-${tierKey}`}>
+                            <div className="seat-allowance-icon" aria-hidden="true">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                              </svg>
+                            </div>
+                            <div className="seat-allowance-content">
+                              <span className="seat-allowance-label">Agent Capacity</span>
+                              <strong className="seat-allowance-val">{tierConfig.seatAllowance}</strong>
+                            </div>
+                          </div>
+
+                          {/* Task 2: Plan Feature Highlights with Section & Inheritance */}
                           <div className="card-features-container">
-                            <div className="features-section-title">Included Features:</div>
-                            <ul className="plan-features-list">
-                              {(plan.features || []).map((feat, idx) => (
+                            {tierConfig.inheritedNote && (
+                              <div className={`plan-inherited-banner tier-${tierKey}`}>
+                                <span className="inherited-badge-icon">✦</span>
+                                <span className="inherited-badge-text">{tierConfig.inheritedNote}</span>
+                              </div>
+                            )}
+
+                            <div className="features-section-title">{tierConfig.sectionTitle}:</div>
+
+                            <ul className={`plan-features-list tier-${tierKey}`}>
+                              {(tierConfig.features || []).map((feat, idx) => (
                                 <li key={idx} className="plan-feature-row">
                                   <span className="feature-check-icon">
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                       <polyline points="20 6 9 17 4 12" />
                                     </svg>
                                   </span>
-                                  <span>{feat}</span>
+                                  <span className="feature-text">{feat}</span>
                                 </li>
                               ))}
                             </ul>
