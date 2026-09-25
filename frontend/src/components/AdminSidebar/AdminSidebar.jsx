@@ -105,7 +105,7 @@ export default function AdminSidebar({ className = "" }) {
         label: "Maps & Geo",
         icon: "🗺️",
         children: [
-          { id: "geo_property_map", label: "Geospatial Property Map", path: "/enterprise", tab: "aimaps", sub: "geo_map" },
+          { id: "geo_property_map", label: "Geospatial Property Map", path: "/enterprise", tab: "aimaps", sub: "geo_map", isDefaultSub: true },
         ],
       },
       {
@@ -121,7 +121,7 @@ export default function AdminSidebar({ className = "" }) {
         label: "Security & RBAC",
         icon: "🛡️",
         children: [
-          { id: "sec_roles", label: "Roles & Permissions", path: "/enterprise", tab: "executive", sub: "rbac" },
+          { id: "sec_roles", label: "Roles & Permissions", path: "/enterprise", tab: "executive", sub: "rbac", isDefaultSub: true },
           { id: "sec_audit", label: "Security Audit Logs", path: "/enterprise", tab: "executive", sub: "audit" },
         ],
       },
@@ -138,7 +138,7 @@ export default function AdminSidebar({ className = "" }) {
         label: "Integrations & API",
         icon: "🔌",
         children: [
-          { id: "api_keys", label: "Developer API Keys", path: "/enterprise", tab: "governance", sub: "apikeys" },
+          { id: "api_keys", label: "Developer API Keys", path: "/enterprise", tab: "governance", sub: "apikeys", isDefaultSub: true },
         ],
       },
       {
@@ -146,7 +146,7 @@ export default function AdminSidebar({ className = "" }) {
         label: "Organization",
         icon: "🏛️",
         children: [
-          { id: "org_profile", label: "Organization Profile", path: "/enterprise", tab: "governance", sub: "organization" },
+          { id: "org_profile", label: "Organization Profile", path: "/enterprise", tab: "governance", sub: "organization", isDefaultSub: true },
         ],
       },
     ],

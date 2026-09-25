@@ -30,8 +30,8 @@ export default function EnterprisePortal() {
 
   useEffect(() => {
     const u = getUser();
-    if (!u || u.role === "user") {
-      navigate("/properties", { replace: true });
+    if (!u) {
+      navigate("/", { replace: true });
     }
   }, [navigate]);
 
@@ -59,7 +59,9 @@ export default function EnterprisePortal() {
               <div className="user-initial">{(user?.name || "U").charAt(0).toUpperCase()}</div>
               <div className="user-info-text">
                 <span className="user-name">{user?.name || "Enterprise User"}</span>
-                <span className="user-role">{isAdmin ? "Administrator" : "Agent"}</span>
+                <span className="user-role">
+                  {isAdmin ? "Administrator" : user?.role === "agent" ? "Agent" : "Demo User"}
+                </span>
               </div>
             </div>
           </div>
