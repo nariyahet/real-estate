@@ -266,13 +266,13 @@ export default function SubscriptionPlans() {
       tierKey: "starter",
       canonicalName: "Starter",
       badgeLabel: "Individual & Small Teams",
-      seatAllowance: "5+ agents (Up to 5 agents)",
-      seatBadgeText: "5+ Agents / Up to 5 Seats",
+      seatAllowance: "Up to 5 agent seats",
+      seatBadgeText: "Up to 5 Seats",
       sectionTitle: "Starter Entitlements",
       inheritedNote: null,
       features: [
         "Up to 5 active property listings",
-        "Up to 5 agent seats (5+ agents)",
+        "Up to 5 agent seats",
         "Standard lead inquiry forms",
         "Basic property photo gallery",
         "Standard email support",
@@ -282,13 +282,13 @@ export default function SubscriptionPlans() {
       tierKey: "pro",
       canonicalName: "Professional Agency",
       badgeLabel: "Growing Brokerage",
-      seatAllowance: "5+ agents (Up to 5 agent seats)",
-      seatBadgeText: "5+ Agents / Up to 5 Seats",
+      seatAllowance: "Up to 5 agent seats",
+      seatBadgeText: "Up to 5 Seats",
       sectionTitle: "Professional Entitlements",
       inheritedNote: null,
       features: [
         "Up to 50 active property listings",
-        "Up to 5 agent seats (5+ agents)",
+        "Up to 5 agent seats",
         "Full CRM Pipeline with Kanban board",
         "Deal escrow & milestone tracking",
         "Digital legal contracts & e-signatures",
@@ -300,13 +300,13 @@ export default function SubscriptionPlans() {
       tierKey: "enterprise",
       canonicalName: "Enterprise Elite",
       badgeLabel: "Large Organization",
-      seatAllowance: "15+ agents (Unlimited agent/broker seats)",
-      seatBadgeText: "15+ Agents / Unlimited Seats",
+      seatAllowance: "Unlimited agent/broker seats",
+      seatBadgeText: "Unlimited Seats",
       sectionTitle: "Enterprise Entitlements",
       inheritedNote: null,
       features: [
         "Unlimited property listings",
-        "Unlimited agent & broker seats (15+ agents)",
+        "Unlimited agent/broker seats",
         "AI Buyer-Property Match & NL Search",
         "Multi-branch management & territories",
         "Advanced Financial P&L & Chart of Accounts",
@@ -347,6 +347,18 @@ export default function SubscriptionPlans() {
       return `₹${num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     return `₹${num.toLocaleString("en-IN")}`;
+  };
+
+  // Helper to ensure clean feature text conforming to UI wording requirements
+  const cleanFeatureText = (text) => {
+    if (typeof text !== "string") return text;
+    if (text.includes("Up to 5 agent seats") || text.includes("(5+ agents)")) {
+      return "Up to 5 agent seats";
+    }
+    if (text.includes("Unlimited agent") || text.includes("(15+ agents)")) {
+      return "Unlimited agent/broker seats";
+    }
+    return text;
   };
 
   // Helper for pricing display
@@ -410,7 +422,7 @@ export default function SubscriptionPlans() {
     {
       group: "TEAM & AGENTS",
       features: [
-        { name: "Licensed Agent Capacity", starter: "Up to 5 Seats (5+)", pro: "Up to 5 Seats (5+)", enterprise: "Unlimited Seats (15+)" },
+        { name: "Licensed Agent Capacity", starter: "Up to 5 agent seats", pro: "Up to 5 agent seats", enterprise: "Unlimited agent/broker seats" },
         { name: "Role-Based Access Control (RBAC)", starter: "Standard", pro: "Branch & Agent Roles", enterprise: "Custom Enterprise Roles" },
         { name: "Automated Commission Ledger", starter: false, pro: true, enterprise: true },
         { name: "Multi-Branch & Territory Management", starter: false, pro: false, enterprise: true },
@@ -726,10 +738,8 @@ export default function SubscriptionPlans() {
                 : (PLAN_TIER_CONFIG[activeTierKey]?.features || []);
               const activeCycle = subscription?.billing_cycle ? subscription.billing_cycle.toUpperCase() : "MONTHLY";
               const activeSeatText = activeTierKey === "enterprise"
-                ? "15+ agents (Unlimited agent/broker seats)"
-                : activeTierKey === "pro"
-                ? "5+ agents (Up to 5 agent seats)"
-                : "5+ agents (Up to 5 agents)";
+                ? "Unlimited agent/broker seats"
+                : "Up to 5 agent seats";
 
               return (
                 <div className={`active-entitlements-card tier-${activeTierKey}`} id="active-subscription-entitlements">
@@ -766,7 +776,7 @@ export default function SubscriptionPlans() {
                       {activeFeatures.map((feat, idx) => (
                         <div key={idx} className="active-feature-badge-item">
                           <span className="active-feat-check">✓</span>
-                          <span className="active-feat-name">{feat}</span>
+                          <span className="active-feat-name">{cleanFeatureText(feat)}</span>
                         </div>
                       ))}
                     </div>
@@ -962,7 +972,7 @@ export default function SubscriptionPlans() {
                                       <polyline points="20 6 9 17 4 12" />
                                     </svg>
                                   </span>
-                                  <span className="feature-text">{feat}</span>
+                                  <span className="feature-text">{cleanFeatureText(feat)}</span>
                                 </li>
                               ))}
                             </ul>
@@ -1487,10 +1497,8 @@ export default function SubscriptionPlans() {
                         <span>Agent Capacity</span>
                         <strong style={{ color: "#DDD6FE" }}>
                           {getPlanTierKey(selectedPlanForCheckout) === "enterprise"
-                            ? "15+ agents (Unlimited Seats)"
-                            : getPlanTierKey(selectedPlanForCheckout) === "pro"
-                            ? "5+ agents (Up to 5 Seats)"
-                            : "5+ agents (Up to 5 agents)"}
+                            ? "Unlimited agent/broker seats"
+                            : "Up to 5 agent seats"}
                         </strong>
                       </div>
                       <div className="summary-row">

@@ -4,6 +4,7 @@ const {
   getDashboardStats,
   getAllUsers,
   getAllAgents,
+  createAgent,
   updateUserRole,
   getAllAdminProperties,
   updateAdminPropertyStatus,
@@ -36,6 +37,13 @@ router.get(
   protect,
   adminOnly,
   getAllAgents
+);
+
+router.post(
+  "/agents",
+  protect,
+  adminOnly,
+  createAgent
 );
 
 router.put(

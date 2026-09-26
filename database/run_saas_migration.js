@@ -92,7 +92,7 @@ async function runSaaSMigration() {
         max_agents: 5,
         features: JSON.stringify([
           'Up to 5 active property listings',
-          'Up to 5 agent seats (5+ agents)',
+          'Up to 5 agent seats',
           'Standard lead inquiry forms',
           'Basic property photo gallery',
           'Standard email support'
@@ -110,7 +110,7 @@ async function runSaaSMigration() {
         max_agents: 5,
         features: JSON.stringify([
           'Up to 50 active property listings',
-          'Up to 5 agent seats (5+ agents)',
+          'Up to 5 agent seats',
           'Full CRM Pipeline with Kanban board',
           'Deal escrow & milestone tracking',
           'Digital legal contracts & e-signatures',
@@ -130,7 +130,7 @@ async function runSaaSMigration() {
         max_agents: -1,     // Unlimited
         features: JSON.stringify([
           'Unlimited property listings',
-          'Unlimited agent & broker seats (15+ agents)',
+          'Unlimited agent/broker seats',
           'AI Buyer-Property Match & NL Search',
           'Multi-branch management & territories',
           'Advanced Financial P&L & Chart of Accounts',

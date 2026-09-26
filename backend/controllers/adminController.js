@@ -1,4 +1,11 @@
 const { pool } = require("../config/db");
+const bcrypt = require("bcryptjs");
+const { findUserByEmail } = require("../models/userModel");
+const {
+  getTenantForUser,
+  getOrganizationSubscription,
+  getOrganizationUsage,
+} = require("../models/saasModel");
 
 const getDashboardStats = async (req, res) => {
   try {
@@ -117,6 +124,168 @@ const getAllAgents = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch agents.",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+const createAgent = async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+
+    // 1. Validate required fields
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Full name is required.",
+      });
+    }
+
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required.",
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email address.",
+      });
+    }
+
+    if (!phone || !phone.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number is required.",
+      });
+    }
+
+    const phoneRegex = /^[+]?[\d\s\-()]{7,25}$/;
+    const digits = phone.replace(/\D/g, "");
+    if (!phoneRegex.test(phone.trim()) || digits.length < 7 || digits.length > 15) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid phone number (7-15 digits).",
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: "Password is required.",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long.",
+      });
+    }
+
+    // 2. Prevent duplicate email accounts
+    const existingUser = await findUserByEmail(normalizedEmail);
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "An account with this email already exists.",
+      });
+    }
+
+    // 3. SaaS Capacity check (Enforce Tenant Subscription Limits)
+    const tenant = await getTenantForUser(req.user.id);
+    if (tenant) {
+      const sub = await getOrganizationSubscription(tenant.organization_id);
+      const usage = await getOrganizationUsage(tenant.organization_id);
+
+      if (sub && sub.max_agents !== -1 && usage.agentsCount >= sub.max_agents) {
+        return res.status(403).json({
+          success: false,
+          code: "ORG_AGENT_QUOTA_EXCEEDED",
+          message: `Agent seat quota reached (${sub.max_agents} allowed under ${sub.plan_name}). Upgrade plan to add more team members.`,
+        });
+      }
+    }
+
+    // 4. Secure password hashing
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 5. Atomic transaction to insert User, Agent, and Org Membership
+    const connection = await pool.getConnection();
+    let agentId;
+    let userId;
+    const agencyName = tenant ? tenant.organization_name : null;
+
+    try {
+      await connection.beginTransaction();
+
+      const [userResult] = await connection.execute(
+        `
+        INSERT INTO users (name, email, password, phone, role)
+        VALUES (?, ?, ?, ?, 'agent')
+        `,
+        [name.trim(), normalizedEmail, hashedPassword, phone.trim()],
+      );
+
+      userId = userResult.insertId;
+
+      const [agentResult] = await connection.execute(
+        `
+        INSERT INTO agents (user_id, agency_name, bio, experience, location)
+        VALUES (?, ?, NULL, 0, NULL)
+        `,
+        [userId, agencyName],
+      );
+
+      agentId = agentResult.insertId;
+
+      if (tenant) {
+        await connection.execute(
+          `
+          INSERT INTO org_memberships (organization_id, user_id, is_primary)
+          VALUES (?, ?, FALSE)
+          `,
+          [tenant.organization_id, userId],
+        );
+      }
+
+      await connection.commit();
+    } catch (txError) {
+      await connection.rollback();
+      throw txError;
+    } finally {
+      connection.release();
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Agent created successfully.",
+      agent: {
+        id: agentId,
+        agent_id: agentId,
+        user_id: userId,
+        name: name.trim(),
+        email: normalizedEmail,
+        phone: phone.trim(),
+        role: "agent",
+        agency_name: agencyName,
+        bio: null,
+        experience: 0,
+        location: null,
+        profile_image: null,
+        created_at: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("Admin Create Agent Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create agent.",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
@@ -389,6 +558,7 @@ module.exports = {
   getDashboardStats,
   getAllUsers,
   getAllAgents,
+  createAgent,
   updateUserRole,
   getAllAdminProperties,
   updateAdminPropertyStatus,
